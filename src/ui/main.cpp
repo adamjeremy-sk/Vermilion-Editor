@@ -6,6 +6,7 @@
 #include <string>
 
 #include "core/version.h"
+#include "ui/gtkx/object_ptr.h"
 
 namespace {
 
@@ -25,10 +26,9 @@ void on_activate(GtkApplication* app, gpointer user_data) {
 }  // namespace
 
 int main(int argc, char** argv) {
-    GtkApplication* app =
-        gtk_application_new("io.github.adamjeremy_sk.Vermilion", G_APPLICATION_DEFAULT_FLAGS);
-    g_signal_connect(app, "activate", G_CALLBACK(on_activate), nullptr);
-    int status = g_application_run(G_APPLICATION(app), argc, argv);
-    g_object_unref(app);
-    return status;
+    vermilion::gtkx::ObjectPtr<GtkApplication> app =
+        vermilion::gtkx::ObjectPtr<GtkApplication>::adopt(
+            gtk_application_new("io.github.adamjeremy_sk.Vermilion", G_APPLICATION_DEFAULT_FLAGS));
+    g_signal_connect(app.get(), "activate", G_CALLBACK(on_activate), nullptr);
+    return g_application_run(G_APPLICATION(app.get()), argc, argv);
 }
