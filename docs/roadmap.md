@@ -18,7 +18,9 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 | M0.2 | CMake skeleton: top level, `src/core`, `src/agent`, `src/ui`, `tests`, GoogleTest target, `.clang-format`, `.gitignore`, a `GtkApplication` window with the application ID | Configures and builds; empty window opens; `ctest` runs one trivial test | Qwen |
 | M0.3 | Fix target linkage (`-fno-exceptions` must not reach the tests); `src/ui/gtkx` library with `ObjectPtr` and string helpers, tested without a display | Compiles; `vermilion_gtkx_tests` pass; compile commands show tests without `-fno-exceptions` | Qwen |
 | M0.4 | `gtkx` signal connections by lambda (RAII disconnect) | Tests with `GListStore` and `GSimpleAction` pass | Qwen |
-| M0.5 | Error and result types, logging, SPDX check script | Check script finds no file without a header | Qwen |
+| M0.5a | `Error` and `Result<T>` types in core (`Status` = `Result<Unit>`), tested incl. death tests for misuse | Tests pass; header compiles under `-fno-exceptions` | Qwen |
+| M0.5b | Logging (GLib `g_log` with a `vermilion` domain; decide at the gate whether a thin layer is needed, per the wrapper rule) | Tests pass; no secrets in log output | Qwen |
+| M0.5c | Check script: SPDX headers on every source file, plus a file-size report (review above 300 lines, fail above 500; tests and data 500 and 800; AGENTS.md rule 16) | Script finds no file without a header and reports sizes | Qwen |
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
 | Gate | Work | Done when | Who |

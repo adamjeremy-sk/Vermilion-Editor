@@ -49,6 +49,7 @@ Dependency direction: `ui -> agent -> core`; `ui -> core`. Core never includes G
 - **Threading:** the GLib main loop plus async I/O (`GSubprocess`, libsoup async API, `GTask`) for network, builds, debugger and monitors. Threads only for heavy computation (large diffs). Widgets are touched from the main thread only. The main loop is never blocked.
 - **Paths and data:** `std::filesystem` or GIO. XDG locations for config, data, cache and state. Text is UTF-8; encoding and line endings are explicit at file boundaries.
 - **Style:** `clang-format` (config committed at F0), warnings as errors (`-Wall -Wextra -Werror`), `clang-tidy` where cheap, ASan and UBSan builds run by Adam on request.
+- **Size and shape:** one responsibility per file; a source file over 300 lines is reviewed, over 500 is split (tests and data tables 500 and 800); functions over 50 lines are flagged; UI is one widget or panel class per file pair and `window` only assembles panels. Details: AGENTS.md rule 16.
 - **Identity stability:** never rename config keys, JSON fields, file formats, command names or IDs when only display text changes.
 
 ## 6. Dependencies  *(Decided; versions are those of Ubuntu 24.04)*

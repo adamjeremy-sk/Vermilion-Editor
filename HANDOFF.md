@@ -4,75 +4,65 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-05 ~19:30 (M0.3 committed; history rewritten and force-pushed; M0.4 prompt issued, not run) |
+| Updated | 2026-11-05 ~19:15 (M0.4 audited PASS WITH NOTES; file-size rule added; M0.5a prompt issued, not run) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info`; if `connectedFolders` does not list `/home/adam/Projects/vermilion-editor`, call `device_request_folder_access` for that path (the whole directory; the grant covers the full subtree, so it is recursive). Ask once. If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Editing rights are unchanged: root orchestration docs and `docs/` only, never code. When a gate needs the model-monitor original, also request `~/Projects/llm-suite-test` (read-only use). (Adam asked for this 2026-11-04; also AI_ONBOARDING.md section 6.1 step 0.) |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, GPL-3.0-or-later. Written from scratch; not based on CrimsonEditor. |
-| Repo state | `main...origin/main` in sync after the **history rewrite** (done 2026-11-05 by Adam, one force-push): root `67e7e70` (M0.1 reset), `5d21e3c` (M0.2), `c8cf24b` (docs), `13ee5bc` (M0.3, includes the HANDOFF update). Local backup tag `backup-pre-rewrite` and the old Crimson tags `v3.81` to `v3.94` still point into the dropped history, so it stays reachable locally; whether `origin` has the old tags is unchecked (see Awaiting). The M0.2 window opened (Adam confirmed). |
-| Version / HEAD | `13ee5bc` (M0.3) plus the docs commit that records this update; read `git log --oneline -5`. Code: static libs `vermilion_core`, `vermilion_agent`, `vermilion_gtkx`, executable `vermilion` (empty window, GtkApplication held by `ObjectPtr`), tests `vermilion_tests` and `vermilion_gtkx_tests`. |
-| Tests | 14 (CoreVersion, AgentInfo, 8 GtkxObjectPtr, 4 GtkxString), passing per Qwen; Orchestrator verified the compile flags, SPDX, layer and GTK 3 greps with fresh commands. |
-| Active task | Roadmap M0: M0.1 to M0.3 done; M0.4 (signal connections by lambda, RAII disconnect) prompt issued; then M0.5 (result types, logging, SPDX script), then M1. |
-| Gate position | M0.3 PASS WITH NOTES. M0.4 prompt issued, not run. |
-| Awaiting | Adam: (1) run `git ls-remote --tags origin`; if the old `v3.*` tags are on origin, delete them there and locally (they keep the old history reachable); (2) commit and push this docs update; (3) paste the M0.4 prompt (verbatim below) into a fresh Qwen session after replacing `XXXXXXX` with `git rev-parse --short HEAD` taken after that docs commit; (4) paste Qwen's report for the audit. |
-| Last prompt issued | **M0.4** (not yet executed). Verbatim text below. |
-| Next action | Audit the M0.4 report with fresh commands (git status, compile flags per file, SPDX and layer greps, test names and count, read `signal.h` for GWeakRef handling and holder ownership). Then issue M0.5. |
+| Repo state | `main...origin/main` in sync at `97eea77` (docs after the history rewrite; root `67e7e70`) when M0.4 was audited. Uncommitted at audit: M0.4 files (`src/ui/gtkx/signal.h`, `signal.cpp`, `tests/gtkx_signal_test.cpp`, two CMake edits) plus the Orchestrator's docs edits (`AGENTS.md` rule 16, `ARCHITECTURE.md` size bullet, `docs/roadmap.md` M0.5 split, `HANDOFF.md`). Adam commits both and pushes. Open housekeeping: old tags `v3.81` to `v3.94` (check `git ls-remote --tags origin`, delete them if present), local tag `backup-pre-rewrite`. |
+| Version / HEAD | `97eea77` plus the M0.4 commit and the docs commit; read `git log --oneline -5`. Code: static libs `vermilion_core`, `vermilion_agent`, `vermilion_gtkx` (ObjectPtr, string helpers, SignalConnection and `connect<Sig>`), executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests`. |
+| Tests | 25 (2 core/agent, 8 GtkxObjectPtr, 4 GtkxString, 11 GtkxSignal), passing per Qwen; Orchestrator verified flags, SPDX, layer, GTK 3 and `g_signal_connect` greps with fresh commands. |
+| Active task | Roadmap M0: M0.1 to M0.4 done; M0.5 split into M0.5a (Error and Result types; prompt issued), M0.5b (logging), M0.5c (SPDX and file-size check script); then M1. |
+| Gate position | M0.4 PASS WITH NOTES. M0.5a prompt issued, not run. |
+| Awaiting | Adam: (1) commit the M0.4 files, then the docs, then push; (2) paste the M0.5a prompt (verbatim below) into a fresh Qwen session after replacing `XXXXXXX` with `git rev-parse --short HEAD` taken after the docs commit; (3) paste Qwen's report for the audit. |
+| Last prompt issued | **M0.5a** (not yet executed). Verbatim text below. |
+| Next action | Audit the M0.5a report with fresh commands (git status, compile flags per file incl. `result.cpp`, SPDX, layer and throw/try/catch greps, `wc -l`, test names and count; read `result.h` for the `die` path and move semantics). Then issue M0.5b (logging). Apply AGENTS.md rule 16 in every audit (sizes, function length). |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. |
 
-**Carry-forward notes (M0.3 audit)**: (1) `ObjectPtr` copy assignment and move assignment have no tests; cover them when next touching `object_ptr.h`. (2) `main.cpp` still uses a bare `g_signal_connect` for `activate`; convert it to `gtkx::connect` in a later UI gate. (3) GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add; tests preset it to the object, and prompts must say so. (4) Qwen's M0.3 report referred to a first failed build "shown above" but did not show it, and its first line was cut; future prompts require the raw failing output first (added to M0.4).
+**Carry-forward notes**: (1) `ObjectPtr` copy assignment and move assignment have no tests; cover them when next touching `object_ptr.h`. (2) `main.cpp` still uses a bare `g_signal_connect` for `activate`; convert it to `gtkx::connect` in a later UI gate. (3) GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add; tests preset it to the object, and prompts must say so. (4) M0.4 audit: `SignalConnection::operator bool` means "not yet disconnected or detached", not "the instance is alive" (it stays true after the instance dies); disconnecting from inside the connection's own handler is untested; `Holder`, `Trampoline` and `holder_destroy_notify` sit in the public `vermilion::gtkx` namespace and should move to a `detail` namespace when `signal.h` is next touched; Qwen reported 10 GtkxSignal tests but there are 11. (5) Reports must show raw failing build output first (carried into every prompt).
 **Open decisions (Adam's call)**: none block M0. Names of config files and JSON schemas are fixed when first written (ARCHITECTURE.md section 10); gdb DAP reliability is checked at M6.2; packaging at M8.
 
-## Last prompt (verbatim)  *(M0.4, issued 2026-11-05 evening, not yet executed; replace `XXXXXXX` with the short HEAD after the docs commit before use)*
+## Last prompt (verbatim)  *(M0.5a, issued 2026-11-05 evening, not yet executed; replace `XXXXXXX` with the short HEAD after the docs commit before use)*
 ````
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: M0.3 PASS WITH NOTES; tree clean at XXXXXXX
+Last verified: M0.4 PASS WITH NOTES; tree clean at XXXXXXX
 
 CONTEXT (BINDING)
-Gate M0.4 of docs/roadmap.md: signal connections by lambda with RAII disconnect, in src/ui/gtkx (namespace vermilion::gtkx).
-Files: NEW src/ui/gtkx/signal.h, NEW src/ui/gtkx/signal.cpp, NEW tests/gtkx_signal_test.cpp. EDIT src/ui/gtkx/CMakeLists.txt (add signal.cpp to the vermilion_gtkx sources, nothing else) and tests/CMakeLists.txt (add gtkx_signal_test.cpp to the existing vermilion_gtkx_tests executable, nothing else). Do not edit main.cpp, object_ptr.h or string.*. New files start with the two header lines (SPDX-License-Identifier: GPL-3.0-or-later, Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)), then #pragma once for headers.
+Gate M0.5a of docs/roadmap.md (M0.5 is split into a, b, c): error-handling types in src/core, header-only logic plus one tiny source file.
+Files: NEW src/core/result.h, NEW src/core/result.cpp, NEW tests/result_test.cpp. EDIT src/core/CMakeLists.txt (add result.cpp to the vermilion_core sources, nothing else) and tests/CMakeLists.txt (add result_test.cpp to the existing vermilion_tests executable, nothing else). Do not touch any other file. New files start with the two header lines (SPDX-License-Identifier: GPL-3.0-or-later, Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)); result.h then has #pragma once. Use the same namespace that src/core/version.h uses and name it in your report. Respect AGENTS.md rule 16 (file size and responsibility).
 
-DESIGN (binding)
-class SignalConnection, move-only (copy deleted):
-- default constructor: inactive. explicit operator bool: true while active.
-- disconnect(): if active and the instance is still alive, call g_signal_handler_disconnect; then become inactive. Safe to call twice.
-- detach(): become inactive WITHOUT disconnecting (the handler stays until the instance is finalized).
-- destructor calls disconnect().
-- move constructor and move assignment transfer; the moved-from object is inactive; move assignment disconnects the current connection first (guard self-assignment).
-- It must NOT hold a strong reference to the instance (that would keep widgets alive). Keep the instance in a GWeakRef that lives on the heap: std::unique_ptr<GWeakRef, Deleter> where the deleter calls g_weak_ref_clear and then deletes. A GWeakRef is never copied or moved by value. disconnect() calls g_weak_ref_get: if it returns non-null, call g_signal_handler_disconnect with the stored handler id, then g_object_unref the returned reference; if null, the instance is gone and the handler died with it.
-- Private constructor SignalConnection(gpointer instance, gulong handler_id) used by connect(); connect is a friend. Non-template code lives in signal.cpp.
-connect (template, in signal.h):
-  template <typename Sig, typename F> SignalConnection connect(gpointer instance, const char* signal_name, F&& callback);
-Sig is a function type whose FIRST parameter is the instance type and whose remaining parameters are the signal arguments, for example void(GListModel*, guint, guint, guint). Inside: a Holder struct containing std::function<Sig>; a template struct Trampoline<Sig> specialised on R(A...) with static R call(A... args, gpointer user_data) that casts user_data to Holder* and returns fn(args...) (void works). Register with g_signal_connect_data(instance, signal_name, G_CALLBACK(&Trampoline<Sig>::call), holder, destroy_notify, G_CONNECT_DEFAULT), where destroy_notify deletes the Holder (GLib runs it on disconnect and when the instance is finalized). Own the Holder in a std::unique_ptr until the returned handler id is non-zero, then release() it to GLib; if the id is 0, the unique_ptr frees it and connect returns an inactive SignalConnection. A null instance returns an inactive SignalConnection. No exceptions; if std::function does not compile under -fno-exceptions, report the exact error and STOP.
+DESIGN (binding), all in result.h
+- struct Error { std::string message; };
+- struct Unit {};  (the success value of operations that return nothing)
+- template <typename T> class Result, holding a std::variant<T, Error> built with std::in_place_index. static_assert that T is not Error. Members: static Result ok(T value); static Result err(Error error); bool is_ok() const; explicit operator bool() const; T& value() &; const T& value() const&; T value() && (moves the value out); const Error& error() const; T value_or(T fallback) const&.
+- Misuse is a programming error: value() on an error result and error() on a success result call a private static [[noreturn]] void die(const char* what) that writes the text to stderr with std::fputs and calls std::abort(). The texts are exactly "Result::value() called on an error" and "Result::error() called on a success" (each followed by a newline). Nothing may throw.
+- using Status = Result<Unit>; and inline Status ok_status() returning a success Status.
+result.cpp: includes result.h and explicitly instantiates Result<int>, Result<std::string> and Result<Unit> (template class Result<int>; and so on). Purpose: the header is compiled under -fno-exceptions inside vermilion_core. If any member fails to compile under -fno-exceptions, report the exact error and STOP.
 
-TESTS (suite GtkxSignal; no display, no gtk_init; include <gio/gio.h>; own instances with ObjectPtr; prove finalization with g_object_add_weak_pointer, remembering that GLib does not set the weak pointer on add, so preset it to the object as the existing tests do)
-Instances: g_list_store_new(G_TYPE_OBJECT) with items from g_object_new(G_TYPE_OBJECT, nullptr) (g_list_store_append does not steal; unref your item reference), and g_simple_action_new("test", nullptr) or, for a parameter, g_simple_action_new("test", G_VARIANT_TYPE_INT32); activate with g_action_activate(G_ACTION(action), g_variant_new_int32(42)) (the floating variant is sunk by GLib; pass nullptr for the parameterless action).
-Required tests:
-1. ListStoreItemsChangedReportsPositionRemovedAdded: connect<void(GListModel*, guint, guint, guint)> on "items-changed"; append one item: one call with (position 0, removed 0, added 1); g_list_store_remove(store, 0): second call with (0, 1, 0). Also check the first lambda argument equals the store.
-2. ActionActivateDeliversParameter: connect<void(GSimpleAction*, GVariant*)> on "activate"; the lambda records g_variant_get_int32 == 42 and the action pointer.
-3. ActionActivateWithoutParameter: the parameter received is nullptr.
-4. DestructorDisconnects: connection in an inner scope; after the scope, another activation does not change the counter.
-5. ExplicitDisconnectStops: disconnect(); bool false; second disconnect() is safe; the counter does not change on activation.
-6. MoveTransfersOwnership: move-construct; source is false, target true and still counting; destroying the source does nothing; move-assigning a new connection over an active one disconnects the old handler (two counters on the same action).
-7. DetachKeepsHandlerConnected: detach(); the connection is false; destroy it; activation still counts.
-8. InstanceFinalizedFirstIsSafe: the connection outlives the instance (drop the ObjectPtr, weak pointer proves finalization); then disconnect() and the destructor are safe.
-9. ClosureIsFreedWhenInstanceDies: the lambda captures a std::shared_ptr<int>; use_count is 2 after connect and 1 after the instance is finalized while the SignalConnection object still exists. A second test: use_count is 1 after disconnect().
-10. DefaultConstructedIsInactiveAndSafe.
-Compare with EXPECT_EQ on integers or pointers only; never const char* against a literal.
+TESTS (suite CoreResult, in tests/result_test.cpp; compare strings as std::string with EXPECT_EQ, never const char* against a literal)
+1. OkHoldsValue: Result<int>::ok(5): is_ok true, bool true, value() == 5.
+2. ErrHoldsMessage: Result<int>::err(Error{"boom"}): is_ok false, bool false, error().message == std::string("boom").
+3. ValueOrReturnsFallbackOnError and ValueOrReturnsValueOnSuccess.
+4. ConstAccess: const Result<std::string>, value() returns the stored string.
+5. MoveOnlyValueCanBeTaken: Result<std::unique_ptr<int>> ok(make_unique<int>(9)); std::move(r).value() yields the pointer with *p == 9.
+6. StatusOkAndErr: ok_status() is ok; Status::err(Error{"x"}) is not ok and keeps the message.
+7. ValueOnErrorAborts: EXPECT_DEATH(Result<int>::err(Error{"e"}).value(), "Result::value\\(\\) called on an error") with ::testing::FLAGS_gtest_death_test_style = "threadsafe" set first in the test.
+8. ErrorOnSuccessAborts: the same style with "Result::error\\(\\) called on a success".
 
 STRICT RAILS
 1. ONE step only. Do not commit, push or stage anything. Do not run the GUI program.
 2. Touch only the files named above. No docs, LICENSE, opencode.json, res/.
 3. Paste raw command output in fenced blocks, unaltered. Never use "..." inside a raw block, never summarize in place of raw output, never retype output by hand. If you trim, cut only from the end and write "[N lines trimmed]".
 4. Show every created file in full and every modified file as the raw git diff output.
-5. No C++ exceptions, no GTK 3 APIs, no new dependencies, no invented functions. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix.
+5. No C++ exceptions, no new dependencies, no invented functions. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix.
 
 STEPS
 STEP 1 (the only step):
 1. Run: git --no-optional-locks status --short. It must print nothing. If it prints anything, STOP and report it.
 2. Make the changes in CONTEXT.
 3. Run: cmake -S . -B build (last 10 lines), cmake --build build (last 15 lines), ctest --test-dir build --output-on-failure (in full).
-4. Flag proof: python3 -c "import json;[print(e['file'].split('/')[-1], '-fno-exceptions' in e['command']) for e in json.load(open('build/compile_commands.json'))]" (raw). Expected: False only for the test files, True for every other file.
-5. Proofs (raw, with exit codes): grep -rL "SPDX-License-Identifier: GPL-3.0-or-later" src tests --include=*.cpp --include=*.h (expected empty); grep -rniE "gtk|gdk|pango|gtksourceview|vte" src/core src/agent (expected empty); grep -rnE "gtk_container_add|gtk_widget_show_all|pack_start" src (expected empty); grep -rn "g_signal_connect" src (expected: main.cpp and signal.cpp or signal.h only).
-6. Run: git --no-optional-locks status --short (raw), then git --no-optional-locks diff -- src/ui/gtkx/CMakeLists.txt tests/CMakeLists.txt (raw).
-EVIDENCE: raw blocks for items 1 to 6, every new file in full, and the test count from ctest.
+4. Flag proof: python3 -c "import json;[print(e['file'].split('/')[-1], '-fno-exceptions' in e['command']) for e in json.load(open('build/compile_commands.json'))]" (raw). Expected: result.cpp True; False only for the test files, True for every other file.
+5. Proofs (raw, with exit codes): grep -rL "SPDX-License-Identifier: GPL-3.0-or-later" src tests --include=*.cpp --include=*.h (expected empty); grep -rniE "gtk|gdk|pango|gtksourceview|vte" src/core src/agent (expected empty); grep -rnE "throw|try|catch" src/core/result.h src/core/result.cpp (expected empty); wc -l src/core/result.h src/core/result.cpp tests/result_test.cpp.
+6. Run: git --no-optional-locks status --short (raw), then git --no-optional-locks diff -- src/core/CMakeLists.txt tests/CMakeLists.txt (raw).
+EVIDENCE: raw blocks for items 1 to 6, every new file in full, the namespace used, and the test count from ctest.
 
 End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" and cease all generation.
 ````
@@ -93,6 +83,8 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - 2026-11-05 — M0.1 (reset, commit `67e7e70 (was 39d9016 before the rewrite)`) done by Adam: 14 tracked files remain, `upstream` removed. M0.2 (CMake skeleton and empty window) executed by Qwen and audited PASS WITH NOTES. Orchestrator re-check with fresh commands: only the expected files, SPDX header present in all 7 sources, no GTK names in `src/core` or `src/agent`, GTK 4 APIs only, ignore rules cover `build`, `cmake-build-*`, `.idea`, `skills`. Qwen found that the two tests failed because `EXPECT_EQ` compared `const char*` pointers (the Orchestrator's prompt said "equals" without naming the comparison); fixed by comparing `std::string`. Notes: (1) `vermilion_core` links `vermilion_warnings` and `vermilion_noexc` as PUBLIC, so `-fno-exceptions` also reaches `vermilion_agent`, the UI and the tests (compile commands show it on all 5 files); the spec said the tests must not get it. Fixed in M0.3. (2) The window has not been opened by the Orchestrator or by Qwen (no display); Adam checks it. Qwen found GTK 4.14.5, GtkSourceView 5.12.0, json-glib 1.8.0, libsoup 3.4.4, libsecret 0.21.4, VTE 0.76.0, GoogleTest 1.14.0.
 - 2026-11-05 — M0.3 (linkage fix, `gtkx` `ObjectPtr` and string helpers, 12 tests) executed by Qwen, audited PASS WITH NOTES (see section 1 carry-forward notes). Orchestrator fresh check: `-fno-exceptions` present on the 4 non-test sources and absent on the 4 test sources, `-Wall` and `-Werror` on all 8, SPDX present in all .cpp/.h, no GTK names in `src/core` or `src/agent`, no GTK 3 calls.
 - 2026-11-05 — (Adam) **History rewrite**: drop all history before the M0.1 reset commit (`39d9016`), which becomes the root; replay later commits; one force-push to `origin main` after the M0.3 commit; backup tag kept locally. Reason: the Crimson code lives in older history. Old objects may stay reachable on GitHub by hash until GitHub purges them. Done 2026-11-05: new root `67e7e70`, force-pushed as `13ee5bc`; trees identical to the backup (`git diff --stat` empty).
+- 2026-11-05 — M0.4 (`SignalConnection`, `connect<Sig>`, 11 tests) executed by Qwen, audited PASS WITH NOTES (notes in section 1). Fresh check: `-fno-exceptions` on the 5 non-test sources and off the 5 test sources, `-Werror` on all 10, SPDX in all .cpp/.h, no GTK names in core or agent, the only `g_signal_connect` hits are `signal.h` (`_data`) and `main.cpp`. `std::function` compiles under `-fno-exceptions`.
+- 2026-11-05 — (Adam) **File size and responsibility** (AGENTS.md rule 16, ARCHITECTURE.md section 5): one responsibility per file; review above 300 lines, split above 500 (tests and data 500 and 800), functions over 50 lines flagged; UI one widget or panel class per file pair; `wc -l` in every report; M0.5c enforces it with a script. M0.5 split into M0.5a, b, c.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -112,6 +104,8 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - Dropped and not scheduled: git integration, multi-cursor, theme system, SSH, session restore, indexed search, plugin hook.
 
 ## 4. Session Log  *(newest first, keep 10)*
+### 2026-11-05 (evening, late) — M0.4 audit, size rules
+- History rewrite done (root `67e7e70`, force-pushed). M0.4 audited PASS WITH NOTES (25 tests). Adam asked about keeping files modular; rule 16 written (limits 300/500, tests and data 500/800). M0.5 split; M0.5a prompt issued. Open: commits and push, tag cleanup check, M0.5a run and audit.
 ### 2026-11-05 (evening, later) — M0.3 audit and history rewrite decision
 - M0.2 window confirmed open. M0.3 report audited PASS WITH NOTES (12 new tests, 14 total; flags, SPDX, layer and GTK 3 proofs checked fresh). Adam decided to rewrite history with `39d9016` as the new root, after the M0.3 commit, with one force-push. M0.4 prompt issued. Open: M0.3 commit, docs commit, rewrite and push, M0.4 run and audit.
 ### 2026-11-05 (evening, end) — M0.2 and handoff
