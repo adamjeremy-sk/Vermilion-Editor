@@ -16,8 +16,9 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 |---|---|---|---|
 | M0.1 | Reset the tree: one `git rm -r` of everything except the kept files; GPL-3 `LICENSE`; remove the `upstream` remote; commit docs | `git ls-files` shows only the kept files; tree clean | Adam, Orchestrator checks |
 | M0.2 | CMake skeleton: top level, `src/core`, `src/agent`, `src/ui`, `tests`, GoogleTest target, `.clang-format`, `.gitignore`, a `GtkApplication` window with the application ID | Configures and builds; empty window opens; `ctest` runs one trivial test | Qwen |
-| M0.3 | `src/ui/gtkx` helpers: GObject reference pointer, signal connection by lambda, string conversion | Compiles; helper behaviour covered where testable without a display | Qwen |
-| M0.4 | Error and result types, logging, SPDX header check script | Check script finds no file without a header | Qwen |
+| M0.3 | Fix target linkage (`-fno-exceptions` must not reach the tests); `src/ui/gtkx` library with `ObjectPtr` and string helpers, tested without a display | Compiles; `vermilion_gtkx_tests` pass; compile commands show tests without `-fno-exceptions` | Qwen |
+| M0.4 | `gtkx` signal connections by lambda (RAII disconnect) | Tests with `GListStore` and `GSimpleAction` pass | Qwen |
+| M0.5 | Error and result types, logging, SPDX check script | Check script finds no file without a header | Qwen |
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
 | Gate | Work | Done when | Who |
