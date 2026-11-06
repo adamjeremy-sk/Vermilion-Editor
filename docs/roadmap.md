@@ -10,7 +10,7 @@
 | v0.4 | Model monitor panel, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M7 |
 | v1.0 | Packaging, documentation, notices | M8 |
 **Dogfooding markers (◆)**: the gates where Adam starts building Vermilion with Vermilion: DOGFOOD 1 at M4.3 (self-build; Adam's first one, set 2026-11-05), 2 at M4.6 (primary editor), 3 at M5.5 (built-in agent trial; proposed, Adam confirms or moves it).
-ctxmon logic (M1) is built early because it is self-contained: the Python original is an executable specification, which makes it the best first job to prove the workflow with the local agent.
+ctxmon logic (M1) is built early because it is self-contained: the Python original (`reference/ctxmon/ctxmon_gtk.py`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent.
 
 ## M0: Reset and foundation
 | Gate | Work | Done when | Who |
