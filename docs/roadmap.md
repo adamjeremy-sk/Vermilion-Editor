@@ -7,7 +7,7 @@
 | v0.1 | Editor, right-hand directory sidebar, build and Output pane, Problems, terminal | M0 to M4 |
 | v0.2 | Agent core: providers (OpenAI-compatible), tools, permission presets, setup dialog, chat, archive, side-by-side diff, change sets, external-change handling | M5 |
 | v0.3 | Debugger (DAP) | M6 |
-| v0.4 | Model monitor panel, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M7 |
+| v0.4 | CTXMon tab and standalone monitor, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M7 |
 | v1.0 | Packaging, documentation, notices | M8 |
 **Dogfooding markers (◆)**: the gates where Adam starts building Vermilion with Vermilion: DOGFOOD 1 at M4.3 (self-build; Adam's first one, set 2026-11-05), 2 at M4.6 (primary editor), 3 at M5.5 (built-in agent trial; proposed, Adam confirms or moves it).
 ctxmon logic (M1) is built early because it is self-contained: the Python original (`reference/ctxmon/ctxmon_gtk.py`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent.
@@ -92,7 +92,8 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 ## M7: v0.4
 | Gate | Work | Done when | Who |
 |---|---|---|---|
-| M7.1 | Model monitor panel and detachable window (cards, graphs) | Matches the Python behaviour | Qwen |
+| M7.1 | CTXMon cards and graphs as a shared widget set; the CTXMon tab in the right-hand stack | Matches the Python behaviour | Qwen |
+| M7.1b | Standalone `vermilion-ctxmon` executable (own window, same cards, no editor); may be built earlier, any time after M1 and the M2.1 window, if Adam wants it sooner | Runs without the editor; watches a real llama.cpp server | Qwen |
 | M7.2 | Cost display with user prices | Totals per conversation and session | Qwen |
 | M7.3 | Anthropic adapter | Same tests as M5.1 | Plan first |
 | M7.4 | Gemini (compatible endpoint check, native if needed) | Same | Plan first |

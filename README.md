@@ -22,7 +22,7 @@
 3. [The window](#the-window)
 4. [Planned features](#planned-features)
 5. [The AI agent](#the-ai-agent)
-6. [Model monitor](#model-monitor)
+6. [CTXMon (model monitor)](#ctxmon-model-monitor)
 7. [Project file](#project-file)
 8. [Configuration and data](#configuration-and-data)
 9. [Building](#building)
@@ -59,7 +59,7 @@ The abandoned port is part of the git history and summarised in `docs/archive/`.
 | Editor, tree, build, terminal (v0.1) | Planned, not started |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
-| Monitor panel, cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
+| CTXMon tab and standalone monitor, cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
 | Code | None yet. Next gate: M0.2, the CMake skeleton and an empty window. |
 | Releases | None |
 
@@ -67,20 +67,20 @@ The abandoned port is part of the git history and summarised in `docs/archive/`.
 
 ## The window
 ```
-+------------------------------------------------------+------------------+
-| tabs: main.cpp | util.h | ...                        | Files | Agent    |
-|------------------------------------------------------|------------------|
-|                                                      | v project/       |
-|   editor (syntax colours, line numbers,              |   v src/         |
-|   breakpoint dots, current-line arrow)               |     main.cpp     |
-|                                                      |     util.h       |
-|                                                      |   CMakeLists.txt |
-|------------------------------------------------------|                  |
-| Output | Problems | Terminal | Debug      [Build][Run]|  Agent tab: chat,|
-|   build log, clickable errors                        |  model monitor   |
-+------------------------------------------------------+------------------+
++------------------------------------------------------+------------------------+
+| tabs: main.cpp | util.h | ...                        | Files | Agent | CTXMon |
+|------------------------------------------------------|------------------------|
+|                                                      | v project/             |
+|   editor (syntax colours, line numbers,              |   v src/               |
+|   breakpoint dots, current-line arrow)               |     main.cpp           |
+|                                                      |     util.h             |
+|                                                      |   CMakeLists.txt       |
+|------------------------------------------------------|------------------------|
+| Output | Problems | Terminal | Debug      [Build][Run]| Agent: chat, diff;     |
+|   build log, clickable errors                        | CTXMon: server monitor |
++------------------------------------------------------+------------------------+
 ```
-One window, one opened folder. The right-hand stack has the directory sidebar (**Files**) and the **Agent**. The bottom panel
+One window, one opened folder. The right-hand stack has three tabs: the directory sidebar (**Files**), the **Agent** and **CTXMon**, the live model monitor (which also exists as a standalone program). The bottom panel
 has the build output, the problem list, terminals and the debugger views.
 
 ---
@@ -124,7 +124,7 @@ Replies stream in and can be stopped at any time.
 
 **Setup dialog.** The first time you open the Agent tab, a dialog takes care of everything: provider, base URL, API key (kept
 in the system keyring), model, a connection test and the permission preset. If a llama.cpp server is running locally, it fills
-in the model and context size and offers the monitor.
+in the model and context size and offers the CTXMon tab.
 
 **Tools.** The agent works through the editor: read a file (line ranges), replace text, create a file, list a directory, search,
 open a file in a tab, run the build, and run a shell command.
@@ -162,11 +162,31 @@ work would cost on a paid model. No prices are shipped.
 
 ---
 
-## Model monitor
-A native port of `ctxmon`, a live monitor for a running llama.cpp server: context usage as a percentage and bar (exact when the
-server log confirms it, estimated while a request runs), generation and prompt speed, time until the context is full, graphs,
-a list of recent requests, GPU memory (AMD through sysfs, or `nvidia-smi`), and warnings at 80% and 95%. Several servers can
-be watched at once. It lives in the Agent tab and in a detachable window.
+## CTXMon (model monitor)
+CTXMon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon` (the Python original is kept for
+reference in [`reference/ctxmon/`](reference/ctxmon/)). It comes in two forms that share the same logic and the same cards:
+
+- **Built in:** the **CTXMon** tab in the right-hand stack, next to Files and Agent, so the server your agent is using is one click away.
+- **Standalone:** a separate program, `vermilion-ctxmon` *(name proposed)*, with its own window. It needs no editor and no folder, so
+  you can watch a server while you work in any other tool. It is built from the same source tree.
+
+What a card shows (one per server, several servers side by side):
+
+- **Context:** percentage and bar, with tokens used, total and free. It says whether the number is exact (the request finished and
+  the server log confirmed it) or an estimate (a request is still running).
+- **Speed:** generation speed (live while generating, otherwise the last request), prompt-processing speed, and the time until the
+  context is full.
+- **Graphs:** context over time and speed over time.
+- **Recent requests:** the newest finished requests with prompt and generated tokens, speeds and the context size afterwards.
+- **Warnings:** at 80% and 95% of the context, and when the context would fill within a minute at the current speed, as a banner
+  in the card and as a desktop notification.
+- **GPU memory:** VRAM used and total (AMD through sysfs, or `nvidia-smi`).
+- **Terminal:** shell tabs (VTE) so you can restart a server without leaving the window.
+
+It polls each server's `/slots` and `/props` endpoints and reads the server log (start the server with `--log-file`) for token counts
+and finished requests. It only talks to your own servers, and shows zeros when nothing is listening. Differences from the Python
+original: GTK 4 has no tray icon, so there is none, and notifications go through `GNotification`. Settings are remembered between
+runs; their file name is fixed when it is first written.
 
 ---
 
@@ -227,6 +247,7 @@ ignored by git. There is nothing to install and no release yet.
 | `src/ui/` | The GTK application. *(M0.2)* |
 | `tests/` | GoogleTest tests for core and agent. *(M0.2)* |
 | `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
+| `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`) and its logo (`ctxmon.svg`). Read-only reference for the port; not built. |
 | `docs/roadmap.md` | The milestone and gate plan. |
 | `docs/requirements/` | Behaviour specifications, for example the directory sidebar. |
 | `docs/archive/` | Notes on the abandoned CrimsonEditor port. |
@@ -259,7 +280,7 @@ The plan is in [`docs/roadmap.md`](docs/roadmap.md):
 | v0.1 | Editor, right-hand directory sidebar, build and Output pane, Problems, terminal |
 | v0.2 | Agent core: providers, tools, permission presets, setup dialog, chat, archive, side-by-side diff |
 | v0.3 | Debugger |
-| v0.4 | Monitor panel, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP |
+| v0.4 | CTXMon tab and standalone monitor, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP |
 | v1.0 | Packaging, documentation, notices |
 
 ---

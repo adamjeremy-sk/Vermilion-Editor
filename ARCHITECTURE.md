@@ -19,20 +19,20 @@ Vermilion Editor is a native Linux text and code editor written from scratch in 
 
 ## 3. The product  *(Decided)*
 ```
-+------------------------------------------------------+------------------+
-| tabs: main.cpp | util.h | ...                        | Files | Agent    |
-|------------------------------------------------------|------------------|
-|                                                      | v project/       |
-|   editor (syntax colours, line numbers,              |   v src/         |
-|   breakpoint dots, current-line arrow)               |     main.cpp     |
-|                                                      |     util.h       |
-|                                                      |   CMakeLists.txt |
-|------------------------------------------------------|                  |
-| Output | Problems | Terminal | Debug      [Build][Run]|  Agent tab: chat,|
-|   build log, clickable errors                        |  model monitor   |
-+------------------------------------------------------+------------------+
++------------------------------------------------------+------------------------+
+| tabs: main.cpp | util.h | ...                        | Files | Agent | CTXMon |
+|------------------------------------------------------|------------------------|
+|                                                      | v project/             |
+|   editor (syntax colours, line numbers,              |   v src/               |
+|   breakpoint dots, current-line arrow)               |     main.cpp           |
+|                                                      |     util.h             |
+|                                                      |   CMakeLists.txt       |
+|------------------------------------------------------|------------------------|
+| Output | Problems | Terminal | Debug      [Build][Run]| Agent: chat, diff;     |
+|   build log, clickable errors                        | CTXMon: server monitor |
++------------------------------------------------------+------------------------+
 ```
-One window, one opened folder at a time. Right-hand stack: **Files** (directory sidebar) and **Agent** tabs. Bottom panel: Output, Problems, Terminal (VTE, several tabs), Debug (stack, variables, breakpoints, watches).
+One window, one opened folder at a time. Right-hand stack: **Files** (directory sidebar), **Agent** and **CTXMon** (model monitor) tabs. Bottom panel: Output, Problems, Terminal (VTE, several tabs), Debug (stack, variables, breakpoints, watches).
 
 ## 4. Layers and layout  *(layers Decided; directories Proposed, fixed at gate F0)*
 Dependency direction: `ui -> agent -> core`; `ui -> core`. Core never includes GTK, Pango, GtkSourceView or VTE headers. GLib, GIO and json-glib are allowed in core. Check: a grep of `src/core` and `src/agent` for `gtk/`, `gdk`, `pango`, `gtksourceview`, `vte` returns nothing.
@@ -40,7 +40,7 @@ Dependency direction: `ui -> agent -> core`; `ui -> core`. Core never includes G
 |---|---|---|
 | `vermilion_core` | `src/core/` | diff engine (Myers, produces aligned rows for side-by-side), permission engine (presets, rules, hard guards), settings and project-file models, build presets and problem matchers, DAP client state machine (transport injected), ctxmon logic (log tail, parsing, poller model, speed and ETA, VRAM readers), slash-command and gate-template engine, cost calculator, chat archive. |
 | `vermilion_agent` | `src/agent/` | provider adapters (OpenAI-compatible, Anthropic, Gemini), agent loop, tool registry, MCP server and client. HTTP through libsoup 3 behind an injectable transport so tests use a fake. |
-| `vermilion` (executable) | `src/ui/` | GTK application, window, tabs, editor view, directory sidebar, bottom panels, terminal, agent tab and setup dialog, diff widget, debugger panels, ctxmon cards; a small helper layer (`src/ui/gtkx/`: GObject reference pointer, signal connection by lambda, string conversion). |
+| `vermilion` (executable) | `src/ui/` | GTK application, window, tabs, editor view, directory sidebar, bottom panels, terminal, agent tab and setup dialog, diff widget, debugger panels, ctxmon cards (shared by the CTXMon tab and the standalone `vermilion-ctxmon` executable); a small helper layer (`src/ui/gtkx/`: GObject reference pointer, signal connection by lambda, string conversion). |
 | tests | `tests/` | GoogleTest, one test file per core or agent module, no display needed. UI is kept thin and is checked by hand. |
 
 ## 5. Conventions  *(Decided 2026-11-05 as part of the language decision; details Proposed)*
@@ -117,7 +117,7 @@ Switching to Unrestricted needs a confirmation dialog and shows a persistent red
 **MCP.** Vermilion is an MCP server over stdio exposing the same tool registry, and an MCP client for stdio tool servers. HTTP transports and ACP are deferred.
 
 ### 7.7 ctxmon (model monitor)  *(Decided)*
-A C++ port of `reference/ctxmon/ctxmon_gtk.py` (Adam's own code, GPL-3; copied from `~/Projects/llm-suite-test` on 2026-11-05, with its logo `ctxmon.svg`; read-only reference, never built or linked). Logic in core with tests derived from the Python version: log tailing and token parsing, `/slots` and `/props` polling, live and finished-request speed, time-to-full estimate, request history, warnings at 80% and 95% and when the context would fill within a minute, VRAM from AMD sysfs or `nvidia-smi`. UI: a card per server (several servers supported) in the Agent tab and a detachable window, with graphs and the terminal. Dropped from the original: the tray icon (GTK 4 has none) and `notify-send` (replaced by `GNotification`). llama.cpp servers only.
+A C++ port of `reference/ctxmon/ctxmon_gtk.py` (Adam's own code, GPL-3; copied from `~/Projects/llm-suite-test` on 2026-11-05, with its logo `ctxmon.svg`; read-only reference, never built or linked). Logic in core with tests derived from the Python version: log tailing and token parsing, `/slots` and `/props` polling, live and finished-request speed, time-to-full estimate, request history, warnings at 80% and 95% and when the context would fill within a minute, VRAM from AMD sysfs or `nvidia-smi`. UI: a card per server (several servers supported), with graphs and the terminal, in two forms built from one shared widget set: the **CTXMon** tab in the right-hand stack, and a **standalone executable** (`vermilion-ctxmon`, own `GtkApplication` window, no editor or folder needed; name and application ID proposed, Adam decided on 2026-11-05 that both exist). The standalone program replaces the earlier idea of a detachable window (Orchestrator reading; Adam confirms). Dropped from the original: the tray icon (GTK 4 has none) and `notify-send` (replaced by `GNotification`). llama.cpp servers only.
 
 ### 7.8 Project file  *(Decided)*
 Two files in the opened folder: `PROJECT.md` (human and agent readable: purpose, directory layout, conventions, decisions, current state, next steps, in the shape of this document) and `.vermilion/project.json` (build, run and debug configurations, permission overrides, agent settings, gate templates in use) *(names proposed)*. New Project creates both from a wizard (name, language and build preset, skeleton); Open Folder offers "Adopt as project", where the agent audits the tree read-only and writes the first `PROJECT.md`. The agent proposes updates to `PROJECT.md` after changes as an ordinary change set.
