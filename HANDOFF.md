@@ -4,65 +4,74 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-05 ~19:10 (session handoff: M0.4 committed and pushed; M0.5a prompt ready but NOT issued to Qwen) |
+| Updated | 2026-11-05 ~19:30 (M0.5a audited PASS WITH NOTES; M0.5b1 prompt ready but NOT issued to Qwen) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info`; if `connectedFolders` does not list `/home/adam/Projects/vermilion-editor`, call `device_request_folder_access` for that path (the whole directory; the grant covers the full subtree, so it is recursive). Ask once. If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Editing rights are unchanged: root orchestration docs and `docs/` only, never code. When a gate needs the model-monitor original, also request `~/Projects/llm-suite-test` (read-only use). (Adam asked for this 2026-11-04; also AI_ONBOARDING.md section 6.1 step 0.) |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, GPL-3.0-or-later. Written from scratch; not based on CrimsonEditor. |
-| Repo state | Verified 2026-11-05 ~19:05: HEAD `bafd9e2` (docs after M0.4), `0710318` (M0.4), `97eea77`, root `67e7e70`; `main...origin/main` in sync, tree clean. `git ls-remote --tags origin` is empty (no old tags on GitHub). Local housekeeping left to Adam: delete old tags `v3.81 v3.83 v3.90 v3.91 v3.92 v3.93 v3.94` (`git tag -d ...`), optionally `backup-pre-rewrite` and `git gc --prune=now`. This handoff update is uncommitted until Adam commits it, which moves HEAD one commit past `bafd9e2`. |
-| Version / HEAD | `bafd9e2` plus the commit of this handoff update; read `git log --oneline -3`. Code: `vermilion_core`, `vermilion_agent`, `vermilion_gtkx` (ObjectPtr, string helpers, SignalConnection, `connect<Sig>`), executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests` (25 tests). |
-| Tests | 25 (2 core/agent, 8 GtkxObjectPtr, 4 GtkxString, 11 GtkxSignal), passing per Qwen; Orchestrator verified flags, SPDX, layer, GTK 3 and `g_signal_connect` greps with fresh commands. |
-| Active task | Roadmap M0: M0.1 to M0.4 done; M0.5 split into M0.5a (Error and Result types; prompt issued), M0.5b (logging), M0.5c (SPDX and file-size check script); then M1. |
-| Gate position | M0.4 done, committed and pushed. M0.5a prompt written, not issued to Qwen. |
-| Awaiting | Adam: (1) commit this handoff (`git add HANDOFF.md && git commit -m "docs: handoff, M0.5a ready" && git push origin main`); (2) in the next chat, "Resume from HANDOFF.md", confirm the readback; (3) paste the M0.5a prompt (verbatim below) into a fresh Qwen session after replacing `XXXXXXX` with `git rev-parse --short HEAD` (the tree must be clean); (4) paste Qwen's report for the audit. |
-| Last prompt issued | **M0.5a** written, NOT yet issued to Qwen. Verbatim text below. |
-| Next action | Audit the M0.5a report with fresh commands (git status, compile flags per file incl. `result.cpp`, SPDX, layer and throw/try/catch greps, `wc -l`, test names and count; read `result.h` for the `die` path and move semantics). Then issue M0.5b (logging). Apply AGENTS.md rule 16 in every audit (sizes, function length). |
+| Repo state | Verified 2026-11-05 ~19:20: HEAD `81dd030` (docs: handoff, M0.5a ready); `main` in sync with `origin/main`. Uncommitted at the time of this update: the M0.5a files (`src/core/result.h`, `src/core/result.cpp`, `tests/result_test.cpp`, edits to `src/core/CMakeLists.txt` and `tests/CMakeLists.txt`) plus the docs edits (`docs/roadmap.md`, this file). Old v3 tags are removed locally (`git tag -l` empty; Adam confirmed); remote tags were empty at the last check. Tag cleanup is closed. |
+| Version / HEAD | `81dd030` plus the commits of Adam's steps below (M0.5a gate commit, docs commit); read `git log --oneline -4`. Code: `vermilion_core` (`version`, `result`), `vermilion_agent`, `vermilion_gtkx` (ObjectPtr, string helpers, SignalConnection, `connect<Sig>`), executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests` (34 tests). |
+| Tests | 34 (2 core/agent, 9 CoreResult, 8 GtkxObjectPtr, 4 GtkxString, 11 GtkxSignal), passing per Qwen. Orchestrator verified fresh: `-fno-exceptions` on the 6 non-test sources and off the 6 test sources, `-Werror` on all 12, SPDX in all .cpp/.h, no GTK names in core or agent, no throw/try/catch in result files, line counts 88/14/71. The Orchestrator does not build. |
+| Active task | Roadmap M0: M0.1 to M0.5a done. M0.5b is split (gate-size rule) into M0.5b1 (`redact_secrets`, pure text, no GLib; prompt ready) and M0.5b2 (log layer over GLib `g_log`, domain `vermilion`, redacting every message; links GLib into `vermilion_core`); then M0.5c (SPDX and file-size script); then M1. |
+| Gate position | M0.5a executed and audited PASS WITH NOTES; awaiting Adam's commits. M0.5b1 prompt written, not issued to Qwen. |
+| Awaiting | Adam: (1) commit the M0.5a gate and the docs, then push: `git add src/core tests && git commit -m "M0.5a: Error and Result<T> types with tests"`, then `git add HANDOFF.md docs/roadmap.md && git commit -m "docs: handoff after M0.5a, dogfooding markers, M0.5b split"`, then `git push origin main`; (2) paste the M0.5b1 prompt (verbatim below) into a fresh Qwen session after replacing `XXXXXXX` with `git rev-parse --short HEAD` (tree must be clean); (3) paste Qwen's report for the audit. |
+| Last prompt issued | **M0.5b1** written, NOT yet issued to Qwen. Verbatim text below. |
+| Next action | Audit the M0.5b1 report with fresh commands (git status, compile flags per file incl. `redact.cpp`, SPDX, layer, `throw/try/catch/regex/tolower` and GLib greps, `wc -l`, test names and count 49; read `redact.cpp` and check each RULE (word start, name list, quote and separator handling, authorization exception, bearer length 8, sk- 16, AIza 30) and function lengths under 50). Then issue M0.5b2 (log layer: `vermilion::log::{debug,info,warning,error}(std::string_view)` calling `g_log("vermilion", level, "%s", redact_secrets(msg))`; `error` maps to `G_LOG_LEVEL_CRITICAL` because `G_LOG_LEVEL_ERROR` aborts; root CMake gets `pkg_check_modules(GLIB2 ... glib-2.0)`; tests install a handler with `g_log_set_handler_full` for the domain and capture messages). Then M0.5c. |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. |
 
-**Carry-forward notes**: (1) `ObjectPtr` copy assignment and move assignment have no tests; cover them when next touching `object_ptr.h`. (2) `main.cpp` still uses a bare `g_signal_connect` for `activate`; convert it to `gtkx::connect` in a later UI gate. (3) GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add; tests preset it to the object, and prompts must say so. (4) M0.4 audit: `SignalConnection::operator bool` means "not yet disconnected or detached", not "the instance is alive" (it stays true after the instance dies); disconnecting from inside the connection's own handler is untested; `Holder`, `Trampoline` and `holder_destroy_notify` sit in the public `vermilion::gtkx` namespace and should move to a `detail` namespace when `signal.h` is next touched; Qwen reported 10 GtkxSignal tests but there are 11. (5) Reports must show raw failing build output first (carried into every prompt).
+**Carry-forward notes**: (1) `ObjectPtr` copy assignment and move assignment have no tests; cover them when next touching `object_ptr.h`. (2) `main.cpp` still uses a bare `g_signal_connect` for `activate`; convert it to `gtkx::connect` in a later UI gate. (3) GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add; tests preset it to the object, and prompts must say so. (4) M0.4 audit: `SignalConnection::operator bool` means "not yet disconnected or detached", not "the instance is alive" (it stays true after the instance dies); disconnecting from inside the connection's own handler is untested; `Holder`, `Trampoline` and `holder_destroy_notify` sit in the public `vermilion::gtkx` namespace and should move to a `detail` namespace when `signal.h` is next touched; Qwen reported 10 GtkxSignal tests but there are 11. (5) Reports must show raw failing build output first (carried into every prompt). (6) M0.5a audit: `result.h` lacks `#include <utility>` (`std::move`, `std::in_place_index`; compiles through other headers), add when next touched; only the `value() &&` path is death-tested, the `&` and `const&` abort paths are not; `value_or` requires copyable `T` (fine for now); Qwen's report said 26 pre-existing tests, the real number is 25 (total 34 is right); Qwen again wrote "(no output)" for empty output. (7) Dogfooding markers are in `docs/roadmap.md` (first at M4.3, set by Adam).
 **Open decisions (Adam's call)**: none block M0. Names of config files and JSON schemas are fixed when first written (ARCHITECTURE.md section 10); gdb DAP reliability is checked at M6.2; packaging at M8.
 
-## Last prompt (verbatim)  *(M0.5a, issued 2026-11-05 evening, not yet executed; replace `XXXXXXX` with the short HEAD (after the handoff commit) before use)*
+## Last prompt (verbatim)  *(M0.5b1, written 2026-11-05 evening, not yet executed; replace `XXXXXXX` with the short HEAD after Adam's commits before use)*
 ````
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: M0.4 PASS WITH NOTES; tree clean at XXXXXXX
+Last verified: M0.5a PASS WITH NOTES, committed and pushed; tree clean at XXXXXXX
 
 CONTEXT (BINDING)
-Gate M0.5a of docs/roadmap.md (M0.5 is split into a, b, c): error-handling types in src/core, header-only logic plus one tiny source file.
-Files: NEW src/core/result.h, NEW src/core/result.cpp, NEW tests/result_test.cpp. EDIT src/core/CMakeLists.txt (add result.cpp to the vermilion_core sources, nothing else) and tests/CMakeLists.txt (add result_test.cpp to the existing vermilion_tests executable, nothing else). Do not touch any other file. New files start with the two header lines (SPDX-License-Identifier: GPL-3.0-or-later, Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)); result.h then has #pragma once. Use the same namespace that src/core/version.h uses and name it in your report. Respect AGENTS.md rule 16 (file size and responsibility).
+Gate M0.5b1 of docs/roadmap.md (M0.5b is split into b1 redaction and b2 logging): a pure text function that masks secrets, in src/core. No GLib, no GTK, no exceptions, no std::regex, no std::tolower and no locale calls.
+Files: NEW src/core/redact.h, NEW src/core/redact.cpp, NEW tests/redact_test.cpp. EDIT src/core/CMakeLists.txt (add redact.cpp to the vermilion_core sources, nothing else) and tests/CMakeLists.txt (add redact_test.cpp to the existing vermilion_tests executable, nothing else). Do not touch any other file. New files start with the two header lines (SPDX-License-Identifier: GPL-3.0-or-later, Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)); headers then have #pragma once. Namespace vermilion (as in src/core/result.h). Each new file has a one-sentence comment saying what it is for (AGENTS.md rule 16). Functions stay under 50 lines: split the work into small helper functions in an anonymous namespace in redact.cpp.
 
-DESIGN (binding), all in result.h
-- struct Error { std::string message; };
-- struct Unit {};  (the success value of operations that return nothing)
-- template <typename T> class Result, holding a std::variant<T, Error> built with std::in_place_index. static_assert that T is not Error. Members: static Result ok(T value); static Result err(Error error); bool is_ok() const; explicit operator bool() const; T& value() &; const T& value() const&; T value() && (moves the value out); const Error& error() const; T value_or(T fallback) const&.
-- Misuse is a programming error: value() on an error result and error() on a success result call a private static [[noreturn]] void die(const char* what) that writes the text to stderr with std::fputs and calls std::abort(). The texts are exactly "Result::value() called on an error" and "Result::error() called on a success" (each followed by a newline). Nothing may throw.
-- using Status = Result<Unit>; and inline Status ok_status() returning a success Status.
-result.cpp: includes result.h and explicitly instantiates Result<int>, Result<std::string> and Result<Unit> (template class Result<int>; and so on). Purpose: the header is compiled under -fno-exceptions inside vermilion_core. If any member fails to compile under -fno-exceptions, report the exact error and STOP.
+API (binding), in redact.h
+std::string redact_secrets(std::string_view text);
+The replacement text is exactly [REDACTED]. Purpose: log lines and error messages must never carry API keys (ARCHITECTURE.md, secrets rail).
 
-TESTS (suite CoreResult, in tests/result_test.cpp; compare strings as std::string with EXPECT_EQ, never const char* against a literal)
-1. OkHoldsValue: Result<int>::ok(5): is_ok true, bool true, value() == 5.
-2. ErrHoldsMessage: Result<int>::err(Error{"boom"}): is_ok false, bool false, error().message == std::string("boom").
-3. ValueOrReturnsFallbackOnError and ValueOrReturnsValueOnSuccess.
-4. ConstAccess: const Result<std::string>, value() returns the stored string.
-5. MoveOnlyValueCanBeTaken: Result<std::unique_ptr<int>> ok(make_unique<int>(9)); std::move(r).value() yields the pointer with *p == 9.
-6. StatusOkAndErr: ok_status() is ok; Status::err(Error{"x"}) is not ok and keeps the message.
-7. ValueOnErrorAborts: EXPECT_DEATH(Result<int>::err(Error{"e"}).value(), "Result::value\\(\\) called on an error") with ::testing::FLAGS_gtest_death_test_style = "threadsafe" set first in the test.
-8. ErrorOnSuccessAborts: the same style with "Result::error\\(\\) called on a success".
+RULES (binding). Scan the input left to right. At each position try rule A, then B, then C. The first rule that matches replaces its span and scanning continues right after the span. If none matches, copy the character unchanged. All letter comparisons are ASCII case-insensitive, done with your own small function. "Word start" at position i means: i is 0, or the character before i is not an ASCII letter or digit (so '_', '-', ':', '"' and space all count as non-alphanumeric).
+A. Named field. Names (matched at a word start): api_key, apikey, api-key, password, passwd, secret, token, authorization. After the name: optionally one closing quote (" or '), then optional spaces or tabs, then one ':' or '=', then optional spaces or tabs, then optionally one opening quote (" or '). What follows is the value. The value ends (exclusive) at the first whitespace, ", ', comma, semicolon, ampersand or '}'. EXCEPTION for the name authorization: its value ends at the first ", ', comma, '\n' or '\r' (so it may contain spaces). If the value is empty, rule A does not match. Otherwise output everything up to the value start unchanged (original letter case), then [REDACTED], and skip the value.
+B. Bearer. At a word start: the word bearer, then one or more spaces, then a run of characters that are not whitespace, ", ', comma or semicolon, with run length at least 8. Output the original bearer word and the spaces unchanged, then [REDACTED], and skip the run.
+C. Key prefixes at a word start (prefix case-sensitive): sk- followed by at least 16 characters from [A-Za-z0-9_-], or AIza followed by at least 30 characters from the same set. The whole token (prefix plus the maximal run of those characters) becomes [REDACTED].
+Known limitation, say it in a comment in redact.h: a bare key= query parameter is not masked (too many false positives).
+
+TESTS (suite CoreRedact, in tests/redact_test.cpp; compare as std::string with EXPECT_EQ, never const char* against a literal; use C++ raw string literals where quotes make escapes hard to read)
+1. PlainTextUnchanged: "n_tokens=128 slot idle; max_tokens: 4096 ok" is returned unchanged.
+2. EmptyValuesUnchanged: "" gives ""; "token=" unchanged; "token=&x=1" unchanged.
+3. AuthorizationHeaderLine: "Authorization: Basic dXNlcjpwYXNz\nnext" gives "Authorization: [REDACTED]\nnext".
+4. AuthorizationInJson: {"Authorization":"Bearer x12345678","a":1} gives {"Authorization":"[REDACTED]","a":1}.
+5. BearerInText: "header Bearer abcdef123456 sent" gives "header Bearer [REDACTED] sent".
+6. ShortBearerWordKept: "bearer of news" unchanged.
+7. SkKeyRedacted: "key sk-ant-api03-abcdefghijklmnop end" gives "key [REDACTED] end".
+8. SkPrefixInsideWordKept: "task-force-abcdefghijklmnopqrstuvwxyz" unchanged, and "sk-1" unchanged.
+9. GoogleKeyRedacted: "use " + "AIza" + std::string(35, 'x') + " now" gives "use [REDACTED] now".
+10. JsonFieldRedacted: {"api_key":"abc123","model":"m"} gives {"api_key":"[REDACTED]","model":"m"}.
+11. EnvStyleRedacted: "OPENAI_API_KEY=abc123 next" gives "OPENAI_API_KEY=[REDACTED] next".
+12. UrlQueryRedacted: "GET /v1?api_key=def&x=1" gives "GET /v1?api_key=[REDACTED]&x=1".
+13. SpacesAndQuotes: password = "hunter2" ok gives password = "[REDACTED]" ok.
+14. MultipleFields: "token=a1 secret=b2" gives "token=[REDACTED] secret=[REDACTED]".
+15. Idempotent: for the inputs of tests 4, 5, 10 and 14, redact_secrets(redact_secrets(x)) equals redact_secrets(x).
 
 STRICT RAILS
 1. ONE step only. Do not commit, push or stage anything. Do not run the GUI program.
 2. Touch only the files named above. No docs, LICENSE, opencode.json, res/.
-3. Paste raw command output in fenced blocks, unaltered. Never use "..." inside a raw block, never summarize in place of raw output, never retype output by hand. If you trim, cut only from the end and write "[N lines trimmed]".
+3. Paste raw command output in fenced blocks, unaltered. Never use "..." inside a raw block, never summarize in place of raw output, never retype output by hand. If you trim, cut only from the end and write "[N lines trimmed]". An empty output is an empty raw block.
 4. Show every created file in full and every modified file as the raw git diff output.
-5. No C++ exceptions, no new dependencies, no invented functions. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix.
+5. No C++ exceptions, no new dependencies, no invented functions. If a test fails because the RULES text and a TEST disagree, report both and STOP; do not guess. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix.
 
 STEPS
 STEP 1 (the only step):
 1. Run: git --no-optional-locks status --short. It must print nothing. If it prints anything, STOP and report it.
 2. Make the changes in CONTEXT.
 3. Run: cmake -S . -B build (last 10 lines), cmake --build build (last 15 lines), ctest --test-dir build --output-on-failure (in full).
-4. Flag proof: python3 -c "import json;[print(e['file'].split('/')[-1], '-fno-exceptions' in e['command']) for e in json.load(open('build/compile_commands.json'))]" (raw). Expected: result.cpp True; False only for the test files, True for every other file.
-5. Proofs (raw, with exit codes): grep -rL "SPDX-License-Identifier: GPL-3.0-or-later" src tests --include=*.cpp --include=*.h (expected empty); grep -rniE "gtk|gdk|pango|gtksourceview|vte" src/core src/agent (expected empty); grep -rnE "throw|try|catch" src/core/result.h src/core/result.cpp (expected empty); wc -l src/core/result.h src/core/result.cpp tests/result_test.cpp.
+4. Flag proof: python3 -c "import json;[print(e['file'].split('/')[-1], '-fno-exceptions' in e['command']) for e in json.load(open('build/compile_commands.json'))]" (raw). Expected: redact.cpp True; False only for the test files, True for every other file.
+5. Proofs (raw, with exit codes): grep -rL "SPDX-License-Identifier: GPL-3.0-or-later" src tests --include=*.cpp --include=*.h (expected empty); grep -rniE "gtk|gdk|pango|gtksourceview|vte" src/core src/agent (expected empty); grep -rnwE "throw|try|catch|regex|tolower" src/core/redact.h src/core/redact.cpp (expected empty); grep -niE "glib|gio|g_" src/core/redact.h src/core/redact.cpp (expected empty); wc -l src/core/redact.h src/core/redact.cpp tests/redact_test.cpp.
 6. Run: git --no-optional-locks status --short (raw), then git --no-optional-locks diff -- src/core/CMakeLists.txt tests/CMakeLists.txt (raw).
-EVIDENCE: raw blocks for items 1 to 6, every new file in full, the namespace used, and the test count from ctest.
+EVIDENCE: raw blocks for items 1 to 6, every new file in full, and the test count from ctest (expected 49 in total: 34 existing plus 15 new).
 
 End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" and cease all generation.
 ````
@@ -85,6 +94,9 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - 2026-11-05 — (Adam) **History rewrite**: drop all history before the M0.1 reset commit (`39d9016`), which becomes the root; replay later commits; one force-push to `origin main` after the M0.3 commit; backup tag kept locally. Reason: the Crimson code lives in older history. Old objects may stay reachable on GitHub by hash until GitHub purges them. Done 2026-11-05: new root `67e7e70`, force-pushed as `13ee5bc`; trees identical to the backup (`git diff --stat` empty).
 - 2026-11-05 — M0.4 (`SignalConnection`, `connect<Sig>`, 11 tests) executed by Qwen, audited PASS WITH NOTES (notes in section 1). Fresh check: `-fno-exceptions` on the 5 non-test sources and off the 5 test sources, `-Werror` on all 10, SPDX in all .cpp/.h, no GTK names in core or agent, the only `g_signal_connect` hits are `signal.h` (`_data`) and `main.cpp`. `std::function` compiles under `-fno-exceptions`.
 - 2026-11-05 — (Adam) **File size and responsibility** (AGENTS.md rule 16, ARCHITECTURE.md section 5): one responsibility per file; review above 300 lines, split above 500 (tests and data 500 and 800), functions over 50 lines flagged; UI one widget or panel class per file pair; `wc -l` in every report; M0.5c enforces it with a script. M0.5 split into M0.5a, b, c.
+- 2026-11-05 — (Adam) **Dogfooding**: the first point at which Vermilion builds itself is M4.3 (Output pane); a second marker at M4.6 (primary editor, CLion kept only as the Qwen host) and a third at M5.5 (built-in agent trial, Orchestrator proposal) are recorded in `docs/roadmap.md`. The earlier proposal at M2.2 was dropped.
+- 2026-11-05 — M0.5a (`Error`, `Unit`, `Result<T>`, `Status`, 9 tests, 34 in total) executed by Qwen, audited PASS WITH NOTES (notes in section 1).
+- 2026-11-05 — (Orchestrator, within the gate-size rule) **M0.5b split**: b1 `redact_secrets` (pure text, no GLib) and b2 the log layer. Wrapper-rule decision for logging: a thin `vermilion::log` layer is allowed because it adds behaviour (redaction of secrets before `g_log`); it is not a pure wrapper.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -104,6 +116,8 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - Dropped and not scheduled: git integration, multi-cursor, theme system, SSH, session restore, indexed search, plugin hook.
 
 ## 4. Session Log  *(newest first, keep 10)*
+### 2026-11-05 (night, later) — M0.5a audit, dogfooding, M0.5b1
+- Resumed at `81dd030`; old tags confirmed removed. Adam set the first dogfooding point at M4.3 (roadmap markers added). M0.5a report audited PASS WITH NOTES (34 tests). M0.5b split; M0.5b1 prompt written. Open: M0.5a and docs commits and push, M0.5b1 run and audit, then M0.5b2, M0.5c.
 ### 2026-11-05 (night) — Session handoff
 - Adam confirmed `git ls-remote --tags origin` is empty and that `bafd9e2` is HEAD; M0.5a prompt not yet issued (Adam will run it next session). Open: handoff commit, tag cleanup (local), M0.5a run and audit, then M0.5b and M0.5c.
 ### 2026-11-05 (evening, late) — M0.4 audit, size rules

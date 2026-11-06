@@ -9,6 +9,7 @@
 | v0.3 | Debugger (DAP) | M6 |
 | v0.4 | Model monitor panel, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M7 |
 | v1.0 | Packaging, documentation, notices | M8 |
+**Dogfooding markers (◆)**: the gates where Adam starts building Vermilion with Vermilion: DOGFOOD 1 at M4.3 (self-build; Adam's first one, set 2026-11-05), 2 at M4.6 (primary editor), 3 at M5.5 (built-in agent trial; proposed, Adam confirms or moves it).
 ctxmon logic (M1) is built early because it is self-contained: the Python original is an executable specification, which makes it the best first job to prove the workflow with the local agent.
 
 ## M0: Reset and foundation
@@ -19,7 +20,8 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 | M0.3 | Fix target linkage (`-fno-exceptions` must not reach the tests); `src/ui/gtkx` library with `ObjectPtr` and string helpers, tested without a display | Compiles; `vermilion_gtkx_tests` pass; compile commands show tests without `-fno-exceptions` | Qwen |
 | M0.4 | `gtkx` signal connections by lambda (RAII disconnect) | Tests with `GListStore` and `GSimpleAction` pass | Qwen |
 | M0.5a | `Error` and `Result<T>` types in core (`Status` = `Result<Unit>`), tested incl. death tests for misuse | Tests pass; header compiles under `-fno-exceptions` | Qwen |
-| M0.5b | Logging (GLib `g_log` with a `vermilion` domain; decide at the gate whether a thin layer is needed, per the wrapper rule) | Tests pass; no secrets in log output | Qwen |
+| M0.5b1 | `redact_secrets(std::string_view)` in core: masks API keys, bearer tokens and secret-named fields (pure text, no GLib) | Tests pass; header and source compile under `-fno-exceptions` | Qwen |
+| M0.5b2 | Log layer over GLib `g_log` (domain `vermilion`), every message passed through `redact_secrets`; links GLib into core. A thin layer is allowed because it adds redaction (wrapper rule) | Tests capture messages with a log handler; no secrets in log output | Qwen |
 | M0.5c | Check script: SPDX headers on every source file, plus a file-size report (review above 300 lines, fail above 500; tests and data 500 and 800; AGENTS.md rule 16) | Script finds no file without a header and reports sizes | Qwen |
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
@@ -56,10 +58,10 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 |---|---|---|---|
 | M4.1 | Project file model (build, run) in core | Tests | Plan first |
 | M4.2 | Build-system detection presets | Tests on fixture folders | Qwen |
-| M4.3 | Run on `GSubprocess`, Output pane | Builds Vermilion itself | Qwen |
+| M4.3 | Run on `GSubprocess`, Output pane | Builds Vermilion itself. **◆ DOGFOOD 1: Vermilion edits and builds its own source** | Qwen |
 | M4.4 | Problem matchers, Problems list, clickable links | Tests on sample compiler output | Qwen |
 | M4.5 | VTE terminal tabs | Shell in the opened folder | Qwen |
-| M4.6 | v0.1 review and tag | Adam signs off | Adam |
+| M4.6 | v0.1 review and tag | Adam signs off. **◆ DOGFOOD 2: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam |
 
 ## M5: Agent core (v0.2)
 | Gate | Work | Done when | Who |
@@ -68,7 +70,7 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 | M5.2 | Tool registry and the eight tools | Tests per tool | Qwen |
 | M5.3 | Permission engine: presets, rules, hard guards, never-send list | Rule-matching tests incl. guards | Plan first |
 | M5.4 | Agent loop with limits | Tests with a scripted provider | Qwen |
-| M5.5 | Chat UI in the Agent tab: Stop, approvals, Copy buttons | Manual check | Qwen |
+| M5.5 | Chat UI in the Agent tab: Stop, approvals, Copy buttons | Manual check. **◆ DOGFOOD 3 (proposed): first try of the built-in agent against local llama.cpp on small tasks; CLion/OpenCode remains the primary agent until Adam judges it good enough** | Qwen |
 | M5.6 | Setup dialog and keyring | Endpoint configured without editing files | Plan first |
 | M5.7 | `/clear`, archive, `/history`, `/copy` | Archive round trip tests | Qwen |
 | M5.8 | Diff engine (Myers, aligned rows, word-level) | Tests incl. edge cases | Qwen |
