@@ -1,0 +1,44 @@
+# Visual C++ 6.0 IDE caches
+*.ncb
+*.opt
+*.plg
+*.aps
+*.dep
+
+# Backups
+*.bak
+
+# Build output — each .vcxproj writes to its own $(ProjectDir)build/<Configuration>/
+# (so the main project lands at /build/ and tests/cedt_tests.vcxproj at /tests/build/)
+**/build/
+
+# Installer build outputs: dist/redist/vc_redist.x86.exe (downloaded by
+# build_installer.ps1) and dist/crimson-editor-*-setup.exe (ISCC output).
+dist/
+
+# Modern Visual Studio
+.vs/
+
+# The 900,000-line manual-test fixture (~56 MB). Regenerate it with
+# `python tests/data/make-fixtures.py --big` — see docs/manual-test-plan.md.
+tests/data/big.txt
+*.vcxproj.user
+
+# vcpkg manifest-mode install dir
+vcpkg_installed/
+
+# Windows
+Thumbs.db
+
+# Personal AI-assistant instructions (kept locally, not shared)
+CLAUDE.md
+
+# Claude Code personal settings (per-user permissions; shared config, if any,
+# would live in .claude/settings.json and can be committed)
+.claude/settings.local.json
+
+# CLion / CMake
+cmake-build-*/
+.idea/
+
+skills/
