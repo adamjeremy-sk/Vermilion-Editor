@@ -165,8 +165,6 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 **Prompt sizing**: ~10 hits needing context per gate; counts-only for high-volume sweeps; at most 10 commands per tool call.
 
 ## 3. Backlog & Known Debt  *(edit freely)*
-- Install the development packages (Decision Log, 2026-11-05) before M0.2.
-- M0.2 must also rewrite `.gitignore` (the old one targets Visual Studio): ignore `build/`, `cmake-build-*/`, `.idea/`, `skills/`.
 - Spikes: GtkSourceView on a 50 MB file (M2.0); gdb built-in DAP (M6.2); providers' usage-on-stream support (M5.1).
 - Hardening later: agent shell confinement (Bubblewrap).
 - Packaging decision (M8): `.deb` or AppImage; Flatpak excluded.
