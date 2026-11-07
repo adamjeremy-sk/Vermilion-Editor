@@ -4,82 +4,51 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-06 ~21:30 (M0.5d1 PASS after fix 1; gate commit, docs commit and push pending; M0.5d2 prompt ready; Adam approved a clang-format check, so M0.5d3 format pass is added before M0.5c) |
+| Updated | 2026-11-06 ~21:40 (M0.5d2 PASS after fix 1; awaiting Adam's gate commit, docs commit and push; M0.5d3 prompt ready) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info` first; if `connectedFolders` already lists `/home/adam/Projects/vermilion-editor` (it did on 2026-11-06), no request is needed. Otherwise call `device_request_folder_access` for that path once (the grant is recursive). If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Note: `device_bash` runs in a VM on Adam's machine, so tool versions seen there (python, awk) are not necessarily Adam's host versions. Editing rights are unchanged: root orchestration docs and `docs/` only, never code. The model-monitor original is in the repo at `reference/ctxmon/`. |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, GPL-3.0-or-later. Written from scratch; not based on CrimsonEditor. |
-| Repo state | Verified 2026-11-06 ~21:20: HEAD `e17e47b` (docs: no carried debt rule, fix loops, M0.5d1 ready), `e74ec72` (M0.5b2). Uncommitted: the 9 M0.5d1 files (`src/ui/gtkx/object_ptr.h`, `signal.h`, `signal.cpp`, `string.h`, `string.cpp`, `src/ui/main.cpp`, `tests/gtkx_object_ptr_test.cpp`, `tests/gtkx_signal_test.cpp`, `tests/gtkx_string_test.cpp`) and the Orchestrator docs edits (`HANDOFF.md`, `docs/roadmap.md`). |
-| Version / HEAD | `e17e47b` plus the M0.5d1 gate commit and the docs commit; read `git log --oneline -3`. Code: `vermilion_core` (`version`, `result`, `redact`, `log`), `vermilion_agent`, `vermilion_gtkx`, executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests` (58 tests). |
-| Tests | 58 (2 core/agent, 9 CoreResult, 15 CoreRedact, 5 CoreLog, 11 GtkxObjectPtr, 4 GtkxString, 12 GtkxSignal), raw ctest output seen in the M0.5d1 fix 1 report. Orchestrator verified fresh 2026-11-06: exactly the 9 files changed, purpose comments on line 3, `detail` namespace, only `g_signal_connect_data` left in `src`, no line over 100 columns in `src` or `tests`. Adam confirmed the window still opens. The Orchestrator does not build. |
-| Active task | Roadmap M0 debt clearing and checks: M0.5d1 done (awaiting commit). Next, in this order: M0.5d2 (core and agent debt and purpose comments; 65 tests), M0.5d3 (one-time `clang-format -i` pass), M0.5c (check script plus ctests `SourceCheck.Repo` and `Format.Check`), then the M0 documentation sweep and M1. |
-| Gate position | M0.5d1 PASS (fix 1: four lines over 100 columns, caused by the prompt, rewrapped), not yet committed. M0.5d2 prompt written (verbatim below), not issued. |
-| Awaiting | Adam: (1) gate commit `git add src/ui/gtkx/object_ptr.h src/ui/gtkx/signal.h src/ui/gtkx/signal.cpp src/ui/gtkx/string.h src/ui/gtkx/string.cpp src/ui/main.cpp tests/gtkx_object_ptr_test.cpp tests/gtkx_signal_test.cpp tests/gtkx_string_test.cpp && git commit -m "M0.5d1: gtkx debt cleared, main.cpp on gtkx::connect, purpose comments"`; (2) docs commit `git add HANDOFF.md docs/roadmap.md && git commit -m "docs: handoff after M0.5d1, clang-format gate, M0.5d2 ready"`; (3) `git status --short` empty, then `git push origin main`; (4) replace `<SHORT_HEAD>` in the M0.5d2 prompt, paste it into a fresh Qwen session; (5) paste Qwen's report. |
-| Last prompt issued | **M0.5d2** written, NOT yet issued to Qwen. Verbatim text below, followed by the stored M0.5c prompt (issue after M0.5d3; before issuing, add the `Format.Check` ctest and the clang-format version found at M0.5d3). |
-| Next action | Audit the M0.5d2 report fresh: git status (exactly the 13 files), full `git diff`, line 3 of each file, `<utility>` in `result.h`, the three-line stop expression in `redact.cpp`, no line over 100, raw ctest 65 of 65. Fix loops until no note is open, then commit and push. Then write M0.5d3: `clang-format --version` first, then `clang-format -i` on every `.cpp` and `.h` under `src` and `tests`, evidence `git diff --stat`, `clang-format --dry-run --Werror` (empty), build and full ctest; the Orchestrator reads the whole diff (formatting only, no token changes). |
+| Repo state | Verified 2026-11-06 ~21:35: HEAD `8aeb656` (docs: handoff, M0.5d2 ready), in sync with `origin/main`. Uncommitted: the 13 M0.5d2 files (audited PASS) plus `HANDOFF.md`, `AI_ONBOARDING.md`, `docs/roadmap.md` (milestone-review rule, this update). |
+| Version / HEAD | `8aeb656` plus Adam's two commits (M0.5d2, docs); read `git log --oneline -3`. Code: `vermilion_core` (`version`, `result`, `redact`, `log`), `vermilion_agent`, `vermilion_gtkx`, executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests` (65 tests). |
+| Tests | 65 (2 core/agent, 11 CoreResult, 20 CoreRedact, 5 CoreLog, 11 GtkxObjectPtr, 4 GtkxString, 12 GtkxSignal); full raw ctest output seen in M0.5d2 fix 1 (exit 0). Orchestrator verified fresh: exactly 13 files, +69/-2, diff matches items A to E, no line over 100 columns, `TEST` count 65. The Orchestrator does not build. |
+| Active task | Roadmap M0 debt clearing and checks: M0.1 to M0.5d2 done (M0.5d2 not yet committed). Next: M0.5d3 (one-time `clang-format -i` pass), M0.5c (check script plus ctests `SourceCheck.Repo` and `Format.Check`), the M0 documentation sweep, then the **M0 milestone review with Adam** (new rule, AI_ONBOARDING.md section 2 item 7), and only then M1. |
+| Gate position | M0.5d2 PASS (after fix 1). M0.5d3 prompt written (verbatim below), not issued. |
+| Awaiting | Adam: commit M0.5d2 and the docs, push; then paste the M0.5d3 prompt into a fresh Qwen session after replacing `<SHORT_HEAD>` with `git rev-parse --short HEAD`; paste the report. |
+| Last prompt issued | M0.5d2 fix 1 (evidence only, passed). **M0.5d3** written, NOT yet issued; verbatim below. |
+| Next action | Audit M0.5d3 fresh: `git status` (only `M` lines in `src`/`tests`), read the WHOLE `git diff` (formatting only; the SAME/DIFF whitespace-stripped token check: every DIFF file must be explained by include sorting, string-literal splitting or comment reflow and is checked by eye), `clang-format --dry-run --Werror` empty, raw ctest 65/65. Record the clang-format version. Fix loops, then commit and push. Then finish the stored M0.5c prompt: add the `Format.Check` ctest (`clang-format --dry-run --Werror` on the same file set; expected count 67 then), Last verified line, `<SHORT_HEAD>`. |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. |
 
-**Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: M0.5d2: (g) `result.h` lacks `#include <utility>`; (h) `value() &` and `value() const&` abort paths not death-tested; (i) `redact.cpp` rule A does not stop at `\v`/`\f`; (j) untested redact paths: single-quoted values, tab separators, `authorization` ending at a comma, a name at the very end of the input; (k) purpose comments missing in `src/core`, `src/agent` and their tests. M0.5d3: code not yet checked against `.clang-format` (clang-format is not installed in the Orchestrator's VM, so only Qwen can run it). Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every line they dictate within 100 columns (M0.5d1 fix 1); Qwen once replaced raw output with a summary table (M0.5d1), so prompts say "one raw block per command, never a table"; do not run dependent Orchestrator tool calls in parallel (a doc edit and its copy-back raced twice on 2026-11-06). Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
+**Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: M0.5d3: code not yet checked against `.clang-format` (clang-format is not installed in the Orchestrator's VM, so only Qwen can run it). Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every line they dictate within 100 columns (M0.5d1 fix 1); Qwen replaced raw output with summaries twice (M0.5d1 table; M0.5d2 ctest tail and "see above" for the diff), so prompts say "one raw block per command, never a table" and the Orchestrator reads diffs itself (candidate lesson for the M0 review: whether to make this an AGENTS.md rule); do not run dependent Orchestrator tool calls in parallel. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
 **Open decisions (Adam's call)**: none block M0. Names of config files and JSON schemas are fixed when first written (ARCHITECTURE.md section 10); gdb DAP reliability is checked at M6.2; packaging at M8.
 
-## Last prompt (verbatim)  *(M0.5d2, written 2026-11-06 evening, not yet executed; replace `<SHORT_HEAD>` with `git rev-parse --short HEAD` after the M0.5d1 and docs commits)*
+## Last prompt (verbatim)  *(M0.5d3, written 2026-11-06 ~21:40, not yet executed; replace `<SHORT_HEAD>` with the short HEAD after Adam's M0.5d2 and docs commits)*
 ````
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: M0.5d1 PASS, committed and pushed; tree clean at <SHORT_HEAD>
+Last verified: M0.5d2 PASS, committed and pushed; tree clean at <SHORT_HEAD>
 
 CONTEXT (BINDING)
-Gate M0.5d2 of docs/roadmap.md: clear the known debt in src/core, src/agent and their tests (AGENTS.md rule 17). No new features. Every line you write stays within 100 columns (.clang-format ColumnLimit).
-Files (EDIT only these 13): src/core/version.h, src/core/version.cpp, src/core/result.h, src/core/result.cpp, src/core/redact.cpp, src/core/log.cpp, src/agent/agent_info.h, src/agent/agent_info.cpp, tests/core_version_test.cpp, tests/agent_info_test.cpp, tests/result_test.cpp, tests/redact_test.cpp, tests/log_test.cpp. No CMake changes.
-
-A. Purpose comments (AGENTS.md rule 16). Insert exactly this line as the new line 3 of each file, directly after the copyright line; change nothing else around it:
-- src/core/version.h: // Version string of Vermilion Editor.
-- src/core/version.cpp: // Implementation of the version string.
-- src/core/result.h: // Error, Unit, Result<T> and Status: error handling without exceptions.
-- src/core/result.cpp: // Explicit instantiations of Result<T>, so the template is compiled with the core flags.
-- src/core/log.cpp: // Implementation of the logging layer: redact the message, then pass it to g_log as "%s".
-- src/agent/agent_info.h: // Identity of the built-in agent (its name).
-- src/agent/agent_info.cpp: // Implementation of the agent identity.
-- tests/core_version_test.cpp: // Tests for the core version string.
-- tests/agent_info_test.cpp: // Tests for the agent identity.
-- tests/result_test.cpp: // Tests for Result<T> and Status, including death tests for misuse.
-- tests/redact_test.cpp: // Tests for redact_secrets: rules A (named fields), B (bearer tokens) and C (key prefixes).
-- tests/log_test.cpp: // Tests for the logging layer: domain, level mapping, redaction and format safety.
-(src/core/redact.cpp already has one; do not change it.)
-
-B. src/core/result.h: add #include <utility> between #include <type_traits> and #include <variant> (std::move and std::in_place_index come from it).
-
-C. tests/result_test.cpp: add two death tests (suite CoreResult), written like the existing ValueOnErrorAborts (same ::testing::FLAGS_gtest_death_test_style = "threadsafe"; line, same EXPECT_DEATH message regex "Result::value\\(\\) called on an error"):
-1. ValueLvalueOnErrorAborts: Result<int> r = Result<int>::err(Error{"e"}); EXPECT_DEATH(r.value(), ...);
-2. ValueConstOnErrorAborts: const Result<int> r = Result<int>::err(Error{"e"}); EXPECT_DEATH(r.value(), ...);
-The file already has using vermilion::Error; and using vermilion::Result;.
-
-D. src/core/redact.cpp, rule A: non-auth values must also stop at '\v' and '\f'. Replace the two lines of the non-auth stop expression (currently lines 95 and 96, the ": (c == ' ' ..." line and the "c == ',' ..." line under it) with exactly these three lines (30 and 33 spaces of indent, as the current lines have):
-                              : (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' ||
-                                 c == '\r' || is_quote(c) || c == ',' || c == ';' || c == '&' ||
-                                 c == '}');
-The authorization branch (is_auth ? ...) is unchanged.
-
-E. tests/redact_test.cpp: add five tests (suite CoreRedact); compare std::string values with EXPECT_EQ as the file does:
-1. VerticalTabAndFormFeedEndValue: "token=abc\vnext" gives "token=[REDACTED]\vnext"; "secret=xyz\fmore" gives "secret=[REDACTED]\fmore".
-2. SingleQuotedValue: "password='hunter2' ok" gives "password='[REDACTED]' ok"; "'token': 'abc'" gives "'token': '[REDACTED]'".
-3. TabSeparators: "token\t=\tabc123\tnext" gives "token\t=\t[REDACTED]\tnext".
-4. AuthorizationEndsAtComma: "Authorization: Basic abc, next" gives "Authorization: [REDACTED], next".
-5. NameAtEndOfInputUnchanged: "token", "my password" and "Authorization:" each come back unchanged.
-If any of these expectations fails, paste the raw failure and STOP; do not change redact.cpp beyond item D to make a test pass.
+Gate M0.5d3 of docs/roadmap.md: a one-time formatting pass with the committed .clang-format (Adam 2026-11-06). Formatting only, no other change of any kind.
+Files: every .cpp and .h under src and tests (24 files today), changed ONLY by running clang-format -i. Do not edit any file by hand. Do not touch .clang-format, any CMake file, docs, or anything outside src and tests.
 
 STRICT RAILS
 1. ONE step only. Do not commit, push or stage anything. Do not run the GUI program.
-2. Touch only the 13 files named above.
+2. Only clang-format writes files. If the build or a test fails after the format pass, paste the raw error lines and STOP; do not fix anything by hand.
 3. Paste raw command output in fenced blocks, unaltered, one block per command. Never use "..." inside a raw block, never replace raw output with a summary or a table, never retype output by hand. If you trim, cut only from the end and write "[N lines trimmed]". An empty output is an empty raw block.
-4. Every modified file is shown as raw git diff output (all 13 are tracked).
-5. No C++ exceptions, no new dependencies, no invented functions. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix. If something in this prompt does not compile as written, say so and show the minimal fix.
+4. Do NOT paste the full git diff; the Orchestrator reads it directly from the tree. Paste exactly the outputs asked for below, nothing in their place.
+5. No new dependencies. If clang-format is not installed, say so and STOP; do not install anything.
 
 STEPS
 STEP 1 (the only step):
 1. Run: git --no-optional-locks status --short. It must print nothing. If it prints anything, STOP and report it.
-2. Make the changes A to E.
-3. Run: cmake --build build 2>&1 | tail -n 15; echo "exit=$?" then ctest --test-dir build --output-on-failure; echo "exit=$?" (in full). Expected 65 tests: 58 existing plus 2 CoreResult plus 5 CoreRedact.
-4. Proofs (raw): for f in src/core/version.h src/core/version.cpp src/core/result.h src/core/result.cpp src/core/redact.cpp src/core/log.cpp src/agent/agent_info.h src/agent/agent_info.cpp tests/core_version_test.cpp tests/agent_info_test.cpp tests/result_test.cpp tests/redact_test.cpp tests/log_test.cpp; do printf '%s: ' "$f"; sed -n 3p "$f"; done; grep -n "#include" src/core/result.h; awk 'length>100 {print FILENAME":"FNR": "length}' src/core/*.h src/core/*.cpp src/agent/*.h src/agent/*.cpp tests/*.cpp; echo "exit=$?" (expected no lines); wc -l src/core/version.h src/core/version.cpp src/core/result.h src/core/result.cpp src/core/redact.cpp src/core/log.cpp src/agent/agent_info.h src/agent/agent_info.cpp tests/core_version_test.cpp tests/agent_info_test.cpp tests/result_test.cpp tests/redact_test.cpp tests/log_test.cpp.
-5. Run: git --no-optional-locks status --short (raw; expected exactly the 13 files as M), then git --no-optional-locks diff (raw, all 13 files).
-EVIDENCE: raw blocks for items 1 to 5 and the test count from ctest.
+2. Run: command -v clang-format; clang-format --version; echo "exit=$?"
+3. Run: find src tests -type f \( -name '*.cpp' -o -name '*.h' \) | wc -l (expected 24), then: find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format -i; echo "exit=$?"
+4. Proofs (raw, one block each):
+   a. git --no-optional-locks diff --stat
+   b. for f in $(find src tests -type f \( -name '*.cpp' -o -name '*.h' \) | LC_ALL=C sort); do if [ "$(git show HEAD:"$f" | tr -d ' \t\n')" = "$(tr -d ' \t\n' < "$f")" ]; then echo "SAME $f"; else echo "DIFF $f"; fi; done
+   c. find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror; echo "exit=$?" (expected no output, exit=0)
+   d. find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 awk 'length>100 {print FILENAME":"FNR": "length}'; echo "exit=$?" (expected no lines)
+5. Run: set -o pipefail; cmake --build build 2>&1 | tail -n 15; echo "exit=$?" then ctest --test-dir build --output-on-failure; echo "exit=$?" (ctest in full, every line). Expected 65 tests.
+6. Run: git --no-optional-locks status --short (raw; expected only " M" lines for files under src and tests, no "??" lines).
+EVIDENCE: raw blocks for items 1 to 6. Then, for each file marked DIFF in 4b, one sentence naming what clang-format changed besides whitespace (for example include order, a split string literal, a reflowed comment). Do not change anything because of it.
 
 End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" and cease all generation.
 ````
@@ -123,7 +92,7 @@ STEP 1 (the only step):
    c. tools/check_sources.sh <(printf '// SPDX-License-Identifier: GPL-3.0-or-later\n// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)\n// Test input.\n'; yes '' | head -n 298) (expected REVIEW, 301 lines, exit 0)
    d. tools/check_sources.sh <(printf '// SPDX-License-Identifier: GPL-3.0-or-later\n// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)\n// Test input.\n'; yes '' | head -n 498) (expected FAIL, 501 lines, exit 1)
    e. tools/check_sources.sh no/such/file.cpp (expected MISSING-FILE, exit 2)
-4. Run: cmake -S . -B build (last 10 lines), cmake --build build (last 15 lines), ctest --test-dir build --output-on-failure (in full). Expected 55 tests: 54 existing plus SourceCheck.Repo.
+4. Run: cmake -S . -B build (last 10 lines), cmake --build build (last 15 lines), ctest --test-dir build --output-on-failure (in full). Expected 66 tests: 65 existing plus SourceCheck.Repo (67 once Format.Check is added).
 5. Proofs (raw): ls -l tools/check_sources.sh (must show the x bits); head -n 4 tools/check_sources.sh; grep -nE "mktemp|/tmp|python|curl|wget" tools/check_sources.sh (expected empty); wc -l tools/check_sources.sh tests/CMakeLists.txt.
 6. Run: git --no-optional-locks status --short (raw; expected exactly ?? tools/ and M tests/CMakeLists.txt), then git --no-optional-locks diff -- tests/CMakeLists.txt (raw).
 EVIDENCE: raw blocks for items 1 to 6, the new file in full, and the test count from ctest.
@@ -160,6 +129,8 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - 2026-11-06 — (Adam) **No carried debt, fix loops.** Every audit note is fixed before the gate commit; small fixes go to Qwen as same-session CONTINUATION prompts (no wipe); if Qwen is low on context Adam says so and the fix rolls into the next full prompt. Orchestrator proposals accepted by Adam: write it into AGENTS.md (rule 17) and AI_ONBOARDING.md section 1 and 2; continuation prompt format; one gate commit with fixes folded in; debt definition (defects, includes, types, purpose comments, untested paths of existing code, stale docs; remarks that depend on unwritten code go to the gate that writes them); clear the older backlog now as M0.5d1 and M0.5d2 before M0.5c. Rule 16 detail: the purpose comment is the line directly after the copyright line, and M0.5c checks it.
 - 2026-11-06 — M0.5d1 (gtkx `detail` namespace, `operator bool` comment, 3 `ObjectPtr` assignment tests, disconnect-inside-handler test, `main.cpp` on `gtkx::connect`, purpose comments; 58 tests) executed by Qwen; first report FAIL (summary table instead of raw output; four lines over 100 columns dictated by the prompt), fix 1 in the same session, then PASS. Adam confirmed the window opens.
 - 2026-11-06 — (Adam) **clang-format check**: a ctest `Format.Check` runs `clang-format --dry-run --Werror` on every `.cpp` and `.h` in `src` and `tests`; it comes with M0.5c, after a one-time format pass M0.5d3.
+- 2026-11-06 — M0.5d2 (purpose comments in core, agent and their tests; `<utility>` in `result.h`; 2 death tests; `\v`/`\f` stop in rule A; 5 redact tests; 65 tests) executed by Qwen; report summarised raw output (ctest tail only, diff "see above"); fix 1 (evidence only) gave the full raw ctest, then PASS. Orchestrator verified the diff fresh.
+- 2026-11-06 — (Adam) **Milestone review**: at the end of every milestone (after its last gate and docs sweep are pushed) the Orchestrator and Adam discuss what was accomplished, what was learned and what the next milestone is, before any prompt of the next milestone. Conclusions in `docs/milestones/M<n>-review.md`. Written into AI_ONBOARDING.md section 1 and section 2 item 7 and the roadmap header.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -178,6 +149,10 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - Dropped and not scheduled: git integration, multi-cursor, theme system, SSH, session restore, indexed search, plugin hook.
 
 ## 4. Session Log  *(newest first, keep 10)*
+### 2026-11-06 (night, later) — M0.5d2 audit, milestone-review rule
+- Resumed at `8aeb656`. M0.5d2 issued; report summarised raw output; fix 1 (evidence only) then PASS (65 tests). Adam set the milestone-review rule. M0.5d3 prompt written. Open: M0.5d2 and docs commits and push, M0.5d3, M0.5c, M0 docs sweep, M0 review, M1.1.
+### 2026-11-06 (night) — Session handoff
+- Adam committed and pushed M0.5d1 (`bdd9817`) and the docs (`3dcf41b`); tree clean. M0.5d2 prompt filled in with `3dcf41b`, not yet issued. Open: handoff commit and push, M0.5d2 run and audit, M0.5d3, M0.5c, M0 docs sweep, M1.1.
 ### 2026-11-06 (evening, later) — M0.5d1 audit and fix, clang-format decision
 - M0.5b2 and docs committed and pushed (`e74ec72`, `e17e47b`). M0.5d1 issued; first report FAIL (no raw output, over-long lines from the prompt), fix 1, then PASS (58 tests, window confirmed). Adam approved a clang-format ctest: M0.5d3 format pass added before M0.5c. M0.5d2 prompt written. Open: commits and push, M0.5d2, M0.5d3, M0.5c, M0 docs sweep, M1.1.
 ### 2026-11-06 (evening) — M0.5b2 audit and fix, no-carried-debt rule
@@ -194,5 +169,3 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - M0.2 window confirmed open. M0.3 report audited PASS WITH NOTES (12 new tests, 14 total; flags, SPDX, layer and GTK 3 proofs checked fresh). Adam decided to rewrite history with `39d9016` as the new root, after the M0.3 commit, with one force-push. M0.4 prompt issued. Open: M0.3 commit, docs commit, rewrite and push, M0.4 run and audit.
 ### 2026-11-05 (evening, end) — M0.2 and handoff
 - M0.1 reset done by Adam (`67e7e70 (was 39d9016 before the rewrite)`); M0.2 (CMake skeleton, empty window, 2 tests) executed by Qwen, audited PASS WITH NOTES, committed and pushed by Adam (`5d21e3c` (was ac38710)). The M0.3 prompt (linkage fix plus `gtkx` ObjectPtr and string helpers) was issued; Adam ended the session before running it. Open: docs commit, M0.3 run and audit, then M0.4.
-### 2026-11-05 (evening) — Reset to a greenfield plan
-- Adam abandoned Crimson as the base and cut the scope to the sidebar, the agent, the ctxmon port and build/debug; the Orchestrator read `ctxmon_gtk.py` (1,587 lines, GTK 3, Adam's own GPL-3 code), weighed C versus C++ (C++17 chosen), confirmed the target system (Ubuntu 24.04.5, gdb 15.1) and settled the licence (GPL-3.0-or-later). All decisions are in the Decision Log; ARCHITECTURE.md, docs/roadmap.md, AGENTS.md, AI_ONBOARDING.md, README.md and LICENSE were rewritten; the old decision log, the sidebar requirement and the archive were saved under `docs/`. The Crimson port had reached C6 (see `docs/archive/`). Open: Adam commits the docs, installs packages, runs M0.1.
