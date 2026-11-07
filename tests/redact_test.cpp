@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Tests for redact_secrets: rules A (named fields), B (bearer tokens) and C (key prefixes).
 
 #include <gtest/gtest.h>
 
@@ -105,4 +106,43 @@ TEST(CoreRedact, Idempotent) {
         const std::string once = redact_secrets(in);
         EXPECT_EQ(redact_secrets(once), once);
     }
+}
+
+TEST(CoreRedact, VerticalTabAndFormFeedEndValue) {
+    const std::string in1 = "token=abc\vnext";
+    const std::string want1 = "token=[REDACTED]\vnext";
+    EXPECT_EQ(redact_secrets(in1), want1);
+    const std::string in2 = "secret=xyz\fmore";
+    const std::string want2 = "secret=[REDACTED]\fmore";
+    EXPECT_EQ(redact_secrets(in2), want2);
+}
+
+TEST(CoreRedact, SingleQuotedValue) {
+    const std::string in1 = "password='hunter2' ok";
+    const std::string want1 = "password='[REDACTED]' ok";
+    EXPECT_EQ(redact_secrets(in1), want1);
+    const std::string in2 = "'token': 'abc'";
+    const std::string want2 = "'token': '[REDACTED]'";
+    EXPECT_EQ(redact_secrets(in2), want2);
+}
+
+TEST(CoreRedact, TabSeparators) {
+    const std::string in = "token\t=\tabc123\tnext";
+    const std::string want = "token\t=\t[REDACTED]\tnext";
+    EXPECT_EQ(redact_secrets(in), want);
+}
+
+TEST(CoreRedact, AuthorizationEndsAtComma) {
+    const std::string in = "Authorization: Basic abc, next";
+    const std::string want = "Authorization: [REDACTED], next";
+    EXPECT_EQ(redact_secrets(in), want);
+}
+
+TEST(CoreRedact, NameAtEndOfInputUnchanged) {
+    const std::string a = "token";
+    EXPECT_EQ(redact_secrets(a), a);
+    const std::string b = "my password";
+    EXPECT_EQ(redact_secrets(b), b);
+    const std::string c = "Authorization:";
+    EXPECT_EQ(redact_secrets(c), c);
 }

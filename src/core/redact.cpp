@@ -92,8 +92,9 @@ RuleMatch try_rule_a(const std::string_view& s, std::size_t i) {
         const char c = s[p];
         const bool stop = is_auth
                               ? (is_quote(c) || c == ',' || c == '\n' || c == '\r')
-                              : (c == ' ' || c == '\t' || c == '\n' || c == '\r' || is_quote(c) ||
-                                 c == ',' || c == ';' || c == '&' || c == '}');
+                              : (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' ||
+                                 c == '\r' || is_quote(c) || c == ',' || c == ';' || c == '&' ||
+                                 c == '}');
         if (stop)
             break;
         ++p;

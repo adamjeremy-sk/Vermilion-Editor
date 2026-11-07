@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Tests for Result<T> and Status, including death tests for misuse.
 
 #include <gtest/gtest.h>
 
@@ -68,4 +69,18 @@ TEST(CoreResult, ErrorOnSuccessAborts) {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     EXPECT_DEATH(Result<int>::ok(1).error(),
                  "Result::error\\(\\) called on a success");
+}
+
+TEST(CoreResult, ValueLvalueOnErrorAborts) {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    Result<int> r = Result<int>::err(Error{"e"});
+    EXPECT_DEATH(r.value(),
+                 "Result::value\\(\\) called on an error");
+}
+
+TEST(CoreResult, ValueConstOnErrorAborts) {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    const Result<int> r = Result<int>::err(Error{"e"});
+    EXPECT_DEATH(r.value(),
+                 "Result::value\\(\\) called on an error");
 }

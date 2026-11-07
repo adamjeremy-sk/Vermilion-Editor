@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Implementation of the logging layer: redact the message, then pass it to g_log as "%s".
 
 #include "core/log.h"
 #include "core/redact.h"
