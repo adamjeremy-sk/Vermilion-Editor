@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Tests for gtkx::connect and SignalConnection, using GListStore and GSimpleAction signals.
 
 #include <gtest/gtest.h>
 
@@ -278,4 +279,24 @@ TEST(GtkxSignal, DefaultConstructedIsInactiveAndSafe) {
     conn.detach();
     EXPECT_FALSE(static_cast<bool>(conn));
     SUCCEED();
+}
+
+TEST(GtkxSignal, DisconnectInsideOwnHandler) {
+    ObjectPtr<GSimpleAction> action = ObjectPtr<GSimpleAction>::adopt(
+        static_cast<GSimpleAction*>(g_simple_action_new("test", nullptr)));
+    GSimpleAction* raw = G_SIMPLE_ACTION(action.get());
+
+    int count = 0;
+    SignalConnection conn;
+    conn = connect<void(GSimpleAction*, GVariant*)>(
+        raw, "activate",
+        [&](GSimpleAction*, GVariant*) { ++count; conn.disconnect(); });
+    ASSERT_TRUE(static_cast<bool>(conn));
+
+    g_action_activate(G_ACTION(raw), nullptr);
+    EXPECT_EQ(count, 1);
+    EXPECT_FALSE(static_cast<bool>(conn));
+
+    g_action_activate(G_ACTION(raw), nullptr);
+    EXPECT_EQ(count, 1);
 }

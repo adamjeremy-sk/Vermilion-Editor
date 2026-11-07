@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// RAII signal connections: a lambda connected to a GObject signal, disconnected on destruction.
 
 #pragma once
 
@@ -22,6 +23,7 @@ public:
     SignalConnection(SignalConnection&& other) noexcept;
     SignalConnection& operator=(SignalConnection&& other) noexcept;
 
+    // True until disconnect() or detach(); it does not say whether the instance is still alive.
     explicit operator bool() const;
 
     void disconnect();
@@ -45,6 +47,8 @@ private:
     gulong handler_id_ = 0;
     bool active_ = false;
 };
+
+namespace detail {
 
 template <typename Sig>
 struct Holder;
@@ -71,18 +75,20 @@ void holder_destroy_notify(gpointer data, GClosure* closure) {
     delete static_cast<Holder<Sig>*>(data);
 }
 
+}  // namespace detail
+
 template <typename Sig, typename F>
 SignalConnection connect(gpointer instance, const char* signal_name, F&& callback) {
     if (instance == nullptr) {
         return SignalConnection();
     }
-    std::unique_ptr<Holder<Sig>> holder(new Holder<Sig>());
+    std::unique_ptr<detail::Holder<Sig>> holder(new detail::Holder<Sig>());
     holder->fn = std::forward<F>(callback);
     gulong id = g_signal_connect_data(
         instance, signal_name,
-        G_CALLBACK(&Trampoline<Sig>::call),
+        G_CALLBACK(&detail::Trampoline<Sig>::call),
         holder.get(),
-        &holder_destroy_notify<Sig>,
+        &detail::holder_destroy_notify<Sig>,
         G_CONNECT_DEFAULT);
     if (id == 0) {
         return SignalConnection();

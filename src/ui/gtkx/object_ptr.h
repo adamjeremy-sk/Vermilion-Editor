@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Owning smart pointer for GObject references: adopt, ref and floating-reference sink.
 
 #pragma once
 

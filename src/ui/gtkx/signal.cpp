@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// SignalConnection implementation: disconnects via a weak reference, so a dead instance is safe.
 
 #include "ui/gtkx/signal.h"
 
