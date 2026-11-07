@@ -223,7 +223,7 @@ sudo apt install build-essential cmake pkg-config libgtk-4-dev libgtksourceview-
   libsoup-3.0-dev libsecret-1-dev libvte-2.91-gtk4-dev libgtest-dev clang-format clang-tidy
 ```
 
-Then, once the skeleton exists (gate M0.2):
+Then:
 
 ```bash
 git clone https://github.com/adamjeremy-sk/Vermilion-Editor.git
@@ -235,6 +235,9 @@ ctest --test-dir build --output-on-failure
 
 The project is developed in CLion; opening the folder picks up `CMakeLists.txt`. `build/`, `cmake-build-*/` and `.idea/` are
 ignored by git. There is nothing to install and no release yet.
+
+Vermilion logs through GLib under the log domain `vermilion`, with secrets masked before anything is written. As in any GLib
+program, debug and info messages are hidden by default; run with `G_MESSAGES_DEBUG=vermilion` (or `all`) to see them.
 
 ---
 

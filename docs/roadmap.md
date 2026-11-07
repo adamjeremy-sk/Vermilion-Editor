@@ -22,7 +22,9 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 | M0.5a | `Error` and `Result<T>` types in core (`Status` = `Result<Unit>`), tested incl. death tests for misuse | Tests pass; header compiles under `-fno-exceptions` | Qwen |
 | M0.5b1 | `redact_secrets(std::string_view)` in core: masks API keys, bearer tokens and secret-named fields (pure text, no GLib) | Tests pass; header and source compile under `-fno-exceptions` | Qwen |
 | M0.5b2 | Log layer over GLib `g_log` (domain `vermilion`), every message passed through `redact_secrets`; links GLib into core. A thin layer is allowed because it adds redaction (wrapper rule) | Tests capture messages with a log handler; no secrets in log output | Qwen |
-| M0.5c | Check script: SPDX headers on every source file, plus a file-size report (review above 300 lines, fail above 500; tests and data 500 and 800; AGENTS.md rule 16) | Script finds no file without a header and reports sizes | Qwen |
+| M0.5d1 | Debt clearing (runs before M0.5c; Adam 2026-11-06, no carried debt): `gtkx` internals into `detail`, `SignalConnection` doc comment, `ObjectPtr` assignment tests, disconnect-inside-handler test, `main.cpp` on `gtkx::connect`, purpose comments in `src/ui` and the gtkx tests | Tests pass (58); window still opens (Adam) | Qwen |
+| M0.5d2 | Debt clearing (runs before M0.5c): `result.h` `<utility>` and the `&`/`const&` abort death tests; `redact.cpp` stops at `\v`/`\f` and the four untested paths; purpose comments in `src/core`, `src/agent` and their tests | Tests pass | Qwen |
+| M0.5c | Check script (runs after M0.5d1 and M0.5d2), including a purpose-comment check: SPDX headers on every source file, plus a file-size report (review above 300 lines, fail above 500; tests and data 500 and 800; AGENTS.md rule 16) | Script finds no file without a header and reports sizes | Qwen |
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
 | Gate | Work | Done when | Who |
