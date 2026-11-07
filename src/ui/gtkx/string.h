@@ -12,4 +12,4 @@ std::string from_utf8(const char* s);
 
 std::string take_string(char* s);
 
-}  // namespace vermilion::gtkx
+} // namespace vermilion::gtkx

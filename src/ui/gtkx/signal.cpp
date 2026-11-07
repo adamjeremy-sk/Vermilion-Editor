@@ -14,9 +14,7 @@ SignalConnection::SignalConnection(gpointer instance, gulong handler_id)
 }
 
 SignalConnection::SignalConnection(SignalConnection&& other) noexcept
-    : weak_(std::move(other.weak_)),
-      handler_id_(other.handler_id_),
-      active_(other.active_) {
+    : weak_(std::move(other.weak_)), handler_id_(other.handler_id_), active_(other.active_) {
     other.weak_ = nullptr;
     other.handler_id_ = 0;
     other.active_ = false;
@@ -61,4 +59,4 @@ void SignalConnection::detach() {
     active_ = false;
 }
 
-}  // namespace vermilion::gtkx
+} // namespace vermilion::gtkx

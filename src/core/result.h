@@ -42,13 +42,9 @@ public:
         return Result(std::variant<T, Error>(std::in_place_index<1>, std::move(error)));
     }
 
-    bool is_ok() const {
-        return storage_.index() == 0;
-    }
+    bool is_ok() const { return storage_.index() == 0; }
 
-    explicit operator bool() const {
-        return is_ok();
-    }
+    explicit operator bool() const { return is_ok(); }
 
     T& value() & {
         if (storage_.index() != 0)
@@ -87,4 +83,4 @@ inline Status ok_status() {
     return Status::ok(Unit{});
 }
 
-}  // namespace vermilion
+} // namespace vermilion

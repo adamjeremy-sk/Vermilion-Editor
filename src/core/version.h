@@ -8,4 +8,4 @@ namespace vermilion {
 
 const char* version();
 
-}  // namespace vermilion
+} // namespace vermilion

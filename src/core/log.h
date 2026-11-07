@@ -16,4 +16,4 @@ void warning(std::string_view message);
 // Uses G_LOG_LEVEL_CRITICAL, never G_LOG_LEVEL_ERROR, because that level aborts the program.
 void error(std::string_view message);
 
-}  // namespace vermilion::logging
+} // namespace vermilion::logging

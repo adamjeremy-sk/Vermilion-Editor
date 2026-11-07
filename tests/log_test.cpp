@@ -19,7 +19,7 @@ struct Entry {
 };
 
 class CoreLog : public ::testing::Test {
-  protected:
+protected:
     void SetUp() override {
         handler_id_ = g_log_set_handler_full(
             vermilion::logging::kDomain, G_LOG_LEVEL_MASK,
@@ -31,9 +31,7 @@ class CoreLog : public ::testing::Test {
             &captured_, nullptr);
     }
 
-    void TearDown() override {
-        g_log_remove_handler(vermilion::logging::kDomain, handler_id_);
-    }
+    void TearDown() override { g_log_remove_handler(vermilion::logging::kDomain, handler_id_); }
 
     std::vector<Entry> captured_;
     guint handler_id_ = 0;
@@ -77,4 +75,4 @@ TEST_F(CoreLog, EmptyMessage) {
     EXPECT_EQ(captured_[0].message, std::string(""));
 }
 
-}  // namespace
+} // namespace

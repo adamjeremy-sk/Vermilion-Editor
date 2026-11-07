@@ -24,4 +24,4 @@ std::string take_string(char* s) {
     return result;
 }
 
-}  // namespace vermilion::gtkx
+} // namespace vermilion::gtkx

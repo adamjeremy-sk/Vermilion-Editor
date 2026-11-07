@@ -24,7 +24,7 @@ void on_activate(GtkApplication* app) {
     gtk_window_present(GTK_WINDOW(window));
 }
 
-}  // namespace
+} // namespace
 
 int main(int argc, char** argv) {
     vermilion::gtkx::ObjectPtr<GtkApplication> app =

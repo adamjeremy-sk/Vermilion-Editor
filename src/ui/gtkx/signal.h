@@ -75,7 +75,7 @@ void holder_destroy_notify(gpointer data, GClosure* closure) {
     delete static_cast<Holder<Sig>*>(data);
 }
 
-}  // namespace detail
+} // namespace detail
 
 template <typename Sig, typename F>
 SignalConnection connect(gpointer instance, const char* signal_name, F&& callback) {
@@ -84,12 +84,9 @@ SignalConnection connect(gpointer instance, const char* signal_name, F&& callbac
     }
     std::unique_ptr<detail::Holder<Sig>> holder(new detail::Holder<Sig>());
     holder->fn = std::forward<F>(callback);
-    gulong id = g_signal_connect_data(
-        instance, signal_name,
-        G_CALLBACK(&detail::Trampoline<Sig>::call),
-        holder.get(),
-        &detail::holder_destroy_notify<Sig>,
-        G_CONNECT_DEFAULT);
+    gulong id =
+        g_signal_connect_data(instance, signal_name, G_CALLBACK(&detail::Trampoline<Sig>::call),
+                              holder.get(), &detail::holder_destroy_notify<Sig>, G_CONNECT_DEFAULT);
     if (id == 0) {
         return SignalConnection();
     }
@@ -97,4 +94,4 @@ SignalConnection connect(gpointer instance, const char* signal_name, F&& callbac
     return SignalConnection(instance, id);
 }
 
-}  // namespace vermilion::gtkx
+} // namespace vermilion::gtkx

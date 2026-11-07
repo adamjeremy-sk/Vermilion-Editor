@@ -13,4 +13,4 @@ namespace vermilion {
 // Known limitation: a bare key= query parameter is not masked (too many false positives).
 std::string redact_secrets(std::string_view text);
 
-}  // namespace vermilion
+} // namespace vermilion

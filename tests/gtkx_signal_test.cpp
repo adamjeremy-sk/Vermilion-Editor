@@ -11,13 +11,13 @@
 #include "ui/gtkx/object_ptr.h"
 #include "ui/gtkx/signal.h"
 
+using vermilion::gtkx::connect;
 using vermilion::gtkx::ObjectPtr;
 using vermilion::gtkx::SignalConnection;
-using vermilion::gtkx::connect;
 
 TEST(GtkxSignal, ListStoreItemsChangedReportsPositionRemovedAdded) {
-    ObjectPtr<GListStore> store = ObjectPtr<GListStore>::adopt(
-        static_cast<GListStore*>(g_list_store_new(G_TYPE_OBJECT)));
+    ObjectPtr<GListStore> store =
+        ObjectPtr<GListStore>::adopt(static_cast<GListStore*>(g_list_store_new(G_TYPE_OBJECT)));
     GListModel* raw = G_LIST_MODEL(store.get());
 
     guint calls = 0;
@@ -27,8 +27,7 @@ TEST(GtkxSignal, ListStoreItemsChangedReportsPositionRemovedAdded) {
     GListModel* seen_model = nullptr;
 
     SignalConnection conn = connect<void(GListModel*, guint, guint, guint)>(
-        raw, "items-changed",
-        [&](GListModel* model, guint pos, guint rem, guint add) {
+        raw, "items-changed", [&](GListModel* model, guint pos, guint rem, guint add) {
             ++calls;
             seen_model = model;
             position = pos;
@@ -64,8 +63,7 @@ TEST(GtkxSignal, ActionActivateDeliversParameter) {
     GSimpleAction* seen_action = nullptr;
 
     SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction* a, GVariant* parameter) {
+        raw, "activate", [&](GSimpleAction* a, GVariant* parameter) {
             seen_action = a;
             if (parameter != nullptr) {
                 value = g_variant_get_int32(parameter);
@@ -88,8 +86,7 @@ TEST(GtkxSignal, ActionActivateWithoutParameter) {
     GVariant* seen = reinterpret_cast<GVariant*>(1);
 
     SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction*, GVariant* parameter) {
+        raw, "activate", [&](GSimpleAction*, GVariant* parameter) {
             ++called;
             seen = parameter;
         });
@@ -109,8 +106,7 @@ TEST(GtkxSignal, DestructorDisconnects) {
     int count = 0;
     {
         SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-            raw, "activate",
-            [&](GSimpleAction*, GVariant*) { ++count; });
+            raw, "activate", [&](GSimpleAction*, GVariant*) { ++count; });
         ASSERT_TRUE(static_cast<bool>(conn));
         g_action_activate(G_ACTION(raw), nullptr);
         EXPECT_EQ(count, 1);
@@ -126,8 +122,7 @@ TEST(GtkxSignal, ExplicitDisconnectStops) {
 
     int count = 0;
     SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction*, GVariant*) { ++count; });
+        raw, "activate", [&](GSimpleAction*, GVariant*) { ++count; });
     ASSERT_TRUE(static_cast<bool>(conn));
 
     conn.disconnect();
@@ -148,8 +143,7 @@ TEST(GtkxSignal, MoveTransfersOwnership) {
     int second = 0;
 
     SignalConnection source = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction*, GVariant*) { ++first; });
+        raw, "activate", [&](GSimpleAction*, GVariant*) { ++first; });
     ASSERT_TRUE(static_cast<bool>(source));
 
     SignalConnection target(std::move(source));
@@ -167,8 +161,7 @@ TEST(GtkxSignal, MoveTransfersOwnership) {
     EXPECT_EQ(first, 2);
 
     SignalConnection other = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction*, GVariant*) { ++second; });
+        raw, "activate", [&](GSimpleAction*, GVariant*) { ++second; });
     ASSERT_TRUE(static_cast<bool>(other));
 
     target = std::move(other);
@@ -187,8 +180,7 @@ TEST(GtkxSignal, DetachKeepsHandlerConnected) {
 
     int count = 0;
     SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction*, GVariant*) { ++count; });
+        raw, "activate", [&](GSimpleAction*, GVariant*) { ++count; });
     ASSERT_TRUE(static_cast<bool>(conn));
 
     conn.detach();
@@ -214,8 +206,7 @@ TEST(GtkxSignal, InstanceFinalizedFirstIsSafe) {
         g_object_add_weak_pointer(G_OBJECT(raw), &weak);
 
         SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-            raw, "activate",
-            [](GSimpleAction*, GVariant*) {});
+            raw, "activate", [](GSimpleAction*, GVariant*) {});
         ASSERT_TRUE(static_cast<bool>(conn));
 
         action.reset();
@@ -239,10 +230,7 @@ TEST(GtkxSignal, ClosureIsFreedWhenInstanceDies) {
             static_cast<GSimpleAction*>(g_simple_action_new("test", nullptr)));
         GSimpleAction* raw = G_SIMPLE_ACTION(action.get());
         conn = connect<void(GSimpleAction*, GVariant*)>(
-            raw, "activate",
-            [captured](GSimpleAction*, GVariant*) {
-                *captured += 1;
-            });
+            raw, "activate", [captured](GSimpleAction*, GVariant*) { *captured += 1; });
         ASSERT_TRUE(static_cast<bool>(conn));
         EXPECT_EQ(captured.use_count(), 2u);
 
@@ -260,10 +248,7 @@ TEST(GtkxSignal, ClosureIsFreedOnDisconnect) {
     GSimpleAction* raw = G_SIMPLE_ACTION(action.get());
 
     SignalConnection conn = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [captured](GSimpleAction*, GVariant*) {
-            *captured += 1;
-        });
+        raw, "activate", [captured](GSimpleAction*, GVariant*) { *captured += 1; });
     ASSERT_TRUE(static_cast<bool>(conn));
     EXPECT_EQ(captured.use_count(), 2u);
 
@@ -288,9 +273,11 @@ TEST(GtkxSignal, DisconnectInsideOwnHandler) {
 
     int count = 0;
     SignalConnection conn;
-    conn = connect<void(GSimpleAction*, GVariant*)>(
-        raw, "activate",
-        [&](GSimpleAction*, GVariant*) { ++count; conn.disconnect(); });
+    conn =
+        connect<void(GSimpleAction*, GVariant*)>(raw, "activate", [&](GSimpleAction*, GVariant*) {
+            ++count;
+            conn.disconnect();
+        });
     ASSERT_TRUE(static_cast<bool>(conn));
 
     g_action_activate(G_ACTION(raw), nullptr);

@@ -8,4 +8,4 @@ namespace vermilion {
 
 const char* agent_name();
 
-}  // namespace vermilion
+} // namespace vermilion

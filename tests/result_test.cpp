@@ -10,10 +10,10 @@
 #include "core/result.h"
 
 using vermilion::Error;
+using vermilion::ok_status;
 using vermilion::Result;
 using vermilion::Status;
 using vermilion::Unit;
-using vermilion::ok_status;
 
 TEST(CoreResult, OkHoldsValue) {
     auto r = Result<int>::ok(5);
@@ -61,26 +61,22 @@ TEST(CoreResult, StatusOkAndErr) {
 
 TEST(CoreResult, ValueOnErrorAborts) {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    EXPECT_DEATH(Result<int>::err(Error{"e"}).value(),
-                 "Result::value\\(\\) called on an error");
+    EXPECT_DEATH(Result<int>::err(Error{"e"}).value(), "Result::value\\(\\) called on an error");
 }
 
 TEST(CoreResult, ErrorOnSuccessAborts) {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    EXPECT_DEATH(Result<int>::ok(1).error(),
-                 "Result::error\\(\\) called on a success");
+    EXPECT_DEATH(Result<int>::ok(1).error(), "Result::error\\(\\) called on a success");
 }
 
 TEST(CoreResult, ValueLvalueOnErrorAborts) {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     Result<int> r = Result<int>::err(Error{"e"});
-    EXPECT_DEATH(r.value(),
-                 "Result::value\\(\\) called on an error");
+    EXPECT_DEATH(r.value(), "Result::value\\(\\) called on an error");
 }
 
 TEST(CoreResult, ValueConstOnErrorAborts) {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     const Result<int> r = Result<int>::err(Error{"e"});
-    EXPECT_DEATH(r.value(),
-                 "Result::value\\(\\) called on an error");
+    EXPECT_DEATH(r.value(), "Result::value\\(\\) called on an error");
 }

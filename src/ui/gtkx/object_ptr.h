@@ -15,9 +15,7 @@ class ObjectPtr {
 public:
     ObjectPtr() = default;
 
-    static ObjectPtr adopt(T* object) {
-        return ObjectPtr(object);
-    }
+    static ObjectPtr adopt(T* object) { return ObjectPtr(object); }
 
     static ObjectPtr adopt_floating(T* object) {
         if (object == nullptr) {
@@ -39,9 +37,7 @@ public:
         }
     }
 
-    ObjectPtr(ObjectPtr&& other) noexcept : object_(other.object_) {
-        other.object_ = nullptr;
-    }
+    ObjectPtr(ObjectPtr&& other) noexcept : object_(other.object_) { other.object_ = nullptr; }
 
     ObjectPtr& operator=(const ObjectPtr& other) {
         if (this != &other) {
@@ -68,17 +64,11 @@ public:
         }
     }
 
-    T* get() const {
-        return object_;
-    }
+    T* get() const { return object_; }
 
-    T* operator->() const {
-        return object_;
-    }
+    T* operator->() const { return object_; }
 
-    explicit operator bool() const {
-        return object_ != nullptr;
-    }
+    explicit operator bool() const { return object_ != nullptr; }
 
     T* release() {
         T* object = object_;
@@ -99,4 +89,4 @@ private:
     T* object_ = nullptr;
 };
 
-}  // namespace vermilion::gtkx
+} // namespace vermilion::gtkx

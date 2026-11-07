@@ -63,8 +63,8 @@ struct RuleMatch {
 
 // Rule A: named field.
 RuleMatch try_rule_a(const std::string_view& s, std::size_t i) {
-    static const std::string_view names[] = {
-        "api_key", "apikey", "api-key", "password", "passwd", "secret", "token", "authorization"};
+    static const std::string_view names[] = {"api_key", "apikey", "api-key", "password",
+                                             "passwd",  "secret", "token",   "authorization"};
     std::string_view name;
     for (std::string_view n : names) {
         if (match_name(s, i, n)) {
@@ -90,11 +90,10 @@ RuleMatch try_rule_a(const std::string_view& s, std::size_t i) {
     const std::size_t value_start = p;
     while (p < s.size()) {
         const char c = s[p];
-        const bool stop = is_auth
-                              ? (is_quote(c) || c == ',' || c == '\n' || c == '\r')
-                              : (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' ||
-                                 c == '\r' || is_quote(c) || c == ',' || c == ';' || c == '&' ||
-                                 c == '}');
+        const bool stop =
+            is_auth ? (is_quote(c) || c == ',' || c == '\n' || c == '\r')
+                    : (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r' ||
+                       is_quote(c) || c == ',' || c == ';' || c == '&' || c == '}');
         if (stop)
             break;
         ++p;
@@ -150,7 +149,7 @@ RuleMatch try_rule_c(const std::string_view& s, std::size_t i) {
     return RuleMatch{true, i, end};
 }
 
-}  // namespace
+} // namespace
 
 std::string redact_secrets(std::string_view text) {
     std::string out;
@@ -177,4 +176,4 @@ std::string redact_secrets(std::string_view text) {
     return out;
 }
 
-}  // namespace vermilion
+} // namespace vermilion

@@ -10,4 +10,4 @@ const char* agent_name() {
     return "vermilion-agent";
 }
 
-}  // namespace vermilion
+} // namespace vermilion

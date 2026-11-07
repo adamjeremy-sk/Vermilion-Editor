@@ -18,7 +18,7 @@ void emit(GLogLevelFlags level, std::string_view message) {
     g_log(kDomain, level, "%s", redacted.c_str());
 }
 
-}  // namespace
+} // namespace
 
 void debug(std::string_view message) {
     emit(G_LOG_LEVEL_DEBUG, message);
@@ -36,4 +36,4 @@ void error(std::string_view message) {
     emit(G_LOG_LEVEL_CRITICAL, message);
 }
 
-}  // namespace vermilion::logging
+} // namespace vermilion::logging

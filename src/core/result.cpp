@@ -12,4 +12,4 @@ template class Result<int>;
 template class Result<std::string>;
 template class Result<Unit>;
 
-}  // namespace vermilion
+} // namespace vermilion
