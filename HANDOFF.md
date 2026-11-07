@@ -4,69 +4,36 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-06 ~21:40 (M0.5d2 PASS after fix 1; awaiting Adam's gate commit, docs commit and push; M0.5d3 prompt ready) |
+| Updated | 2026-11-06 ~22:00 (M0.5d3 PASS after fix 1 and fix 2: `.clang-format` gained `AccessModifierOffset: -4` and `AlwaysBreakTemplateDeclarations: Yes`; awaiting gate commit, docs commit, push; M0.5c1 prompt ready; AGENTS.md rules 18 (evidence files) and 19 (format own files before reporting) added) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info` first; if `connectedFolders` already lists `/home/adam/Projects/vermilion-editor` (it did on 2026-11-06), no request is needed. Otherwise call `device_request_folder_access` for that path once (the grant is recursive). If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Note: `device_bash` runs in a VM on Adam's machine, so tool versions seen there (python, awk) are not necessarily Adam's host versions. Editing rights are unchanged: root orchestration docs and `docs/` only, never code. The model-monitor original is in the repo at `reference/ctxmon/`. |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, GPL-3.0-or-later. Written from scratch; not based on CrimsonEditor. |
-| Repo state | Verified 2026-11-06 ~21:35: HEAD `8aeb656` (docs: handoff, M0.5d2 ready), in sync with `origin/main`. Uncommitted: the 13 M0.5d2 files (audited PASS) plus `HANDOFF.md`, `AI_ONBOARDING.md`, `docs/roadmap.md` (milestone-review rule, this update). |
-| Version / HEAD | `8aeb656` plus Adam's two commits (M0.5d2, docs); read `git log --oneline -3`. Code: `vermilion_core` (`version`, `result`, `redact`, `log`), `vermilion_agent`, `vermilion_gtkx`, executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests` (65 tests). |
-| Tests | 65 (2 core/agent, 11 CoreResult, 20 CoreRedact, 5 CoreLog, 11 GtkxObjectPtr, 4 GtkxString, 12 GtkxSignal); full raw ctest output seen in M0.5d2 fix 1 (exit 0). Orchestrator verified fresh: exactly 13 files, +69/-2, diff matches items A to E, no line over 100 columns, `TEST` count 65. The Orchestrator does not build. |
-| Active task | Roadmap M0 debt clearing and checks: M0.1 to M0.5d2 done (M0.5d2 not yet committed). Next: M0.5d3 (one-time `clang-format -i` pass), M0.5c (check script plus ctests `SourceCheck.Repo` and `Format.Check`), the M0 documentation sweep, then the **M0 milestone review with Adam** (new rule, AI_ONBOARDING.md section 2 item 7), and only then M1. |
-| Gate position | M0.5d2 PASS (after fix 1). M0.5d3 prompt written (verbatim below), not issued. |
-| Awaiting | Adam: commit M0.5d2 and the docs, push; then paste the M0.5d3 prompt into a fresh Qwen session after replacing `<SHORT_HEAD>` with `git rev-parse --short HEAD`; paste the report. |
-| Last prompt issued | M0.5d2 fix 1 (evidence only, passed). **M0.5d3** written, NOT yet issued; verbatim below. |
-| Next action | Audit M0.5d3 fresh: `git status` (only `M` lines in `src`/`tests`), read the WHOLE `git diff` (formatting only; the SAME/DIFF whitespace-stripped token check: every DIFF file must be explained by include sorting, string-literal splitting or comment reflow and is checked by eye), `clang-format --dry-run --Werror` empty, raw ctest 65/65. Record the clang-format version. Fix loops, then commit and push. Then finish the stored M0.5c prompt: add the `Format.Check` ctest (`clang-format --dry-run --Werror` on the same file set; expected count 67 then), Last verified line, `<SHORT_HEAD>`. |
-| Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. |
+| Repo state | Verified 2026-11-06 ~21:50: HEAD `27aa8c0` (docs: milestone review rule), `f677f59` (M0.5d2); in sync with `origin/main`. Uncommitted: `.clang-format` and the 19 files reformatted by M0.5d3 (audited PASS) plus `AGENTS.md`, `HANDOFF.md`, `docs/roadmap.md` (rules 18 and 19, M0.5c split, this update). |
+| Version / HEAD | `27aa8c0` plus Adam's two commits (M0.5d3, docs); read `git log --oneline -3`. Code: `vermilion_core` (`version`, `result`, `redact`, `log`), `vermilion_agent`, `vermilion_gtkx`, executable `vermilion`, tests `vermilion_tests` and `vermilion_gtkx_tests` (65 tests). |
+| Tests | 65, full raw ctest in the M0.5d3 report (exit 0). M0.5d3: clang-format 18.1.3 (Ubuntu 1ubuntu1) on Adam's machine; 20 of 24 files changed, +75/-122; Orchestrator read the whole diff: whitespace and line breaks only, plus `SortUsingDeclarations` reordering in `tests/gtkx_signal_test.cpp` and `tests/result_test.cpp` (the two DIFF files of the token check); dry-run clean; no line over 100. |
+| Active task | Roadmap M0: M0.1 to M0.5d3 done (M0.5d3 not yet committed). Next: M0.5c1 (`tools/check_sources.sh`, ctest `SourceCheck.Repo`, `evidence/` in `.gitignore`; 66 tests), M0.5c2 (`tools/check_format.sh`, ctest `Format.Check`; 67 tests), the M0 documentation sweep, the **M0 milestone review with Adam**, then M1. |
+| Gate position | M0.5d3 PASS (fix 1 failed on the Orchestrator's wrong key name `BreakTemplateDeclarations`, which needs clang-format 19; fix 2 used `AlwaysBreakTemplateDeclarations`, which 18 knows and 19+ still accept). Final: 19 source files plus `.clang-format`, templates and access labels left as written, dry-run clean, 65 tests (full log read). M0.5c1 prompt written (verbatim below), not issued. |
+| Awaiting | Adam: commit M0.5d3 and the docs and push; then paste the M0.5c1 prompt into a fresh Qwen session after replacing `<SHORT_HEAD>`. |
+| Last prompt issued | M0.5d3 (passed). **M0.5c1** written, NOT yet issued; verbatim below, followed by the stored M0.5c2 prompt. |
+| Next action | Audit M0.5c1: read `evidence/M0.5c1/*.txt` directly (headers name today's date and the HEAD; mtimes newer than the edited files), the new script in full, `git diff` of `.gitignore` and `tests/CMakeLists.txt`, `git status` (only `?? tools/`, ` M .gitignore`, ` M tests/CMakeLists.txt`; no `evidence/`), 66 tests. Fix loops, commit, push, then M0.5c2. |
+| Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. Adam codes only at home on this computer with the chat linked, so the Orchestrator can always read `evidence/`. |
 
-**Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: M0.5d3: code not yet checked against `.clang-format` (clang-format is not installed in the Orchestrator's VM, so only Qwen can run it). Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every line they dictate within 100 columns (M0.5d1 fix 1); Qwen replaced raw output with summaries twice (M0.5d1 table; M0.5d2 ctest tail and "see above" for the diff), so prompts say "one raw block per command, never a table" and the Orchestrator reads diffs itself (candidate lesson for the M0 review: whether to make this an AGENTS.md rule); do not run dependent Orchestrator tool calls in parallel. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
+**Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: none open in code. Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every C++ line they dictate within 100 columns; Qwen replaced raw output with summaries twice (M0.5d1, M0.5d2), answered from M0.5c1 on by AGENTS.md rule 18 (evidence files the Orchestrator reads itself; Adam trusts Qwen not to fabricate them, the Orchestrator still checks headers and mtimes for staleness); clang-format is 18.1.3 on Adam's machine and not installed in the Orchestrator's VM; do not run dependent Orchestrator tool calls in parallel; **prompts and AGENTS.md never mention what the Orchestrator checks or reads (Adam, 2026-11-06)**; check clang-format option names against version 18 before dictating them. Topics already collected for the M0 review: raw-output summarising and rule 18; prompt bugs found by Qwen (`EXPECT_EQ` on `const char*`, over-long dictated lines); GLib weak-pointer quirk; gate sizes. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
 **Open decisions (Adam's call)**: none block M0. Names of config files and JSON schemas are fixed when first written (ARCHITECTURE.md section 10); gdb DAP reliability is checked at M6.2; packaging at M8.
 
-## Last prompt (verbatim)  *(M0.5d3, written 2026-11-06 ~21:40, not yet executed; replace `<SHORT_HEAD>` with the short HEAD after Adam's M0.5d2 and docs commits)*
-````
-FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: M0.5d2 PASS, committed and pushed; tree clean at <SHORT_HEAD>
-
-CONTEXT (BINDING)
-Gate M0.5d3 of docs/roadmap.md: a one-time formatting pass with the committed .clang-format (Adam 2026-11-06). Formatting only, no other change of any kind.
-Files: every .cpp and .h under src and tests (24 files today), changed ONLY by running clang-format -i. Do not edit any file by hand. Do not touch .clang-format, any CMake file, docs, or anything outside src and tests.
-
-STRICT RAILS
-1. ONE step only. Do not commit, push or stage anything. Do not run the GUI program.
-2. Only clang-format writes files. If the build or a test fails after the format pass, paste the raw error lines and STOP; do not fix anything by hand.
-3. Paste raw command output in fenced blocks, unaltered, one block per command. Never use "..." inside a raw block, never replace raw output with a summary or a table, never retype output by hand. If you trim, cut only from the end and write "[N lines trimmed]". An empty output is an empty raw block.
-4. Do NOT paste the full git diff; the Orchestrator reads it directly from the tree. Paste exactly the outputs asked for below, nothing in their place.
-5. No new dependencies. If clang-format is not installed, say so and STOP; do not install anything.
-
-STEPS
-STEP 1 (the only step):
-1. Run: git --no-optional-locks status --short. It must print nothing. If it prints anything, STOP and report it.
-2. Run: command -v clang-format; clang-format --version; echo "exit=$?"
-3. Run: find src tests -type f \( -name '*.cpp' -o -name '*.h' \) | wc -l (expected 24), then: find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format -i; echo "exit=$?"
-4. Proofs (raw, one block each):
-   a. git --no-optional-locks diff --stat
-   b. for f in $(find src tests -type f \( -name '*.cpp' -o -name '*.h' \) | LC_ALL=C sort); do if [ "$(git show HEAD:"$f" | tr -d ' \t\n')" = "$(tr -d ' \t\n' < "$f")" ]; then echo "SAME $f"; else echo "DIFF $f"; fi; done
-   c. find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror; echo "exit=$?" (expected no output, exit=0)
-   d. find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 awk 'length>100 {print FILENAME":"FNR": "length}'; echo "exit=$?" (expected no lines)
-5. Run: set -o pipefail; cmake --build build 2>&1 | tail -n 15; echo "exit=$?" then ctest --test-dir build --output-on-failure; echo "exit=$?" (ctest in full, every line). Expected 65 tests.
-6. Run: git --no-optional-locks status --short (raw; expected only " M" lines for files under src and tests, no "??" lines).
-EVIDENCE: raw blocks for items 1 to 6. Then, for each file marked DIFF in 4b, one sentence naming what clang-format changed besides whitespace (for example include order, a split string literal, a reflowed comment). Do not change anything because of it.
-
-End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" and cease all generation.
-````
-
-## Stored prompt: M0.5c  *(issue after M0.5d3 is committed; first add the `Format.Check` ctest (`clang-format --dry-run --Werror` on the same file set) and change its Last verified line to M0.5d3; replace `<SHORT_HEAD>` then)*
+## Last prompt (verbatim)  *(M0.5c1, written 2026-11-06 ~21:55, not yet executed; replace `<SHORT_HEAD>` with the short HEAD after Adam's M0.5d3 and docs commits)*
 ````
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
 Last verified: M0.5d3 PASS, committed and pushed; tree clean at <SHORT_HEAD>
 
 CONTEXT (BINDING)
-Gate M0.5c of docs/roadmap.md, the last gate of M0: a check script that enforces AGENTS.md rule 5 (SPDX and copyright header on every source file) and the purpose comment of rule 16 (the line directly after the copyright line is a comment), and reports file sizes against rule 16. It is registered as a ctest test so every build run checks the tree.
-Files: NEW tools/check_sources.sh (make it executable with chmod +x). EDIT tests/CMakeLists.txt: append exactly one line at the end of the file: add_test(NAME SourceCheck.Repo COMMAND ${CMAKE_SOURCE_DIR}/tools/check_sources.sh). Do not touch any other file. Do not add or change any C++ code.
+Gate M0.5c1 of docs/roadmap.md: a check script that enforces AGENTS.md rule 5 (SPDX and copyright header on every source file) and the purpose comment of rule 16 (the line directly after the copyright line is a comment), and reports file sizes against rule 16. It is registered as a ctest test so every test run checks the tree. This gate also starts AGENTS.md rule 18 (evidence files): read rule 18 now; this report uses it.
+Files: EDIT .gitignore: append exactly one line, evidence/, at the end (do this FIRST, before any evidence file exists). NEW tools/check_sources.sh (make it executable with chmod +x). EDIT tests/CMakeLists.txt: append exactly one line at the end: add_test(NAME SourceCheck.Repo COMMAND ${CMAKE_SOURCE_DIR}/tools/check_sources.sh). Do not touch any other file. Do not add or change any C++ code.
 
 SCRIPT (binding). Bash only, using only bash, find, sort, awk and printf. No Python, no temporary files, no network.
 Header: line 1 #!/usr/bin/env bash, line 2 # SPDX-License-Identifier: GPL-3.0-or-later, line 3 # Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk), line 4 a one-sentence comment saying what the script is for. Then set -u -o pipefail (NOT set -e, because a non-matching check is normal).
 Inputs:
-- No arguments: cd to the repository root with cd "$(dirname "$0")/.." and check every file found by find src tests tools -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.sh' \), sorted with LC_ALL=C sort. Nothing else is scanned (reference/, res/, docs/, build/ and cmake-build-*/ are never checked).
-- One or more arguments: check exactly those paths, in the given order, relative to the caller's current directory (do not cd). A path that is not a readable file prints MISSING-FILE <path> and makes the script exit 2 at the end.
+- No arguments: cd to the repository root with cd "$(dirname "$0")/.." and check every file found by find src tests tools -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.sh' \), sorted with LC_ALL=C sort. Nothing else is scanned (reference/, res/, docs/, evidence/, build/ and cmake-build-*/ are never checked).
+- One or more arguments: check exactly those paths, in the given order, relative to the caller's current directory (do not cd). Test a path with [ -r "$f" ] only (NOT -f: the tests below pass pipes such as /dev/fd/63). A path that fails it prints MISSING-FILE <path> and makes the script exit 2 at the end.
 Per file, read the file exactly ONCE with this awk program (the input may be a pipe, so a second read would see nothing):
 awk 'NR<=5 && /SPDX-License-Identifier: GPL-3\.0-or-later/ {s=1} NR<=5 && /Copyright \(C\) [0-9][0-9][0-9][0-9].* Adam Hainstock \(@adamjeremy-sk\)/ {c=1; cl=NR; next} cl && NR==cl+1 && /^(\/\/|#) [^ ]/ {p=1} END {print NR, s+0, c+0, p+0}' "$f"
 (the fourth field is 1 when the line directly after the copyright line is a // or # comment)
@@ -77,25 +44,69 @@ Exit code: 2 if any MISSING-FILE; else 1 if any MISSING-HEADER, MISSING-PURPOSE 
 
 STRICT RAILS
 1. ONE step only. Do not commit, push or stage anything. Do not run the GUI program.
-2. Touch only the two files named above. No docs, LICENSE, opencode.json, res/, reference/.
-3. Paste raw command output in fenced blocks, unaltered. Never use "..." inside a raw block, never summarize in place of raw output, never retype output by hand. If you trim, cut only from the end and write "[N lines trimmed]". An empty output is an empty raw block.
-4. Show the new file in full and the modified file as the raw git diff output.
+2. Touch only the three files named above, plus files under evidence/M0.5c1/ written by commands (AGENTS.md rule 18). No docs, LICENSE, opencode.json, res/, reference/.
+3. Outputs marked FILE go to evidence/M0.5c1/<name>.txt in the exact form of AGENTS.md rule 18; in the report paste only the raw tail -n 3 of each, under its path. Every other output is pasted raw in a fenced block, unaltered, one block per command. Never use "..." inside a raw block, never summarize or tabulate in place of raw output, never retype output by hand. An empty output is an empty raw block.
+4. Show the new script in full (cat -A is not needed; a plain fenced block of the file) and the two modified files as raw git diff output.
 5. No new dependencies, no invented commands or options. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix. If something in this prompt does not work as written (for example the awk program), say so, show the raw error and the minimal fix.
 
 STEPS
 STEP 1 (the only step):
 1. Run: git --no-optional-locks status --short. It must print nothing. If it prints anything, STOP and report it.
-2. Make the changes in CONTEXT, including chmod +x tools/check_sources.sh.
-3. Run (raw, each followed by echo "exit=$?"):
-   a. tools/check_sources.sh (full output; expected every file OK, exit 0)
-   b. tools/check_sources.sh <(printf 'int x;\n') (expected OK, 1 line, MISSING-HEADER and MISSING-PURPOSE, exit 1)
-   c. tools/check_sources.sh <(printf '// SPDX-License-Identifier: GPL-3.0-or-later\n// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)\n// Test input.\n'; yes '' | head -n 298) (expected REVIEW, 301 lines, exit 0)
-   d. tools/check_sources.sh <(printf '// SPDX-License-Identifier: GPL-3.0-or-later\n// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)\n// Test input.\n'; yes '' | head -n 498) (expected FAIL, 501 lines, exit 1)
-   e. tools/check_sources.sh no/such/file.cpp (expected MISSING-FILE, exit 2)
-4. Run: cmake -S . -B build (last 10 lines), cmake --build build (last 15 lines), ctest --test-dir build --output-on-failure (in full). Expected 66 tests: 65 existing plus SourceCheck.Repo (67 once Format.Check is added).
-5. Proofs (raw): ls -l tools/check_sources.sh (must show the x bits); head -n 4 tools/check_sources.sh; grep -nE "mktemp|/tmp|python|curl|wget" tools/check_sources.sh (expected empty); wc -l tools/check_sources.sh tests/CMakeLists.txt.
-6. Run: git --no-optional-locks status --short (raw; expected exactly ?? tools/ and M tests/CMakeLists.txt), then git --no-optional-locks diff -- tests/CMakeLists.txt (raw).
-EVIDENCE: raw blocks for items 1 to 6, the new file in full, and the test count from ctest.
+2. Append evidence/ to .gitignore. Then make the other changes in CONTEXT, including chmod +x tools/check_sources.sh.
+3. Script runs, each as FILE with the given name (the command inside rule 18's braces is exactly the text shown):
+   a. check_all: tools/check_sources.sh (expected every file OK, 25 files, exit=0)
+   b. check_bare: tools/check_sources.sh <(printf 'int x;\n') (expected OK, 1 line, MISSING-HEADER and MISSING-PURPOSE, exit=1)
+   c. check_review: tools/check_sources.sh <(printf '// SPDX-License-Identifier: GPL-3.0-or-later\n// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)\n// Test input.\n'; yes '' | head -n 298) (expected REVIEW, 301 lines, exit=0)
+   d. check_fail: tools/check_sources.sh <(printf '// SPDX-License-Identifier: GPL-3.0-or-later\n// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)\n// Test input.\n'; yes '' | head -n 498) (expected FAIL, 501 lines, exit=1)
+   e. check_missing: tools/check_sources.sh no/such/file.cpp (expected MISSING-FILE, exit=2)
+4. Build and test, each as FILE: configure: cmake -S . -B build; build: cmake --build build; ctest: ctest --test-dir build --output-on-failure (expected 66 tests: 65 existing plus SourceCheck.Repo).
+5. Proofs (raw, pasted): ls -l tools/check_sources.sh (must show the x bits); head -n 4 tools/check_sources.sh; grep -nE "mktemp|/tmp|python|curl|wget" tools/check_sources.sh; echo "exit=$?" (expected no lines, exit=1); wc -l tools/check_sources.sh tests/CMakeLists.txt; ls evidence/M0.5c1.
+6. Run (raw, pasted): git --no-optional-locks status --short (expected exactly " M .gitignore", " M tests/CMakeLists.txt" and "?? tools/"; no evidence/ line), then git --no-optional-locks diff -- .gitignore tests/CMakeLists.txt.
+EVIDENCE: the tail -n 3 of the eight FILE outputs under their paths, raw blocks for items 1, 5 and 6, and the new script in full.
+
+End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" and cease all generation.
+````
+
+## Stored prompt: M0.5c2  *(issue after M0.5c1 is committed; replace `<SHORT_HEAD>` then)*
+````
+FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
+Last verified: M0.5c1 PASS, committed and pushed; tree clean at <SHORT_HEAD>
+
+CONTEXT (BINDING)
+Gate M0.5c2 of docs/roadmap.md, the last code gate of M0: a format check registered as ctest Format.Check, so every test run fails if a .cpp or .h file in src or tests drifts from .clang-format. AGENTS.md rule 18 (evidence files) applies.
+Files: NEW tools/check_format.sh (chmod +x). EDIT tests/CMakeLists.txt: append exactly these two lines at the end:
+add_test(NAME Format.Check COMMAND ${CMAKE_SOURCE_DIR}/tools/check_format.sh)
+set_tests_properties(Format.Check PROPERTIES SKIP_RETURN_CODE 77)
+Do not touch any other file. Do not add or change any C++ code.
+
+SCRIPT (binding). Bash only, using only bash, find, sort, xargs, printf and clang-format. No temporary files, no network.
+Header: line 1 #!/usr/bin/env bash, line 2 # SPDX-License-Identifier: GPL-3.0-or-later, line 3 # Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk), line 4 a one-sentence comment saying what the script is for. Then set -u -o pipefail.
+Behaviour:
+1. If command -v clang-format finds nothing: print SKIP clang-format not installed and exit 77 (ctest reports the test as skipped, not failed).
+2. Print the first line of clang-format --version.
+3. No arguments: cd "$(dirname "$0")/.." and check every file from find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 | LC_ALL=C sort -z, passed with xargs -0 to clang-format --dry-run --Werror. One or more arguments: run clang-format --dry-run --Werror on exactly those paths (do not cd).
+4. Last line: printf 'format check: %s\n' "clean" or "DIRTY". Exit 0 when clang-format exited 0 for every file, else exit 1 (map xargs's 123 to 1).
+
+STRICT RAILS
+1. ONE step only. Do not commit, push or stage anything. Do not run the GUI program.
+2. Touch only the two files named above, plus files under evidence/M0.5c2/ written by commands (AGENTS.md rule 18).
+3. Outputs marked FILE go to evidence/M0.5c2/<name>.txt in the exact form of AGENTS.md rule 18; in the report paste only the raw tail -n 3 of each, under its path. Every other output is pasted raw in a fenced block, unaltered, one block per command. Never use "..." inside a raw block, never summarize or tabulate in place of raw output, never retype output by hand. An empty output is an empty raw block.
+4. Show the new script in full and the modified file as raw git diff output.
+5. No new dependencies, no invented commands or options. If a build or test fails because of your own code, paste the raw error lines FIRST, then fix it within the listed files and show each fix. If something in this prompt does not work as written, say so, show the raw error and the minimal fix.
+
+STEPS
+STEP 1 (the only step):
+1. Run: git --no-optional-locks status --short. It must print nothing. If it prints anything, STOP and report it.
+2. Make the changes in CONTEXT, including chmod +x tools/check_format.sh.
+3. Script runs, each as FILE with the given name:
+   a. format_all: tools/check_format.sh (expected clean, exit=0)
+   b. format_dirty: tools/check_format.sh <(printf 'int  x ;\n') (expected a clang-format warning, DIRTY, exit=1)
+   c. format_skip: env PATH=/nonexistent /bin/bash tools/check_format.sh (expected SKIP clang-format not installed, exit=77)
+   d. sources: tools/check_sources.sh (expected every file OK, 26 files, exit=0)
+4. Build and test, each as FILE: configure: cmake -S . -B build; build: cmake --build build; ctest: ctest --test-dir build --output-on-failure (expected 67 tests: 66 existing plus Format.Check, all passed, none skipped).
+5. Proofs (raw, pasted): ls -l tools/check_format.sh; head -n 4 tools/check_format.sh; wc -l tools/check_format.sh tests/CMakeLists.txt; ls evidence/M0.5c2.
+6. Run (raw, pasted): git --no-optional-locks status --short (expected exactly " M tests/CMakeLists.txt" and "?? tools/check_format.sh"), then git --no-optional-locks diff -- tests/CMakeLists.txt.
+EVIDENCE: the tail -n 3 of the seven FILE outputs under their paths, raw blocks for items 1, 5 and 6, and the new script in full.
 
 End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" and cease all generation.
 ````
@@ -131,6 +142,10 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - 2026-11-06 — (Adam) **clang-format check**: a ctest `Format.Check` runs `clang-format --dry-run --Werror` on every `.cpp` and `.h` in `src` and `tests`; it comes with M0.5c, after a one-time format pass M0.5d3.
 - 2026-11-06 — M0.5d2 (purpose comments in core, agent and their tests; `<utility>` in `result.h`; 2 death tests; `\v`/`\f` stop in rule A; 5 redact tests; 65 tests) executed by Qwen; report summarised raw output (ctest tail only, diff "see above"); fix 1 (evidence only) gave the full raw ctest, then PASS. Orchestrator verified the diff fresh.
 - 2026-11-06 — (Adam) **Milestone review**: at the end of every milestone (after its last gate and docs sweep are pushed) the Orchestrator and Adam discuss what was accomplished, what was learned and what the next milestone is, before any prompt of the next milestone. Conclusions in `docs/milestones/M<n>-review.md`. Written into AI_ONBOARDING.md section 1 and section 2 item 7 and the roadmap header.
+- 2026-11-06 — M0.5d3 (one-time `clang-format -i`, clang-format 18.1.3) executed by Qwen, audited PASS: 20 files, formatting only plus using-declaration sorting; 65 tests.
+- 2026-11-06 — (Adam) **Evidence files**: long command output goes to `evidence/<gate>/<name>.txt` (git-ignored), written by the command itself; Qwen reports the tail and the path; the Orchestrator reads the files directly. Adam trusts Qwen not to fabricate them (unlike Gemma). AGENTS.md rule 18; `.gitignore` line added in M0.5c1.
+- 2026-11-06 — (Orchestrator, within the gate-size rule) **M0.5c split**: c1 `check_sources.sh` + `SourceCheck.Repo` + `evidence/` ignore; c2 `check_format.sh` + `Format.Check` (skip code 77 when clang-format is missing).
+- 2026-11-06 — (Adam, on the Orchestrator's recommendation) **Format style**: `.clang-format` adds `AccessModifierOffset: -4` and `AlwaysBreakTemplateDeclarations: Yes` so the checked style matches how Qwen writes; M0.5d3 fix 2. AGENTS.md rule 19: Qwen runs `clang-format -i` on its own changed files before every report, so `Format.Check` does not fail on style. Prompts and AGENTS.md do not mention the Orchestrator's own checks.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -149,8 +164,8 @@ End your response with the exact phrase "STOPPING AND WAITING FOR VERIFICATION" 
 - Dropped and not scheduled: git integration, multi-cursor, theme system, SSH, session restore, indexed search, plugin hook.
 
 ## 4. Session Log  *(newest first, keep 10)*
-### 2026-11-06 (night, later) — M0.5d2 audit, milestone-review rule
-- Resumed at `8aeb656`. M0.5d2 issued; report summarised raw output; fix 1 (evidence only) then PASS (65 tests). Adam set the milestone-review rule. M0.5d3 prompt written. Open: M0.5d2 and docs commits and push, M0.5d3, M0.5c, M0 docs sweep, M0 review, M1.1.
+### 2026-11-06 (night, later) — M0.5d2 and M0.5d3 audits, milestone review, evidence files
+- Resumed at `8aeb656`. M0.5d2: report summarised raw output, fix 1, PASS (65 tests), committed `f677f59`, docs `27aa8c0`. Adam set the milestone-review rule and the evidence-file rule (AGENTS.md 18). M0.5d3 PASS (clang-format 18.1.3). M0.5c split into c1 and c2; both prompts written. Open: style choice, M0.5d3 and docs commits and push, M0.5c1, M0.5c2, M0 docs sweep, M0 review, M1.1.
 ### 2026-11-06 (night) — Session handoff
 - Adam committed and pushed M0.5d1 (`bdd9817`) and the docs (`3dcf41b`); tree clean. M0.5d2 prompt filled in with `3dcf41b`, not yet issued. Open: handoff commit and push, M0.5d2 run and audit, M0.5d3, M0.5c, M0 docs sweep, M1.1.
 ### 2026-11-06 (evening, later) — M0.5d1 audit and fix, clang-format decision
