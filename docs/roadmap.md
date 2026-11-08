@@ -43,6 +43,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M1.6 | VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing | Tests on fake sysfs trees and sample output | Qwen |
 
 ## M2: Editor
+**Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M2.9) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that.
 | Gate | Work | Done when | Who |
 |---|---|---|---|
 | M2.0 | Spike: GtkSourceView with a 50 MB file; measure open time, scrolling, memory | Numbers recorded in HANDOFF.md | Orchestrator plans, Qwen codes, Adam measures |

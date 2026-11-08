@@ -59,6 +59,7 @@ Component map: `src/core` (UI-free logic), `src/agent` (providers, loop, tools, 
 *   **Drift**: Silently omitting hits it judges irrelevant instead of classifying them. Always reconcile table rows against raw output lines.
 *   **Drift**: Claiming "zero references" without showing the grep and its raw output.
 *   **Drift**: Drive-by edits (include cleanup, reformatting) outside the step's scope.
+*   **Drift**: Cleaning up byproducts unasked (M1.0: `rm -rf reference/ctxmon/__pycache__`). AGENTS.md rule 8 now forbids deleting anything a prompt does not name; prompts that run scripts should also stop the byproduct at its source.
 *   **Drift**: Inventing APIs, headers or function names. Adam's compile is the only proof; a gate that adds code says exactly what to build and run.
 *Technical traps for this stack:*
 *   **Trap (GTK 3 habits)**: The model tends to write GTK 3 code. In GTK 4 there is no `gtk_container_add`, no `gtk_widget_show_all`, no `pack_start`; use `gtk_box_append`, `gtk_window_set_child`, `GtkEventController`s, `GtkListView`/`GtkColumnView` (not `GtkTreeView`, deprecated), `GtkFileDialog` (not `GtkFileChooserDialog`). GtkSourceView is version 5 (`GtkSourceView`, `GtkSourceBuffer`, `GtkSourceMark`), libsoup is version 3 (`SoupSession`, `soup_session_send_async`); both differ from the older versions in the model's memory.
