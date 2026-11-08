@@ -96,6 +96,8 @@ Update it (and write it back to the Project) at each of these moments, without b
 
 Rules: overwrite §1 Current State entirely; append one dated line per decision to §2; edit §3 Backlog; prepend a §4 Session Log entry and keep only the 10 newest. Record the last issued prompt verbatim in §1 when a task is mid-gate — a new instance cannot recover it otherwise.
 
+**Writing to Adam's computer (2026-11-07):** a file built in the cloud workspace and sent with `device_commit_files` gets a staging name never used before in the session (a reused name once delivered a stale HANDOFF.md, committed in `b97b1ac`). After every such write, grep the file on the computer for content that only the new version has, before telling Adam to commit. Small edits are better made on the computer directly with `device_bash`.
+
 **Mirror rule (Adam, 2026-11-04):** the repo is authoritative. Whenever the Orchestrator changes HANDOFF.md, AGENTS.md, AI_ONBOARDING.md, ARCHITECTURE.md or docs/roadmap.md, it also overwrites the matching file in the claude.ai Project (`claude/<name>`) in the same turn, so no stale copy remains. Stale Project copies mislead new instances. Delete superseded drafts from the Project.
 
 **6.3 Adam's side**

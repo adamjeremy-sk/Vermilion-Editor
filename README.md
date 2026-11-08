@@ -10,8 +10,8 @@
 </p>
 
 > **Status: pre-alpha. Not usable yet.**
-> Vermilion Editor is being written from scratch. Milestone M0 (foundation) is done: the CMake build, an empty window,
-> core helper types, logging with secret masking and the repository checks, with 67 tests. Editing arrives with M2.
+> Vermilion Editor is being written from scratch. Milestone M0 (foundation) is done, and M1 (the CTXMon monitor logic)
+> is under way: log and timing parsing are ported, with 77 tests. Editing and the CTXMon window arrive with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 ---
@@ -53,11 +53,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, tree, build, terminal (v0.1) | Planned, not started |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 in progress: CTXMon logic (log token lines, timing lines and finished requests done) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
-| CTXMon tab and standalone monitor, cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks; 67 tests. Next: M1, the CTXMon logic. |
+| Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 in progress: `src/ctxmon/core` parses llama.cpp log token lines and timing lines, tested against the Python original; 77 tests. Next: the `/slots` and `/props` responses. |
 | Releases | None |
 
 ---
@@ -102,8 +102,8 @@ Bazel. Output streams into the Output pane; compiler errors from gcc, clang, rus
 clickable links to the source line.
 
 ### Terminal (v0.1)
-Terminal tabs (VTE) in the bottom panel, started in the opened folder. Run and Debug use a terminal so the program has a real
-stdin and stdout.
+The terminal (VTE) is built first as part of CTXMon (M2), so you can restart a server from the monitor. Whether the editor's
+bottom panel also gets terminal tabs (the same terminal, started in the opened folder, for Run and Debug) is still open.
 
 ### Debugger (v0.3)
 Debug Adapter Protocol, using gdb's built-in adapter first (C, C++, Rust). Click the gutter to set a breakpoint; continue, step
@@ -160,8 +160,11 @@ work would cost on a paid model. No prices are shipped.
 ---
 
 ## CTXMon (model monitor)
-CTXMon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon` (the Python original is kept for
-reference in [`reference/ctxmon/`](reference/ctxmon/)). It comes in two forms that share the same logic and the same cards:
+CTXMon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon`. It is developed in this
+repository: its logic lives in `src/ctxmon/core` (no GTK) and its window in `src/ctxmon/ui`. The Python original in
+[`reference/ctxmon/`](reference/ctxmon/) is frozen and only supplies the expected values for the tests; it is removed once
+the port is complete (gate M2.11), after which the repository contains no Python. CTXMon comes in two forms that share the same
+logic and the same cards:
 
 - **Built in:** the **CTXMon** tab in the right-hand stack, next to Files and Agent, so the server your agent is using is one click away.
 - **Standalone:** a separate program, `vermilion-ctxmon` *(name proposed)*, with its own window. It needs no editor and no folder, so
@@ -230,6 +233,9 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
+Optional: `python3 tools/ctxmon_oracle.py` regenerates the CTXMon tests' expected values from the Python original
+(`tests/ctxmon/fixtures/expected/`); the build does not need Python. The script goes away with the Python original (M2.11).
+
 The test run includes two repository checks: `SourceCheck.Repo` (`tools/check_sources.sh`: licence header, purpose comment
 and size of every source file) and `Format.Check` (`tools/check_format.sh`: `clang-format --dry-run --Werror` on every `.cpp`
 and `.h` file; reported as skipped, not failed, when clang-format is not installed).
@@ -246,14 +252,17 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, monitor logic, slash commands, cost, archive. No GTK headers. |
+| `src/core/` | UI-free logic: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
+| `src/ctxmon/core/` | CTXMon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
+| `src/ctxmon/ui/` | *(M2)* The CTXMon cards, graphs and terminal, shared by the CTXMon tab and the standalone `vermilion-ctxmon`. |
 | `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. |
 | `src/ui/` | The GTK application, and `gtkx/`, a small helper layer (GObject reference pointer, signal connection by lambda, string conversion). |
-| `tests/` | GoogleTest tests for core and agent. |
-| `tools/` | Repository checks run by `ctest`: `check_sources.sh` and `check_format.sh`. |
+| `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses in `fixtures/`. |
+| `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M2.11). |
 | `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
-| `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`) and its logo (`ctxmon.svg`). Read-only reference for the port; not built. |
+| `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M2.11) and its logo (`ctxmon.svg`). Not built. |
 | `docs/roadmap.md` | The milestone and gate plan. |
+| `docs/milestones/` | Milestone reviews (what was done, what was learned, what comes next). |
 | `docs/requirements/` | Behaviour specifications, for example the directory sidebar. |
 | `ARCHITECTURE.md` | The decided architecture. |
 | `AGENTS.md`, `AI_ONBOARDING.md`, `HANDOFF.md` | The development process: rules for the coding agent, how the process works, and where it stands. |
@@ -281,10 +290,10 @@ The plan is in [`docs/roadmap.md`](docs/roadmap.md):
 
 | Version | Contents |
 |---|---|
-| v0.1 | Editor, right-hand directory sidebar, build and Output pane, Problems, terminal |
+| v0.1 | Editor, CTXMon (standalone `vermilion-ctxmon` and the CTXMon tab), right-hand directory sidebar, build and Output pane, Problems, terminal |
 | v0.2 | Agent core: providers, tools, permission presets, setup dialog, chat, archive, side-by-side diff |
 | v0.3 | Debugger |
-| v0.4 | CTXMon tab and standalone monitor, cost display, Anthropic and Gemini adapters, project file, gate framework, MCP |
+| v0.4 | Cost display, Anthropic and Gemini adapters, project file, gate framework, MCP |
 | v1.0 | Packaging, documentation, notices |
 
 ---
@@ -301,7 +310,7 @@ Vermilion Editor is free software under the **GNU General Public License, versio
 
 Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 
-Every source file carries an SPDX licence header. The model monitor is a port of ctxmon from
-[llm-suite-test](https://github.com/adamjeremy-sk/llm-suite-test), also by the author. The libraries used (GTK, GtkSourceView,
+Every source file carries an SPDX licence header. The model monitor began as a port of ctxmon from
+[llm-suite-test](https://github.com/adamjeremy-sk/llm-suite-test), also by the author; it is now developed here. The libraries used (GTK, GtkSourceView,
 GLib, json-glib, libsoup, libsecret, VTE) are LGPL-licensed; GoogleTest is BSD-licensed. A full third-party notice file will be added before
 the first release.
