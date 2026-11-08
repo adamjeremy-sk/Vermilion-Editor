@@ -1,0 +1,3 @@
+prompt eval time =     300.00 ms /   120 tokens (    2.50 ms per token,   400.00 tokens per second)
+       eval time =     500.00 ms /    40 runs   (   12.50 ms per token,    80.00 tokens per second)
+prompt eval time =     150.00 ms /    60 tokens (    2.50 ms per token,   400.50 tokens per second)

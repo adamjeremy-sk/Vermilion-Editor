@@ -12,6 +12,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 ORIGINAL = ROOT / "reference" / "ctxmon" / "ctxmon_gtk.py"
 EXPECTED = ROOT / "tests" / "ctxmon" / "fixtures" / "expected"
 LOGS = ROOT / "tests" / "ctxmon" / "fixtures" / "logs"
+TIMING = ROOT / "tests" / "ctxmon" / "fixtures" / "timing"
 
 
 def load_original():
@@ -37,7 +38,21 @@ def last_tokens_cases(m):
     return cases
 
 
-GENERATORS = {"fmt_duration": fmt_duration_cases, "last_tokens": last_tokens_cases}
+def timing_cases(m):
+    cases = []
+    for path in sorted(TIMING.glob("*.log")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        gen_tps, prompt_tps = m.last_speeds(text)
+        cases.append({"file": path.name, "gen_tps": gen_tps, "prompt_tps": prompt_tps,
+                      "requests": m.parse_requests(text)})
+    return cases
+
+
+GENERATORS = {
+    "fmt_duration": fmt_duration_cases,
+    "last_tokens": last_tokens_cases,
+    "timing": timing_cases,
+}
 
 
 def main():

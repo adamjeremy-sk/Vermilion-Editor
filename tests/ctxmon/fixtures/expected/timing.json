@@ -1,0 +1,57 @@
+[
+  {
+    "file": "empty.log",
+    "gen_tps": null,
+    "prompt_tps": null,
+    "requests": []
+  },
+  {
+    "file": "gen_only.log",
+    "gen_tps": 80.0,
+    "prompt_tps": null,
+    "requests": [
+      {
+        "prompt_tokens": null,
+        "prompt_tps": null,
+        "gen_tokens": 64,
+        "gen_tps": 80.0,
+        "ctx": 764
+      }
+    ]
+  },
+  {
+    "file": "trailing.log",
+    "gen_tps": 80.0,
+    "prompt_tps": 400.5,
+    "requests": [
+      {
+        "prompt_tokens": 120,
+        "prompt_tps": 400.0,
+        "gen_tokens": 40,
+        "gen_tps": 80.0,
+        "ctx": null
+      }
+    ]
+  },
+  {
+    "file": "two_requests.log",
+    "gen_tps": 73.71,
+    "prompt_tps": 509.68,
+    "requests": [
+      {
+        "prompt_tokens": 200,
+        "prompt_tps": 384.39,
+        "gen_tokens": 310,
+        "gen_tps": 73.62,
+        "ctx": 1510
+      },
+      {
+        "prompt_tokens": 50,
+        "prompt_tps": 509.68,
+        "gen_tokens": 96,
+        "gen_tps": 73.71,
+        "ctx": 1656
+      }
+    ]
+  }
+]

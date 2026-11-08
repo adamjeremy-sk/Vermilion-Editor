@@ -16,6 +16,7 @@
 using vermilion::ctxmon::kTailBytes;
 using vermilion::ctxmon::last_token;
 using vermilion::ctxmon::tail_start;
+using vermilion::ctxmon::token_matches;
 using vermilion::ctxmon::TokenKind;
 
 namespace {
@@ -86,4 +87,14 @@ TEST(CtxmonLogTokens, OverflowingNumberIsSkipped) {
 
 TEST(CtxmonLogTokens, DefaultViewHasNoReading) {
     EXPECT_FALSE(last_token(std::string_view()).has_value());
+}
+
+TEST(CtxmonLogTokens, TokenMatchesKeepOrderAndPositions) {
+    const auto matches = token_matches("ab n_past = 3\nstop processing: n_tokens = 9\n");
+    ASSERT_EQ(matches.size(), 2u);
+    EXPECT_EQ(matches[0].pos, 3u);
+    EXPECT_EQ(matches[0].reading.tokens, 3);
+    EXPECT_EQ(matches[1].pos, 14u);
+    EXPECT_EQ(matches[1].reading.tokens, 9);
+    EXPECT_EQ(kind_name(matches[1].reading.kind), std::string("final"));
 }

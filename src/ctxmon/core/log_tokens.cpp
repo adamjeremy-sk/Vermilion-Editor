@@ -11,6 +11,7 @@
 #include <optional>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace vermilion::ctxmon {
 
@@ -42,9 +43,10 @@ std::size_t tail_start(std::size_t file_size, std::size_t floor) {
     return floor > tail ? floor : tail;
 }
 
-std::optional<TokenReading> last_token(std::string_view text) {
+std::vector<TokenMatch> token_matches(std::string_view text) {
+    std::vector<TokenMatch> matches;
     if (text.empty()) {
-        return std::nullopt; // also covers a default string_view, whose data() is null
+        return matches; // also covers a default string_view, whose data() is null
     }
     // The pattern is constant, so compiling cannot fail; every test runs it.
     g_autoptr(GRegex) regex =
@@ -52,8 +54,10 @@ std::optional<TokenReading> last_token(std::string_view text) {
     g_autoptr(GMatchInfo) info = nullptr;
     g_regex_match_full(regex, text.data(), static_cast<gssize>(text.size()), 0,
                        G_REGEX_MATCH_DEFAULT, &info, nullptr);
-    std::optional<TokenReading> last;
     while (g_match_info_matches(info)) {
+        gint match_start = -1;
+        gint match_end = -1;
+        g_match_info_fetch_pos(info, 0, &match_start, &match_end);
         for (const Group& group : kGroups) {
             gint start = -1;
             gint end = -1;
@@ -61,13 +65,22 @@ std::optional<TokenReading> last_token(std::string_view text) {
                 long long value = 0;
                 const auto result = std::from_chars(text.data() + start, text.data() + end, value);
                 if (result.ec == std::errc()) {
-                    last = TokenReading{value, group.kind};
+                    matches.push_back(
+                        {static_cast<std::size_t>(match_start), TokenReading{value, group.kind}});
                 }
             }
         }
         g_match_info_next(info, nullptr);
     }
-    return last;
+    return matches;
+}
+
+std::optional<TokenReading> last_token(std::string_view text) {
+    const std::vector<TokenMatch> matches = token_matches(text);
+    if (matches.empty()) {
+        return std::nullopt;
+    }
+    return matches.back().reading;
 }
 
 } // namespace vermilion::ctxmon

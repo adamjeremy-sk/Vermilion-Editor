@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <optional>
 #include <string_view>
+#include <vector>
 
 namespace vermilion::ctxmon {
 
@@ -25,14 +26,23 @@ struct TokenReading {
     TokenKind kind = TokenKind::Final;
 };
 
+// One token line and the byte offset where its match starts in the text.
+struct TokenMatch {
+    std::size_t pos = 0;
+    TokenReading reading;
+};
+
 // Byte offset where the scan of a log of file_size bytes starts. Content before floor (the
 // session start) is ignored; a floor beyond the end means the log was truncated (server
 // restart), so it counts as 0. At most the last kTailBytes are scanned.
 std::size_t tail_start(std::size_t file_size, std::size_t floor);
 
-// The last token line in text, or nothing if there is none. Bytes are matched raw, so a
-// multi-byte character cut at the start of a tail does no harm. A number too large for
-// long long is skipped (the Python original has no limit).
+// Every token line in text, oldest first. Bytes are matched raw, so a multi-byte character
+// cut at the start of a tail does no harm. A number too large for long long is skipped (the
+// Python original has no limit).
+std::vector<TokenMatch> token_matches(std::string_view text);
+
+// The last token line in text, or nothing if there is none (same rules as token_matches).
 std::optional<TokenReading> last_token(std::string_view text);
 
 } // namespace vermilion::ctxmon

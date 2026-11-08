@@ -1,0 +1,12 @@
+slot update_slots: id  0 | task 20 | prompt processing done, n_tokens = 1200, batch.n_tokens = 200
+slot print_timing: id  0 | task 20 |
+prompt eval time =     520.31 ms /   200 tokens (    2.60 ms per token,   384.39 tokens per second)
+       eval time =    4210.77 ms /   310 runs   (   13.58 ms per token,    73.62 tokens per second)
+      total time =    4731.08 ms /   510 tokens
+slot      release: id  0 | task 20 | stop processing: n_tokens = 1510, truncated = 0
+slot update_slots: id  0 | task 21 | prompt processing done, n_tokens = 1560, batch.n_tokens = 50
+slot print_timing: id  0 | task 21 |
+prompt eval time =      98.10 ms /    50 tokens (    1.96 ms per token,   509.68 tokens per second)
+       eval time =    1302.44 ms /    96 runs   (   13.57 ms per token,    73.71 tokens per second)
+      total time =    1400.54 ms /   146 tokens
+slot      release: id  0 | task 21 | stop processing: n_past = 1656, truncated = 0
