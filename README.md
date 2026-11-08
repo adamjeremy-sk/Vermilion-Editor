@@ -47,9 +47,6 @@ Principles:
 - **Local first.** A local llama.cpp server is a first-class endpoint, with a monitor for it; cloud providers use your own keys.
 - **Linux only.** Wayland and X11 through GTK. English interface. No telemetry.
 
-The project began as a port of the Windows editor CrimsonEditor and was restarted from scratch; nothing of that code remains.
-The abandoned port is part of the git history and summarised in `docs/archive/`.
-
 ---
 
 ## Status
@@ -258,7 +255,6 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`) and its logo (`ctxmon.svg`). Read-only reference for the port; not built. |
 | `docs/roadmap.md` | The milestone and gate plan. |
 | `docs/requirements/` | Behaviour specifications, for example the directory sidebar. |
-| `docs/archive/` | Notes on the abandoned CrimsonEditor port. |
 | `ARCHITECTURE.md` | The decided architecture. |
 | `AGENTS.md`, `AI_ONBOARDING.md`, `HANDOFF.md` | The development process: rules for the coding agent, how the process works, and where it stands. |
 | `opencode.json` | Configuration of the local coding agent's model and permissions. Do not edit casually. |

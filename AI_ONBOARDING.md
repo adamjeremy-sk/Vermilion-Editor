@@ -37,10 +37,10 @@ Every non-trivial task executes under this protocol. No exceptions.
     - Check every tool option dictated in a prompt against the versions on Adam's machine (clang-format 18.1.3: the key is `AlwaysBreakTemplateDeclarations`, not `BreakTemplateDeclarations`).
 
 ## 3. Architectural Rails (Decided; see ARCHITECTURE.md)
-1.  **Greenfield.** Nothing is inherited from CrimsonEditor. Licence GPL-3.0-or-later; every source file carries the SPDX line and the copyright line (AGENTS.md rule 5).
+1.  **Greenfield.** Written from scratch. Licence GPL-3.0-or-later; every source file carries the SPDX line and the copyright line (AGENTS.md rule 5).
 2.  **C++17 with the plain GTK 4 C API, GtkSourceView 5.** No gtkmm, no libadwaita, no bindings, no vendor SDKs, nothing that merely wraps another API. A new dependency needs Adam's decision.
 3.  **No C++ exceptions in project code; RAII only.** `GError` at the GTK boundary.
-4.  **Layers.** `src/core` and `src/agent` never include GTK, Pango, GtkSourceView or VTE headers; `src/ui` holds all UI.
+4.  **Layers.** `src/core`, `src/agent` and `src/ctxmon/core` never include GTK, Pango, GtkSourceView or VTE headers; `src/ui` and `src/ctxmon/ui` hold all UI.
 5.  **UTF-8 internally; explicit encodings and line endings at file boundaries; XDG paths** for config, data, cache and state.
 6.  **Responsive UI.** The GTK main loop is never blocked; async I/O on the main loop, threads only for heavy computation.
 7.  **Agent safety.** Permission presets (Restricted is the default; Balanced; Unrestricted behind a confirmation and a red badge; Custom). Hard guards in every preset: the agent cannot change its own preset and cannot read API keys. Keys live in the keyring; JSON holds references only.
@@ -50,7 +50,7 @@ Every non-trivial task executes under this protocol. No exceptions.
 ## 4. Project Summary & Component Map
 **Vermilion Editor**: native Linux text and code editor, written from scratch in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent (OpenAI-compatible, Anthropic and Gemini providers, MCP), build and Output/Problems panes, a DAP debugger, a VTE terminal, a right-hand directory sidebar, and a model monitor ported from Adam's `ctxmon`. IDE: CLion (CMake). Local working tree: `~/Projects/vermilion-editor`. Remote: `origin` = https://github.com/adamjeremy-sk/Vermilion-Editor.
 
-Component map: `src/core` (UI-free logic), `src/agent` (providers, loop, tools, MCP), `src/ui` (GTK application), `tests/`. Details and the planned directory names are in ARCHITECTURE.md section 4; the milestone plan is docs/roadmap.md. Earlier history (the abandoned Crimson port) is in `docs/archive/`.
+Component map: `src/core` (UI-free logic), `src/agent` (providers, loop, tools, MCP), `src/ctxmon/core` (model-monitor logic, UI-free) and `src/ctxmon/ui` (its cards and the standalone `vermilion-ctxmon`), `src/ui` (GTK application), `tests/` (with `tests/ctxmon/`). Details and the planned directory names are in ARCHITECTURE.md section 4; the milestone plan is docs/roadmap.md.
 
 ## 5. Known Traps & Common Agent Drifts
 *Process drifts (seen with the local agent):*
@@ -64,6 +64,9 @@ Component map: `src/core` (UI-free logic), `src/agent` (providers, loop, tools, 
 *   **Trap (GTK 3 habits)**: The model tends to write GTK 3 code. In GTK 4 there is no `gtk_container_add`, no `gtk_widget_show_all`, no `pack_start`; use `gtk_box_append`, `gtk_window_set_child`, `GtkEventController`s, `GtkListView`/`GtkColumnView` (not `GtkTreeView`, deprecated), `GtkFileDialog` (not `GtkFileChooserDialog`). GtkSourceView is version 5 (`GtkSourceView`, `GtkSourceBuffer`, `GtkSourceMark`), libsoup is version 3 (`SoupSession`, `soup_session_send_async`); both differ from the older versions in the model's memory.
 *   **Trap (ownership)**: GObject reference rules (transfer none/full, floating references, `g_object_ref_sink`), and signals still connected to a destroyed object. Use the `gtkx` helpers; never leave a bare `g_signal_connect` capturing a pointer that can die.
 *   **Trap (tests)**: `EXPECT_EQ(const char*, "literal")` compares pointers and always fails; compare `std::string` values or use `EXPECT_STREQ`. A gate prompt must name the comparison, not just say "equals" (my M0.2 prompt did not).
+*   **Trap (CMake linkage)**: an INTERFACE target holding compile options (`vermilion_noexc`, `vermilion_warnings`) linked PUBLIC leaks its flags to every dependant, tests included (M0.2). Link them PRIVATE; a prompt that adds a library names the keyword.
+*   **Trap (regex)**: `std::regex` throws on errors and has no lookbehind (ctxmon's timing pattern needs `(?<!prompt )`). Use GLib `GRegex` (ARCHITECTURE.md section 5).
+*   **Trap (GLib 2.80)**: `g_object_add_weak_pointer` does not set the pointer when it is added; tests preset it.
 *   **Trap (exceptions)**: An exception escaping through a GTK callback is undefined behaviour. No exceptions in project code.
 *   **Trap (main loop)**: Blocking calls (synchronous HTTP, `waitpid`, large file reads) on the main thread; widgets touched from a worker thread.
 *   **Trap (streaming)**: Server-sent events arrive in arbitrary chunks; a parser that assumes one event per read breaks. Tool-call arguments also arrive in fragments.
@@ -87,6 +90,8 @@ Update it (and write it back to the Project) at each of these moments, without b
 - Adam makes an architectural decision;
 - Adam says "handoff", "wrap up", or that he's ending the session;
 - the conversation is getting long (risk of context loss).
+**End of the development day (Adam, 2026-11-07):** when Adam says "Handoff to tomorrow's session", the Orchestrator brings README.md up to date with everything changed that day (the README is not touched after each gate), then updates HANDOFF.md, mirrors the changed docs to the Project and gives Adam one docs commit and the push. Documentation sweeps (end of task, end of milestone) are always done by the Orchestrator, never by a Qwen gate.
+
 Rules: overwrite §1 Current State entirely; append one dated line per decision to §2; edit §3 Backlog; prepend a §4 Session Log entry and keep only the 10 newest. Record the last issued prompt verbatim in §1 when a task is mid-gate — a new instance cannot recover it otherwise.
 
 **Mirror rule (Adam, 2026-11-04):** the repo is authoritative. Whenever the Orchestrator changes HANDOFF.md, AGENTS.md, AI_ONBOARDING.md, ARCHITECTURE.md or docs/roadmap.md, it also overwrites the matching file in the claude.ai Project (`claude/<name>`) in the same turn, so no stale copy remains. Stale Project copies mislead new instances. Delete superseded drafts from the Project.

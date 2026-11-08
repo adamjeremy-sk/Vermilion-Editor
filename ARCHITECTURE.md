@@ -1,5 +1,5 @@
 # ARCHITECTURE.md: Vermilion Editor
-**Status**: rewritten 2026-11-05 for the greenfield plan. Sections marked *Decided* are Adam's decisions; *Proposed* sections are the Orchestrator's recommendations awaiting Adam; names marked *(name proposed)* are placeholders fixed at the gate that creates them. Nothing in this repository is based on CrimsonEditor any more: the code, tests, data and licence of the former port were removed in the reset (see HANDOFF.md section 2 and `docs/archive/`).
+**Status**: rewritten 2026-11-05 for the greenfield plan. Sections marked *Decided* are Adam's decisions; *Proposed* sections are the Orchestrator's recommendations awaiting Adam; names marked *(name proposed)* are placeholders fixed at the gate that creates them. The project is written from scratch.
 
 ## 1. What this is  *(Decided)*
 Vermilion Editor is a native Linux text and code editor written from scratch in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent, a project build system integration, a debugger and a terminal. It is released under GPL-3.0-or-later. Target system: Ubuntu 24.04 (GTK 4.14, GLib 2.80, gdb 15.1). Linux only.
@@ -15,7 +15,7 @@ Vermilion Editor is a native Linux text and code editor written from scratch in 
 | Platform | Linux, Wayland and X11 through GTK. English UI only. No telemetry. |
 | Process | Gate system (AI_ONBOARDING.md, AGENTS.md). Adam builds, tests and commits. |
 | Application ID | `io.github.adamjeremy_sk.Vermilion` |
-| Dropped | Everything of Crimson Editor (macros, user-tool slots, column mode, bookmarks, templates, `.spc` syntax files, dictionaries, KR edition), printing, FTP, `.prj` project files, git integration, multi-cursor, theme system beyond GtkSourceView style schemes and the system dark mode, SSH, session restore beyond last folder and window size, indexed project search, plugin system. |
+| Dropped | Macros, user-tool slots, column mode, bookmarks, templates, printing, FTP, git integration, multi-cursor, theme system beyond GtkSourceView style schemes and the system dark mode, SSH, session restore beyond last folder and window size, indexed project search, plugin system. |
 
 ## 3. The product  *(Decided)*
 ```
@@ -35,13 +35,15 @@ Vermilion Editor is a native Linux text and code editor written from scratch in 
 One window, one opened folder at a time. Right-hand stack: **Files** (directory sidebar), **Agent** and **CTXMon** (model monitor) tabs. Bottom panel: Output, Problems, Terminal (VTE, several tabs), Debug (stack, variables, breakpoints, watches).
 
 ## 4. Layers and layout  *(layers Decided; directories fixed at M0.2)*
-Dependency direction: `ui -> agent -> core`; `ui -> core`. Core never includes GTK, Pango, GtkSourceView or VTE headers. GLib, GIO and json-glib are allowed in core. Check: a grep of `src/core` and `src/agent` for `gtk/`, `gdk`, `pango`, `gtksourceview`, `vte` returns nothing.
+Dependency direction: `ui -> agent -> core`; `ui -> core`; `ctxmon/core -> core`; `ui -> ctxmon/ui -> ctxmon/core`. Core, agent and ctxmon core never include GTK, Pango, GtkSourceView or VTE headers. GLib, GIO and json-glib are allowed there. Check: a grep of `src/core`, `src/agent` and `src/ctxmon/core` for `gtk/`, `gdk`, `pango`, `gtksourceview`, `vte` returns nothing.
 | Library | Directory | Contents |
 |---|---|---|
-| `vermilion_core` | `src/core/` | diff engine (Myers, produces aligned rows for side-by-side), permission engine (presets, rules, hard guards), settings and project-file models, build presets and problem matchers, DAP client state machine (transport injected), ctxmon logic (log tail, parsing, poller model, speed and ETA, VRAM readers), slash-command and gate-template engine, cost calculator, chat archive. |
+| `vermilion_core` | `src/core/` | diff engine (Myers, produces aligned rows for side-by-side), permission engine (presets, rules, hard guards), settings and project-file models, build presets and problem matchers, DAP client state machine (transport injected), slash-command and gate-template engine, cost calculator, chat archive. |
 | `vermilion_agent` | `src/agent/` | provider adapters (OpenAI-compatible, Anthropic, Gemini), agent loop, tool registry, MCP server and client. HTTP through libsoup 3 behind an injectable transport so tests use a fake. |
-| `vermilion` (executable) | `src/ui/` | GTK application, window, tabs, editor view, directory sidebar, bottom panels, terminal, agent tab and setup dialog, diff widget, debugger panels, ctxmon cards (shared by the CTXMon tab and the standalone `vermilion-ctxmon` executable); a small helper layer (`src/ui/gtkx/`: GObject reference pointer, signal connection by lambda, string conversion). |
-| tests | `tests/` | GoogleTest, one test file per core or agent module, no display needed. UI is kept thin and is checked by hand. |
+| `vermilion` (executable) | `src/ui/` | GTK application, window, tabs, editor view, directory sidebar, bottom panels, terminal, agent tab and setup dialog, diff widget, debugger panels, the CTXMon tab (hosts the cards from `src/ctxmon/ui`); a small helper layer (`src/ui/gtkx/`: GObject reference pointer, signal connection by lambda, string conversion). |
+| `vermilion_ctxmon_core` *(name proposed, fixed at M1.0)* | `src/ctxmon/core/` | ctxmon logic, UI-free: log token and timing parsing, request history, `/slots` and `/props` parsing, live speed, server state and warnings, graph geometry, VRAM readers. Pure functions on text, JSON strings and file trees; the I/O that feeds them comes in M2. |
+| ctxmon UI | `src/ctxmon/ui/` | (M2) The server cards and graphs shared by the CTXMon tab and the standalone `vermilion-ctxmon` executable, and that executable's `main`. |
+| tests | `tests/`, `tests/ctxmon/` | GoogleTest, one test file per core, agent or ctxmon module, no display needed. ctxmon tests take their expected values from the Python oracle (M1.0). UI is kept thin and is checked by hand. |
 
 Repository checks live in `tools/` and run as ctest tests with every test run: `check_sources.sh` (`SourceCheck.Repo`: SPDX and copyright header, purpose comment, file size per AGENTS.md rule 16) and `check_format.sh` (`Format.Check`: `clang-format --dry-run --Werror` on every `.cpp` and `.h`; skipped when clang-format is missing).
 
@@ -52,6 +54,7 @@ Repository checks live in `tools/` and run as ctest tests with every test run: `
 - **Paths and data:** `std::filesystem` or GIO. XDG locations for config, data, cache and state. Text is UTF-8; encoding and line endings are explicit at file boundaries.
 - **Style:** `clang-format` (`.clang-format` committed at M0.2: LLVM base, indent 4, 100 columns; enforced by ctest `Format.Check`), warnings as errors (`-Wall -Wextra -Werror`), `clang-tidy` where cheap, ASan and UBSan builds run by Adam on request.
 - **Size and shape:** one responsibility per file; a source file over 300 lines is reviewed, over 500 is split (tests and data tables 500 and 800); functions over 50 lines are flagged; UI is one widget or panel class per file pair and `window` only assembles panels. Details: AGENTS.md rule 16.
+- **Regular expressions:** GLib's `GRegex` (PCRE2: lookbehind, named groups, no exceptions), part of GLib and allowed in every layer; `std::regex` is not used (Adam, 2026-11-07). Later users: ctxmon parsing (M1), editor search (M2.3), problem matchers (M4.4).
 - **Identity stability:** never rename config keys, JSON fields, file formats, command names or IDs when only display text changes.
 
 ## 6. Dependencies  *(Decided; versions are those of Ubuntu 24.04)*
@@ -119,7 +122,13 @@ Switching to Unrestricted needs a confirmation dialog and shows a persistent red
 **MCP.** Vermilion is an MCP server over stdio exposing the same tool registry, and an MCP client for stdio tool servers. HTTP transports and ACP are deferred.
 
 ### 7.7 ctxmon (model monitor)  *(Decided)*
-A C++ port of `reference/ctxmon/ctxmon_gtk.py` (Adam's own code, GPL-3; copied from `~/Projects/llm-suite-test` on 2026-11-05, with its logo `ctxmon.svg`; read-only reference, never built or linked). Logic in core with tests derived from the Python version: log tailing and token parsing, `/slots` and `/props` polling, live and finished-request speed, time-to-full estimate, request history, warnings at 80% and 95% and when the context would fill within a minute, VRAM from AMD sysfs or `nvidia-smi`. UI: a card per server (several servers supported), with graphs and the terminal, in two forms built from one shared widget set: the **CTXMon** tab in the right-hand stack, and a **standalone executable** (`vermilion-ctxmon`, own `GtkApplication` window, no editor or folder needed; name and application ID proposed, Adam decided on 2026-11-05 that both exist). The standalone program replaces the earlier idea of a detachable window (Orchestrator reading; Adam confirms). Dropped from the original: the tray icon (GTK 4 has none) and `notify-send` (replaced by `GNotification`). llama.cpp servers only.
+From 2026-11-07 Vermilion's ctxmon is the source of truth and all ctxmon development happens in this repository (Adam). The Python original `reference/ctxmon/ctxmon_gtk.py` (Adam's own code, GPL-3; copied from `~/Projects/llm-suite-test` on 2026-11-05, sha256 `895a34f7...d407`, with its logo `ctxmon.svg`) is frozen: it is never built or linked, it is not re-copied, and it serves only as the oracle for the M1 tests. Whether it is removed once the port is complete is decided at the M2 review.
+
+**Layout.** `src/ctxmon/core` holds the logic (no GTK), `src/ctxmon/ui` the cards and the standalone executable, `tests/ctxmon` the tests; core and UI never mix (section 4).
+
+**Logic (M1).** Log token lines (`n_tokens`, `n_past`, session floor), timing lines and finished-request history, `/slots` and `/props` parsing, live speed over a two-second window, server state with history pruning, warnings at 80% and 95% and when the context would fill within a minute, graph geometry, `fmt_duration`, VRAM from AMD sysfs or `nvidia-smi` output. Everything is a pure function on text, JSON strings or a directory tree, tested against expected values produced by the Python original (oracle script and fixtures, M1.0). The Python's thread-based poller and blocking HTTP are not ported; the I/O is redesigned in M2 on GIO and libsoup async calls on the main loop.
+
+**UI (M2).** A card per server (several servers supported), with graphs and the terminal, in two forms built from one shared widget set: the **CTXMon** tab in the right-hand stack (added when the stack exists, M3), and a **standalone executable** (`vermilion-ctxmon`, own `GtkApplication` window, no editor or folder needed; name and application ID proposed). Dropped from the original: the tray icon (GTK 4 has none) and `notify-send` (replaced by `GNotification`). llama.cpp servers only.
 
 ### 7.8 Project file  *(Decided)*
 Two files in the opened folder: `PROJECT.md` (human and agent readable: purpose, directory layout, conventions, decisions, current state, next steps, in the shape of this document) and `.vermilion/project.json` (build, run and debug configurations, permission overrides, agent settings, gate templates in use) *(names proposed)*. New Project creates both from a wizard (name, language and build preset, skeleton); Open Folder offers "Adopt as project", where the agent audits the tree read-only and writes the first `PROJECT.md`. The agent proposes updates to `PROJECT.md` after changes as an ordinary change set.
