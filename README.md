@@ -9,9 +9,9 @@
   C++17 &middot; GTK 4 &middot; GtkSourceView 5 &middot; GPL-3.0-or-later
 </p>
 
-> **Status: pre-alpha. Nothing runs yet.**
-> Vermilion Editor is being written from scratch. At this stage the repository holds the plan: the architecture, the
-> roadmap and the rules for the development process. The first code (a window skeleton) arrives with roadmap gate M0.2.
+> **Status: pre-alpha. Not usable yet.**
+> Vermilion Editor is being written from scratch. Milestone M0 (foundation) is done: the CMake build, an empty window,
+> core helper types, logging with secret masking and the repository checks, with 67 tests. Editing arrives with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 ---
@@ -60,7 +60,7 @@ The abandoned port is part of the git history and summarised in `docs/archive/`.
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | CTXMon tab and standalone monitor, cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | None yet. Next gate: M0.2, the CMake skeleton and an empty window. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks; 67 tests. Next: M1, the CTXMon logic. |
 | Releases | None |
 
 ---
@@ -233,8 +233,12 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-The project is developed in CLion; opening the folder picks up `CMakeLists.txt`. `build/`, `cmake-build-*/` and `.idea/` are
-ignored by git. There is nothing to install and no release yet.
+The test run includes two repository checks: `SourceCheck.Repo` (`tools/check_sources.sh`: licence header, purpose comment
+and size of every source file) and `Format.Check` (`tools/check_format.sh`: `clang-format --dry-run --Werror` on every `.cpp`
+and `.h` file; reported as skipped, not failed, when clang-format is not installed).
+
+The project is developed in CLion; opening the folder picks up `CMakeLists.txt`. `build/`, `cmake-build-*/`, `.idea/` and
+`evidence/` (command output saved for audits) are ignored by git. There is nothing to install and no release yet.
 
 Vermilion logs through GLib under the log domain `vermilion`, with secrets masked before anything is written. As in any GLib
 program, debug and info messages are hidden by default; run with `G_MESSAGES_DEBUG=vermilion` (or `all`) to see them.
@@ -245,10 +249,11 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, monitor logic, slash commands, cost, archive. No GTK headers. *(created at M0.2)* |
-| `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. *(M0.2)* |
-| `src/ui/` | The GTK application. *(M0.2)* |
-| `tests/` | GoogleTest tests for core and agent. *(M0.2)* |
+| `src/core/` | UI-free logic: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, monitor logic, slash commands, cost, archive. No GTK headers. |
+| `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. |
+| `src/ui/` | The GTK application, and `gtkx/`, a small helper layer (GObject reference pointer, signal connection by lambda, string conversion). |
+| `tests/` | GoogleTest tests for core and agent. |
+| `tools/` | Repository checks run by `ctest`: `check_sources.sh` and `check_format.sh`. |
 | `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`) and its logo (`ctxmon.svg`). Read-only reference for the port; not built. |
 | `docs/roadmap.md` | The milestone and gate plan. |

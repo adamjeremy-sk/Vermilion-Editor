@@ -13,6 +13,8 @@
 ctxmon logic (M1) is built early because it is self-contained: the Python original (`reference/ctxmon/ctxmon_gtk.py`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent.
 
 ## M0: Reset and foundation
+**Done 2026-11-07**: every gate below committed and pushed; 67 tests. Milestone review: `docs/milestones/M0-review.md`.
+
 | Gate | Work | Done when | Who |
 |---|---|---|---|
 | M0.1 | Reset the tree: one `git rm -r` of everything except the kept files; GPL-3 `LICENSE`; remove the `upstream` remote; commit docs | `git ls-files` shows only the kept files; tree clean | Adam, Orchestrator checks |

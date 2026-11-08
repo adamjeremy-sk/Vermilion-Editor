@@ -34,7 +34,7 @@ Vermilion Editor is a native Linux text and code editor written from scratch in 
 ```
 One window, one opened folder at a time. Right-hand stack: **Files** (directory sidebar), **Agent** and **CTXMon** (model monitor) tabs. Bottom panel: Output, Problems, Terminal (VTE, several tabs), Debug (stack, variables, breakpoints, watches).
 
-## 4. Layers and layout  *(layers Decided; directories Proposed, fixed at gate F0)*
+## 4. Layers and layout  *(layers Decided; directories fixed at M0.2)*
 Dependency direction: `ui -> agent -> core`; `ui -> core`. Core never includes GTK, Pango, GtkSourceView or VTE headers. GLib, GIO and json-glib are allowed in core. Check: a grep of `src/core` and `src/agent` for `gtk/`, `gdk`, `pango`, `gtksourceview`, `vte` returns nothing.
 | Library | Directory | Contents |
 |---|---|---|
@@ -43,12 +43,14 @@ Dependency direction: `ui -> agent -> core`; `ui -> core`. Core never includes G
 | `vermilion` (executable) | `src/ui/` | GTK application, window, tabs, editor view, directory sidebar, bottom panels, terminal, agent tab and setup dialog, diff widget, debugger panels, ctxmon cards (shared by the CTXMon tab and the standalone `vermilion-ctxmon` executable); a small helper layer (`src/ui/gtkx/`: GObject reference pointer, signal connection by lambda, string conversion). |
 | tests | `tests/` | GoogleTest, one test file per core or agent module, no display needed. UI is kept thin and is checked by hand. |
 
+Repository checks live in `tools/` and run as ctest tests with every test run: `check_sources.sh` (`SourceCheck.Repo`: SPDX and copyright header, purpose comment, file size per AGENTS.md rule 16) and `check_format.sh` (`Format.Check`: `clang-format --dry-run --Werror` on every `.cpp` and `.h`; skipped when clang-format is missing).
+
 ## 5. Conventions  *(Decided 2026-11-05 as part of the language decision; details Proposed)*
 - **Errors:** no C++ exceptions in project code. An exception escaping through a GTK callback is undefined behaviour. Use `std::optional` or a small `Result<T>` type; at the GTK boundary use `GError`. Compile with `-fno-exceptions` where the dependencies allow it.
 - **Memory:** RAII only. Smart pointers or the `gtkx` helpers for GObject references; no raw `new`/`delete`/`g_free` outside the helpers.
 - **Threading:** the GLib main loop plus async I/O (`GSubprocess`, libsoup async API, `GTask`) for network, builds, debugger and monitors. Threads only for heavy computation (large diffs). Widgets are touched from the main thread only. The main loop is never blocked.
 - **Paths and data:** `std::filesystem` or GIO. XDG locations for config, data, cache and state. Text is UTF-8; encoding and line endings are explicit at file boundaries.
-- **Style:** `clang-format` (config committed at F0), warnings as errors (`-Wall -Wextra -Werror`), `clang-tidy` where cheap, ASan and UBSan builds run by Adam on request.
+- **Style:** `clang-format` (`.clang-format` committed at M0.2: LLVM base, indent 4, 100 columns; enforced by ctest `Format.Check`), warnings as errors (`-Wall -Wextra -Werror`), `clang-tidy` where cheap, ASan and UBSan builds run by Adam on request.
 - **Size and shape:** one responsibility per file; a source file over 300 lines is reviewed, over 500 is split (tests and data tables 500 and 800); functions over 50 lines are flagged; UI is one widget or panel class per file pair and `window` only assembles panels. Details: AGENTS.md rule 16.
 - **Identity stability:** never rename config keys, JSON fields, file formats, command names or IDs when only display text changes.
 
@@ -141,7 +143,6 @@ GSettings is not used (it needs installed schemas). Nothing is written next to t
 - `.idea/` and `cmake-build-*/` are per-user and never committed.
 
 ## 10. Open items
-- Exact directory names and CMake targets (decided at gate F0).
 - Names of the configuration files and JSON schemas (decided when each is first written; config-format work is plan-first, AGENTS.md rule 10).
 - Whether gdb's DAP is solid enough (spike at the debugger milestone).
 - Provider details: usage-on-stream support, tool-call formats (checked at the provider gate).
