@@ -13,3 +13,4 @@ target_link_libraries(vermilion_gtkx_tests PRIVATE
     vermilion_gtkx
     vermilion_warnings)
 gtest_discover_tests(vermilion_gtkx_tests)
+add_test(NAME SourceCheck.Repo COMMAND ${CMAKE_SOURCE_DIR}/tools/check_sources.sh)
