@@ -1,0 +1,58 @@
+[
+  {
+    "seconds": 0,
+    "text": "0s"
+  },
+  {
+    "seconds": 0.4,
+    "text": "0s"
+  },
+  {
+    "seconds": 0.5,
+    "text": "0s"
+  },
+  {
+    "seconds": 1.5,
+    "text": "2s"
+  },
+  {
+    "seconds": 2.5,
+    "text": "2s"
+  },
+  {
+    "seconds": 59.5,
+    "text": "60s"
+  },
+  {
+    "seconds": 89.4,
+    "text": "89s"
+  },
+  {
+    "seconds": 89.5,
+    "text": "1m30s"
+  },
+  {
+    "seconds": 90,
+    "text": "1m30s"
+  },
+  {
+    "seconds": 90.5,
+    "text": "1m30s"
+  },
+  {
+    "seconds": 125,
+    "text": "2m05s"
+  },
+  {
+    "seconds": 3599.5,
+    "text": "60m00s"
+  },
+  {
+    "seconds": 3600,
+    "text": "60m00s"
+  },
+  {
+    "seconds": 7322,
+    "text": "122m02s"
+  }
+]

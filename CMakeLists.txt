@@ -26,5 +26,6 @@ enable_testing()
 
 add_subdirectory(src/core)
 add_subdirectory(src/agent)
+add_subdirectory(src/ctxmon/core)
 add_subdirectory(src/ui)
 add_subdirectory(tests)
