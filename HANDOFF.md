@@ -4,17 +4,17 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-07 ~21:50 (M1.0 PASS after fix 1; AGENTS.md rule 8 extended; M1.1 prompt written) |
+| Updated | 2026-11-07 ~22:20 (M1.1 PASS; M1.2 prompt written, its code pre-compiled and checked against the oracle by the Orchestrator) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info` first; if `connectedFolders` already lists `/home/adam/Projects/vermilion-editor`, no request is needed. Otherwise call `device_request_folder_access` for that path once (the grant is recursive). If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Note: `device_bash` runs in a VM on Adam's machine, so tool versions seen there (python 3.10, awk) are not Adam's host versions. Editing rights are unchanged: root orchestration docs and `docs/` only, never code. |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, model monitor (ctxmon), GPL-3.0-or-later. Written from scratch. |
-| Repo state | Verified 2026-11-07 ~21:45: HEAD `f39251b`, pushed. Uncommitted: the M1.0 gate (` M CMakeLists.txt`, ` M tests/CMakeLists.txt`, `?? tools/ctxmon_oracle.py`, `?? src/ctxmon/core/{CMakeLists.txt,format.h,format.cpp}`, `?? tests/ctxmon/{CMakeLists.txt,format_test.cpp,fixtures/expected/fmt_duration.json}`) and the Orchestrator's docs (` M AGENTS.md`, ` M AI_ONBOARDING.md`, ` M HANDOFF.md`, ` M docs/roadmap.md`). Adam makes the gate commit "M1.0: ctxmon core library, oracle script, fmt_duration (69 tests)", then the docs commit "docs: handoff after M1.0, deletion rule for byproducts", then pushes. |
-| Version / HEAD | `f39251b` plus the two M1.0 commits. Code adds `vermilion_ctxmon_core` (`format`: `fmt_duration`), `vermilion_ctxmon_tests`, `tools/ctxmon_oracle.py` (frozen Python as oracle, writes no bytecode). |
-| Tests | 69, all passing (M1.0). 73 expected after M1.1. |
+| Repo state | Verified 2026-11-07 ~22:00: HEAD `a956153` (docs: handoff after M1.0), pushed; `9589377` is the M1.0 gate commit. Uncommitted: the M1.1 gate (` M src/ctxmon/core/CMakeLists.txt`, ` M tests/ctxmon/CMakeLists.txt`, ` M tools/ctxmon_oracle.py`, `?? src/ctxmon/core/log_tokens.{h,cpp}`, `?? tests/ctxmon/log_tokens_test.cpp`, `?? tests/ctxmon/fixtures/logs/*.log` (6), `?? tests/ctxmon/fixtures/expected/last_tokens.json`) and the Orchestrator's docs (` M AI_ONBOARDING.md`, ` M HANDOFF.md`, ` M docs/roadmap.md`). Adam makes the gate commit "M1.1: ctxmon log token lines (73 tests)", then the docs commit "docs: handoff after M1.1", then pushes. |
+| Version / HEAD | `a956153` plus the two M1.1 commits. ctxmon core: `format` (`fmt_duration`), `log_tokens` (`tail_start`, `last_token`); oracle generators `fmt_duration`, `last_tokens`. |
+| Tests | 73, all passing (M1.1). 77 expected after M1.2. |
 | Active task | **M1, ctxmon logic** (gate M1.0 next). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
-| Gate position | M1.0 **PASS** (fix 1 done: hash of the JSON unchanged, no `__pycache__`). M1.1 prompt written (verbatim below), issued after the two commits and the push. |
-| Awaiting | Adam: the M1.0 gate commit, the docs commit, the push; then run M1.1 in a fresh Qwen session and paste the report. |
-| Last prompt issued | M1.1 (2026-11-07, verbatim below). |
-| Next action | Audit M1.1: evidence headers at the docs commit and mtimes after the edits; `last_tokens.json` has 30 cases and matches the Orchestrator's own Python run (empty: all null; mixed_partial: 16 prompt except floor 238 null; new_wording: 4400 prompt except floor 470 null; no_tokens: all null; old_wording: 1100 past except floor 303 null; utf8_split: 5 past at floors 0, 1, 115, null at 7 and 15); `G_REGEX_RAW`; GLib linked PRIVATE; 73 tests; "Unexpected files" section present. Then M1.2 (timing lines, `last_speeds`, `parse_requests`). Before any UI gate, talk with Adam about his UI specifications. README.md only on "Handoff to tomorrow's session". |
+| Gate position | M1.1 **PASS** (no notes; E3 was not pasted raw, but the Orchestrator verified the files byte-identical to the dictated code and the fixtures byte-identical to a fresh run). M1.2 prompt written (verbatim below), issued after the two commits and the push. |
+| Awaiting | Adam: the M1.1 gate commit, the docs commit, the push; run M1.2 in a fresh Qwen session and paste the report. Open question to Adam: does the editor still get its own terminal panel (M4.5), reusing the ctxmon terminal widget? |
+| Last prompt issued | M1.2 (2026-11-07, verbatim below). |
+| Next action | Audit M1.2: evidence headers at the docs commit, mtimes after the edits; the dictated files byte-identical (the Orchestrator's verified copies were in the cloud workspace `/home/claude/m12`; if that is gone, compare with the verbatim prompt below); `timing.json` as expected (empty: nulls and no requests; gen_only: one request, prompt null, gen 64/80.0, ctx 764; trailing: one request 120/400.0, 40/80.0, ctx null, last prompt 400.5; two_requests: 200/384.39, 310/73.62, ctx 1510 and 50/509.68, 96/73.71, ctx 1656); `fmt_duration.json` and `last_tokens.json` not modified; 77 tests. Then M1.3 (`/slots` and `/props` parsing on JSON strings). Before any UI gate, talk with Adam about his UI specifications. README.md only on "Handoff to tomorrow's session". |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. Adam codes only at home on this computer with the chat linked, so the Orchestrator can always read `evidence/`. |
 
 **Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: none open in code. Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every C++ line they dictate within 100 columns; Qwen replaced raw output with summaries twice (M0.5d1, M0.5d2), answered from M0.5c1 on by AGENTS.md rule 18 (evidence files the Orchestrator reads itself; Adam trusts Qwen not to fabricate them, the Orchestrator still checks headers and mtimes for staleness); clang-format is 18.1.3 on Adam's machine and not installed in the Orchestrator's VM; do not run dependent Orchestrator tool calls in parallel; **prompts and AGENTS.md never mention what the Orchestrator checks or reads (Adam, 2026-11-06)**; check clang-format option names against version 18 before dictating them. Prompt-authoring practices (format step, no dictated whitespace, header lines for new files, FILE evidence, silence about the Orchestrator's checks, tool-version check) are in AI_ONBOARDING.md section 2 item 8. Topics already collected for the M0 review: raw-output summarising and rule 18; format-style choice and rule 19 (the Orchestrator's wrong clang-format key); prompt bugs found by Qwen (`EXPECT_EQ` on `const char*`, over-long dictated lines); GLib weak-pointer quirk; gate sizes. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
@@ -22,37 +22,64 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 
 ## Last prompt (verbatim)
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: New task; tree clean at the commit "docs: handoff after M1.0, deletion rule for byproducts" (HEAD).
+Last verified: New task; tree clean at the commit "docs: handoff after M1.1" (HEAD).
 
-TASK: Gate M1.1, ctxmon log token lines. One step.
+TASK: Gate M1.2, ctxmon timing lines and finished requests. One step.
 
 CONTEXT (BINDING)
 - ctxmon logic lives in `src/ctxmon/core` (library `vermilion_ctxmon_core`, namespace `vermilion::ctxmon`, no GTK headers). Tests live in `tests/ctxmon` (executable `vermilion_ctxmon_tests`). Expected values come from the frozen Python original `reference/ctxmon/ctxmon_gtk.py` (read-only) through `tools/ctxmon_oracle.py`.
-- This gate ports `last_tokens` (ctxmon_gtk.py lines 59 to 63 `TOKEN_RE`, lines 166 to 188) as two pure functions, without file I/O: `tail_start` (which byte offset the scan starts at) and `last_token` (the last token line in a piece of log text). Reading the file comes later (M2.8).
-- Regular expressions use GLib `GRegex` (AGENTS.md rule 20), compiled with `G_REGEX_RAW` so the log bytes are matched as bytes: a tail can start inside a multi-byte character, and the Python original decodes such bytes with replacement characters.
-- Test count: 69 now, 73 after this gate.
+- This gate ports `last_speeds` and `parse_requests` (ctxmon_gtk.py lines 65 to 71 and 191 to 229) into a new module `timing`. `parse_requests` needs every token line with its position, so `log_tokens` gains `token_matches`, and `last_token` becomes its last element (same results as before).
+- Regular expressions use GLib `GRegex` with `G_REGEX_RAW` (AGENTS.md rule 20). The generation pattern uses a lookbehind, `(?<!prompt )`, which GRegex supports.
+- Test count: 73 now, 77 after this gate.
 
 STRICT RAILS
-- Create exactly these files: `src/ctxmon/core/log_tokens.h`, `src/ctxmon/core/log_tokens.cpp`, `tests/ctxmon/log_tokens_test.cpp`, the six fixture logs of step 1 in `tests/ctxmon/fixtures/logs/`, and `tests/ctxmon/fixtures/expected/last_tokens.json` (written by the oracle, never by hand).
-- Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/CMakeLists.txt`, `tests/ctxmon/CMakeLists.txt`.
-- No other change. No new dependency (GLib is already found by the top-level `CMakeLists.txt`).
+- Create exactly these files: `src/ctxmon/core/timing.h`, `src/ctxmon/core/timing.cpp`, `tests/ctxmon/timing_test.cpp`, the four fixture logs of step 1 in `tests/ctxmon/fixtures/timing/`, and `tests/ctxmon/fixtures/expected/timing.json` (written by the oracle, never by hand).
+- Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/log_tokens.h`, `src/ctxmon/core/log_tokens.cpp`, `tests/ctxmon/log_tokens_test.cpp`, `src/ctxmon/core/CMakeLists.txt`, `tests/ctxmon/CMakeLists.txt`.
+- Re-running the oracle rewrites `fmt_duration.json` and `last_tokens.json` with identical content: `git status` must not list them as modified.
+- No other change. No new dependency.
 
 STEP 1
-1. Create the fixture logs with exactly these commands (run from the project root; the bytes matter, so do not create them with a file editor):
+1. Create the fixture logs with exactly these commands, run from the project root (the bytes matter, so do not create them with a file editor):
 ```bash
-mkdir -p tests/ctxmon/fixtures/logs && cd tests/ctxmon/fixtures/logs
-printf 'srv  log_server_r: request: POST /v1/chat/completions 127.0.0.1 200\nslot update_slots: id  0 | task 12 | prompt processing progress, n_tokens = 2048, batch.n_tokens = 2048, progress = 0.50\nslot update_slots: id  0 | task 12 | prompt processing done, n_tokens = 4096, batch.n_tokens = 48\nslot      release: id  0 | task 12 | stop processing: n_tokens = 4321, truncated = 0\nslot update_slots: id  0 | task 13 | prompt processing done, n_tokens = 4400, batch.n_tokens = 79\n' > new_wording.log
-printf 'slot update_slots: id  0 | task 3 | prompt processing progress, n_past = 512, n_tokens = 512, progress = 0.25\nslot update_slots: id  0 | task 3 | prompt processing progress, n_past = 1024, n_tokens = 512, progress = 0.50\nslot      release: id  0 | task 3 | stop processing: n_past = 1100, truncated = 0\n' > old_wording.log
-printf 'slot      release: id  0 | task 1 | stop processing: n_past = 900, truncated = 0\nslot      release: id  0 | task 2 | stop processing: n_tokens = 1500, truncated = 0\nslot update_slots: id  0 | task 3 | prompt processing done, n_tokens = 16' > mixed_partial.log
-printf 'main: server is listening on http://127.0.0.1:8080\nslot update_slots: id  0 | task 4 | prompt processing progress, n_tokens = 128, batch.n_tokens = 128, progress = 1.00\nstats: maxn_past = 3\nsrv  update_slots: all slots are idle\n' > no_tokens.log
+mkdir -p tests/ctxmon/fixtures/timing && cd tests/ctxmon/fixtures/timing
+printf 'slot update_slots: id  0 | task 20 | prompt processing done, n_tokens = 1200, batch.n_tokens = 200\nslot print_timing: id  0 | task 20 |\nprompt eval time =     520.31 ms /   200 tokens (    2.60 ms per token,   384.39 tokens per second)\n       eval time =    4210.77 ms /   310 runs   (   13.58 ms per token,    73.62 tokens per second)\n      total time =    4731.08 ms /   510 tokens\nslot      release: id  0 | task 20 | stop processing: n_tokens = 1510, truncated = 0\nslot update_slots: id  0 | task 21 | prompt processing done, n_tokens = 1560, batch.n_tokens = 50\nslot print_timing: id  0 | task 21 |\nprompt eval time =      98.10 ms /    50 tokens (    1.96 ms per token,   509.68 tokens per second)\n       eval time =    1302.44 ms /    96 runs   (   13.57 ms per token,    73.71 tokens per second)\n      total time =    1400.54 ms /   146 tokens\nslot      release: id  0 | task 21 | stop processing: n_past = 1656, truncated = 0\n' > two_requests.log
+printf '       eval time =     800.00 ms /    64 runs   (   12.50 ms per token,    80.00 tokens per second)\nslot update_slots: id  0 | task 30 | prompt processing done, n_tokens = 700, batch.n_tokens = 12\nslot      release: id  0 | task 30 | stop processing: n_tokens = 764, truncated = 0\n' > gen_only.log
+printf 'prompt eval time =     300.00 ms /   120 tokens (    2.50 ms per token,   400.00 tokens per second)\n       eval time =     500.00 ms /    40 runs   (   12.50 ms per token,    80.00 tokens per second)\nprompt eval time =     150.00 ms /    60 tokens (    2.50 ms per token,   400.50 tokens per second)\n' > trailing.log
 : > empty.log
-printf '\xe2\x86\x92 n_past = 5\n' > utf8_split.log
 cd - > /dev/null
 ```
-2. In `tools/ctxmon_oracle.py`:
-   - add the line `LOGS = ROOT / "tests" / "ctxmon" / "fixtures" / "logs"` directly after the `EXPECTED = ...` line;
-   - add this function directly after `fmt_duration_cases` (two blank lines before and after, as in the file):
+2. Replace the whole content of `tools/ctxmon_oracle.py` with exactly:
 ```python
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+# Writes the expected values for the ctxmon tests by running the frozen Python original.
+"""Usage: python3 tools/ctxmon_oracle.py  (rewrites tests/ctxmon/fixtures/expected/)"""
+import importlib.util
+import json
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+ORIGINAL = ROOT / "reference" / "ctxmon" / "ctxmon_gtk.py"
+EXPECTED = ROOT / "tests" / "ctxmon" / "fixtures" / "expected"
+LOGS = ROOT / "tests" / "ctxmon" / "fixtures" / "logs"
+TIMING = ROOT / "tests" / "ctxmon" / "fixtures" / "timing"
+
+
+def load_original():
+    sys.dont_write_bytecode = True  # keep reference/ free of __pycache__
+    spec = importlib.util.spec_from_file_location("ctxmon_gtk", ORIGINAL)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def fmt_duration_cases(m):
+    inputs = [0, 0.4, 0.5, 1.5, 2.5, 59.5, 89.4, 89.5, 90, 90.5, 125, 3599.5, 3600, 7322]
+    return [{"seconds": s, "text": m.fmt_duration(s)} for s in inputs]
+
+
 def last_tokens_cases(m):
     cases = []
     for path in sorted(LOGS.glob("*.log")):
@@ -61,10 +88,39 @@ def last_tokens_cases(m):
             tokens, kind, _found = m.last_tokens(str(path), floor)
             cases.append({"file": path.name, "floor": floor, "tokens": tokens, "kind": kind})
     return cases
+
+
+def timing_cases(m):
+    cases = []
+    for path in sorted(TIMING.glob("*.log")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        gen_tps, prompt_tps = m.last_speeds(text)
+        cases.append({"file": path.name, "gen_tps": gen_tps, "prompt_tps": prompt_tps,
+                      "requests": m.parse_requests(text)})
+    return cases
+
+
+GENERATORS = {
+    "fmt_duration": fmt_duration_cases,
+    "last_tokens": last_tokens_cases,
+    "timing": timing_cases,
+}
+
+
+def main():
+    m = load_original()
+    EXPECTED.mkdir(parents=True, exist_ok=True)
+    for name, generate in sorted(GENERATORS.items()):
+        path = EXPECTED / (name + ".json")
+        path.write_text(json.dumps(generate(m), indent=2) + "\n", encoding="utf-8")
+        print(path.relative_to(ROOT))
+
+
+if __name__ == "__main__":
+    main()
 ```
-   - change the `GENERATORS` line to: `GENERATORS = {"fmt_duration": fmt_duration_cases, "last_tokens": last_tokens_cases}`
 3. Run: `python3 tools/ctxmon_oracle.py; echo "exit=$?"`
-4. Create `src/ctxmon/core/log_tokens.h` with exactly this content:
+4. Replace the whole content of `src/ctxmon/core/log_tokens.h` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
@@ -75,6 +131,7 @@ def last_tokens_cases(m):
 #include <cstddef>
 #include <optional>
 #include <string_view>
+#include <vector>
 
 namespace vermilion::ctxmon {
 
@@ -93,19 +150,28 @@ struct TokenReading {
     TokenKind kind = TokenKind::Final;
 };
 
+// One token line and the byte offset where its match starts in the text.
+struct TokenMatch {
+    std::size_t pos = 0;
+    TokenReading reading;
+};
+
 // Byte offset where the scan of a log of file_size bytes starts. Content before floor (the
 // session start) is ignored; a floor beyond the end means the log was truncated (server
 // restart), so it counts as 0. At most the last kTailBytes are scanned.
 std::size_t tail_start(std::size_t file_size, std::size_t floor);
 
-// The last token line in text, or nothing if there is none. Bytes are matched raw, so a
-// multi-byte character cut at the start of a tail does no harm. A number too large for
-// long long is skipped (the Python original has no limit).
+// Every token line in text, oldest first. Bytes are matched raw, so a multi-byte character
+// cut at the start of a tail does no harm. A number too large for long long is skipped (the
+// Python original has no limit).
+std::vector<TokenMatch> token_matches(std::string_view text);
+
+// The last token line in text, or nothing if there is none (same rules as token_matches).
 std::optional<TokenReading> last_token(std::string_view text);
 
 } // namespace vermilion::ctxmon
 ```
-5. Create `src/ctxmon/core/log_tokens.cpp` with exactly this content:
+5. Replace the whole content of `src/ctxmon/core/log_tokens.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
@@ -120,6 +186,7 @@ std::optional<TokenReading> last_token(std::string_view text);
 #include <optional>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace vermilion::ctxmon {
 
@@ -151,9 +218,10 @@ std::size_t tail_start(std::size_t file_size, std::size_t floor) {
     return floor > tail ? floor : tail;
 }
 
-std::optional<TokenReading> last_token(std::string_view text) {
+std::vector<TokenMatch> token_matches(std::string_view text) {
+    std::vector<TokenMatch> matches;
     if (text.empty()) {
-        return std::nullopt; // also covers a default string_view, whose data() is null
+        return matches; // also covers a default string_view, whose data() is null
     }
     // The pattern is constant, so compiling cannot fail; every test runs it.
     g_autoptr(GRegex) regex =
@@ -161,8 +229,10 @@ std::optional<TokenReading> last_token(std::string_view text) {
     g_autoptr(GMatchInfo) info = nullptr;
     g_regex_match_full(regex, text.data(), static_cast<gssize>(text.size()), 0,
                        G_REGEX_MATCH_DEFAULT, &info, nullptr);
-    std::optional<TokenReading> last;
     while (g_match_info_matches(info)) {
+        gint match_start = -1;
+        gint match_end = -1;
+        g_match_info_fetch_pos(info, 0, &match_start, &match_end);
         for (const Group& group : kGroups) {
             gint start = -1;
             gint end = -1;
@@ -170,42 +240,252 @@ std::optional<TokenReading> last_token(std::string_view text) {
                 long long value = 0;
                 const auto result = std::from_chars(text.data() + start, text.data() + end, value);
                 if (result.ec == std::errc()) {
-                    last = TokenReading{value, group.kind};
+                    matches.push_back(
+                        {static_cast<std::size_t>(match_start), TokenReading{value, group.kind}});
                 }
             }
         }
         g_match_info_next(info, nullptr);
     }
-    return last;
+    return matches;
+}
+
+std::optional<TokenReading> last_token(std::string_view text) {
+    const std::vector<TokenMatch> matches = token_matches(text);
+    if (matches.empty()) {
+        return std::nullopt;
+    }
+    return matches.back().reading;
 }
 
 } // namespace vermilion::ctxmon
 ```
-6. In `src/ctxmon/core/CMakeLists.txt`:
-   - change the first line to `add_library(vermilion_ctxmon_core STATIC format.cpp log_tokens.cpp)`;
-   - change the last line to `target_link_libraries(vermilion_ctxmon_core PRIVATE vermilion_warnings vermilion_noexc PkgConfig::GLIB2)`.
-7. In `tests/ctxmon/CMakeLists.txt`, change the first line to `add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp)`.
-8. Create `tests/ctxmon/log_tokens_test.cpp` with exactly this content:
+6. Create `src/ctxmon/core/timing.h` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Tests for the ctxmon log token scanner against the values of the Python original.
+// Reads llama.cpp timing lines: the latest speeds and the list of finished requests.
+
+#pragma once
+
+#include <optional>
+#include <string_view>
+#include <vector>
+
+namespace vermilion::ctxmon {
+
+// Speeds of the last timing lines in a piece of log text, in tokens per second.
+struct LastSpeeds {
+    std::optional<double> gen_tps;    // last "eval time" line (generation)
+    std::optional<double> prompt_tps; // last "prompt eval time" line
+};
+
+// One finished request, built from its timing lines.
+struct FinishedRequest {
+    std::optional<long long> prompt_tokens; // absent without a preceding prompt line
+    std::optional<double> prompt_tps;
+    long long gen_tokens = 0;
+    double gen_tps = 0.0;
+    std::optional<long long> ctx; // context size after the request, when the log says so
+};
+
+// last_speeds of the Python original. A line whose numbers do not parse is skipped (the
+// Python original would raise).
+LastSpeeds last_speeds(std::string_view text);
+
+// parse_requests of the Python original: finished requests in text, oldest first. Lines whose
+// numbers do not parse are skipped, as in last_speeds.
+std::vector<FinishedRequest> parse_requests(std::string_view text);
+
+} // namespace vermilion::ctxmon
+```
+7. Create `src/ctxmon/core/timing.cpp` with exactly:
+```cpp
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Timing-line parsing: GEN_RE and PROMPT_RE of the Python original on GRegex.
+
+#include "ctxmon/core/timing.h"
+
+#include <glib.h>
+
+#include <algorithm>
+#include <charconv>
+#include <cstddef>
+#include <optional>
+#include <string_view>
+#include <system_error>
+#include <vector>
+
+#include "ctxmon/core/log_tokens.h"
+
+namespace vermilion::ctxmon {
+
+namespace {
+
+// "eval time = 1234.56 ms / 100 tokens ( 12.35 ms per token, 81.00 tokens per second)".
+// Groups: 1 milliseconds, 2 token count, 3 tokens per second. The lookbehind keeps the
+// generation pattern out of "prompt eval time" lines.
+constexpr const char* kGenPattern =
+    R"re((?<!prompt )eval time =\s*([\d.]+) ms /\s*(\d+) (?:tokens|runs)\s*)re"
+    R"re(\(\s*[\d.]+ ms per token,\s*([\d.]+) tokens per second\))re";
+constexpr const char* kPromptPattern =
+    R"re(prompt eval time =\s*([\d.]+) ms /\s*(\d+) (?:tokens|runs)\s*)re"
+    R"re(\(\s*[\d.]+ ms per token,\s*([\d.]+) tokens per second\))re";
+
+// One timing line and the byte offset where its match starts.
+struct Timing {
+    std::size_t pos = 0;
+    long long tokens = 0;
+    double tps = 0.0;
+};
+
+// Parses capture group `group` into value; false if it is unset or not entirely a number.
+template <typename T>
+bool parse_group(GMatchInfo* info, gint group, std::string_view text, T& value) {
+    gint start = -1;
+    gint end = -1;
+    if (!g_match_info_fetch_pos(info, group, &start, &end) || start < 0) {
+        return false;
+    }
+    const char* last = text.data() + end;
+    const auto result = std::from_chars(text.data() + start, last, value);
+    return result.ec == std::errc() && result.ptr == last;
+}
+
+// Every match of pattern in text whose token count and speed parse, oldest first.
+std::vector<Timing> timings(std::string_view text, const char* pattern) {
+    std::vector<Timing> out;
+    if (text.empty()) {
+        return out;
+    }
+    // The patterns are constant, so compiling cannot fail; every test runs them.
+    g_autoptr(GRegex) regex = g_regex_new(pattern, G_REGEX_RAW, G_REGEX_MATCH_DEFAULT, nullptr);
+    g_autoptr(GMatchInfo) info = nullptr;
+    g_regex_match_full(regex, text.data(), static_cast<gssize>(text.size()), 0,
+                       G_REGEX_MATCH_DEFAULT, &info, nullptr);
+    while (g_match_info_matches(info)) {
+        gint start = -1;
+        gint end = -1;
+        g_match_info_fetch_pos(info, 0, &start, &end);
+        Timing timing;
+        timing.pos = static_cast<std::size_t>(start);
+        if (parse_group(info, 2, text, timing.tokens) && parse_group(info, 3, text, timing.tps)) {
+            out.push_back(timing);
+        }
+        g_match_info_next(info, nullptr);
+    }
+    return out;
+}
+
+enum class EventKind { Token, Prompt, Gen };
+
+// A token line or a timing line, ordered by position for parse_requests.
+struct Event {
+    std::size_t pos = 0;
+    EventKind kind = EventKind::Token;
+    TokenKind token_kind = TokenKind::Final;
+    long long tokens = 0;
+    double tps = 0.0;
+};
+
+std::vector<Event> events_in(std::string_view text) {
+    std::vector<Event> events;
+    for (const TokenMatch& m : token_matches(text)) {
+        events.push_back({m.pos, EventKind::Token, m.reading.kind, m.reading.tokens, 0.0});
+    }
+    for (const Timing& t : timings(text, kPromptPattern)) {
+        events.push_back({t.pos, EventKind::Prompt, TokenKind::Final, t.tokens, t.tps});
+    }
+    for (const Timing& t : timings(text, kGenPattern)) {
+        events.push_back({t.pos, EventKind::Gen, TokenKind::Final, t.tokens, t.tps});
+    }
+    std::stable_sort(events.begin(), events.end(),
+                     [](const Event& a, const Event& b) { return a.pos < b.pos; });
+    return events;
+}
+
+} // namespace
+
+LastSpeeds last_speeds(std::string_view text) {
+    LastSpeeds speeds;
+    const std::vector<Timing> gen = timings(text, kGenPattern);
+    const std::vector<Timing> prompt = timings(text, kPromptPattern);
+    if (!gen.empty()) {
+        speeds.gen_tps = gen.back().tps;
+    }
+    if (!prompt.empty()) {
+        speeds.prompt_tps = prompt.back().tps;
+    }
+    return speeds;
+}
+
+std::vector<FinishedRequest> parse_requests(std::string_view text) {
+    std::vector<FinishedRequest> out;
+    std::optional<Event> pending; // the last prompt line not yet paired with a generation line
+    bool awaiting_ctx = false;
+    for (const Event& e : events_in(text)) {
+        if (e.kind == EventKind::Token) {
+            // llama.cpp prints the timings first and the release line right after, so the
+            // first non-prompt token line after a generation line is that request's context.
+            if (awaiting_ctx && e.token_kind != TokenKind::Prompt) {
+                out.back().ctx = e.tokens;
+                awaiting_ctx = false;
+            }
+        } else if (e.kind == EventKind::Prompt) {
+            pending = e;
+        } else {
+            FinishedRequest request;
+            if (pending) {
+                request.prompt_tokens = pending->tokens;
+                request.prompt_tps = pending->tps;
+            }
+            request.gen_tokens = e.tokens;
+            request.gen_tps = e.tps;
+            out.push_back(request);
+            pending.reset();
+            awaiting_ctx = true;
+        }
+    }
+    return out;
+}
+
+} // namespace vermilion::ctxmon
+```
+8. In `src/ctxmon/core/CMakeLists.txt`, change the first line to `add_library(vermilion_ctxmon_core STATIC format.cpp log_tokens.cpp timing.cpp)`.
+   In `tests/ctxmon/CMakeLists.txt`, change the first line to `add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp)`.
+9. In `tests/ctxmon/log_tokens_test.cpp`, add the line `using vermilion::ctxmon::token_matches;` directly after `using vermilion::ctxmon::tail_start;`, and append this test at the end of the file (one blank line before it):
+```cpp
+TEST(CtxmonLogTokens, TokenMatchesKeepOrderAndPositions) {
+    const auto matches = token_matches("ab n_past = 3\nstop processing: n_tokens = 9\n");
+    ASSERT_EQ(matches.size(), 2u);
+    EXPECT_EQ(matches[0].pos, 3u);
+    EXPECT_EQ(matches[0].reading.tokens, 3);
+    EXPECT_EQ(matches[1].pos, 14u);
+    EXPECT_EQ(matches[1].reading.tokens, 9);
+    EXPECT_EQ(kind_name(matches[1].reading.kind), std::string("final"));
+}
+```
+10. Create `tests/ctxmon/timing_test.cpp` with exactly:
+```cpp
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
+// Tests for the ctxmon timing-line parser against the values of the Python original.
 
 #include <gtest/gtest.h>
 #include <json-glib/json-glib.h>
 
-#include <cstddef>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <string>
-#include <string_view>
+#include <vector>
 
-#include "ctxmon/core/log_tokens.h"
+#include "ctxmon/core/timing.h"
 
-using vermilion::ctxmon::kTailBytes;
-using vermilion::ctxmon::last_token;
-using vermilion::ctxmon::tail_start;
-using vermilion::ctxmon::TokenKind;
+using vermilion::ctxmon::FinishedRequest;
+using vermilion::ctxmon::last_speeds;
+using vermilion::ctxmon::parse_requests;
 
 namespace {
 
@@ -214,23 +494,30 @@ std::string read_bytes(const std::string& path) {
     return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 }
 
-std::string kind_name(TokenKind kind) {
-    switch (kind) {
-    case TokenKind::Final:
-        return "final";
-    case TokenKind::Prompt:
-        return "prompt";
-    case TokenKind::Past:
-        return "past";
+// Compares a value that may be absent with a JSON member that may be null.
+void expect_member(JsonObject* object, const char* name, const std::optional<double>& value) {
+    SCOPED_TRACE(name);
+    if (json_object_get_null_member(object, name)) {
+        EXPECT_FALSE(value.has_value());
+    } else {
+        ASSERT_TRUE(value.has_value());
+        EXPECT_DOUBLE_EQ(*value, json_object_get_double_member(object, name));
     }
-    return "?";
+}
+
+void expect_request(JsonObject* expected, const FinishedRequest& actual) {
+    expect_member(expected, "prompt_tokens", actual.prompt_tokens);
+    expect_member(expected, "prompt_tps", actual.prompt_tps);
+    expect_member(expected, "gen_tokens", static_cast<double>(actual.gen_tokens));
+    expect_member(expected, "gen_tps", actual.gen_tps);
+    expect_member(expected, "ctx", actual.ctx);
 }
 
 } // namespace
 
-TEST(CtxmonLogTokens, MatchesOracle) {
+TEST(CtxmonTiming, MatchesOracle) {
     const std::string fixtures = CTXMON_FIXTURE_DIR;
-    const std::string path = fixtures + "/expected/last_tokens.json";
+    const std::string path = fixtures + "/expected/timing.json";
     g_autoptr(JsonParser) parser = json_parser_new();
     g_autoptr(GError) error = nullptr;
     ASSERT_TRUE(json_parser_load_from_file(parser, path.c_str(), &error))
@@ -238,62 +525,59 @@ TEST(CtxmonLogTokens, MatchesOracle) {
     JsonNode* root = json_parser_get_root(parser);
     ASSERT_TRUE(JSON_NODE_HOLDS_ARRAY(root));
     JsonArray* cases = json_node_get_array(root);
-    ASSERT_EQ(json_array_get_length(cases), 30u);
+    ASSERT_EQ(json_array_get_length(cases), 4u);
     for (guint i = 0; i < json_array_get_length(cases); ++i) {
         JsonObject* c = json_array_get_object_element(cases, i);
         const std::string file = json_object_get_string_member(c, "file");
-        const auto floor = static_cast<std::size_t>(json_object_get_int_member(c, "floor"));
-        SCOPED_TRACE(file + " floor " + std::to_string(floor));
-        const std::string bytes = read_bytes(fixtures + "/logs/" + file);
-        ASSERT_TRUE(!bytes.empty() || file == "empty.log");
-        const auto start = tail_start(bytes.size(), floor);
-        const auto reading = last_token(std::string_view(bytes).substr(start));
-        if (json_object_get_null_member(c, "tokens")) {
-            EXPECT_FALSE(reading.has_value());
-        } else {
-            ASSERT_TRUE(reading.has_value());
-            EXPECT_EQ(reading->tokens, json_object_get_int_member(c, "tokens"));
-            const std::string kind = json_object_get_string_member(c, "kind");
-            EXPECT_EQ(kind_name(reading->kind), kind);
+        SCOPED_TRACE(file);
+        const std::string text = read_bytes(fixtures + "/timing/" + file);
+        ASSERT_TRUE(!text.empty() || file == "empty.log");
+        const auto speeds = last_speeds(text);
+        expect_member(c, "gen_tps", speeds.gen_tps);
+        expect_member(c, "prompt_tps", speeds.prompt_tps);
+        const std::vector<FinishedRequest> requests = parse_requests(text);
+        JsonArray* expected = json_object_get_array_member(c, "requests");
+        ASSERT_EQ(requests.size(), json_array_get_length(expected));
+        for (guint k = 0; k < json_array_get_length(expected); ++k) {
+            SCOPED_TRACE(k);
+            expect_request(json_array_get_object_element(expected, k), requests[k]);
         }
     }
 }
 
-TEST(CtxmonLogTokens, TailStartKeepsOnlyTheTail) {
-    EXPECT_EQ(tail_start(kTailBytes + 100, 0), 100u);
-    EXPECT_EQ(tail_start(kTailBytes + 100, 500), 500u);
-    EXPECT_EQ(tail_start(kTailBytes + 100, kTailBytes + 200), 100u); // floor past the end
-    EXPECT_EQ(tail_start(10, 20), 0u);
+TEST(CtxmonTiming, MalformedRateIsSkipped) {
+    const std::string text = "eval time = 10.0 ms / 5 runs ( 2.00 ms per token, "
+                             "1.2.3 tokens per second)\n";
+    EXPECT_FALSE(last_speeds(text).gen_tps.has_value());
+    EXPECT_TRUE(parse_requests(text).empty());
 }
 
-TEST(CtxmonLogTokens, OverflowingNumberIsSkipped) {
-    const auto reading = last_token("n_past = 7\nn_past = 99999999999999999999\n");
-    ASSERT_TRUE(reading.has_value());
-    EXPECT_EQ(reading->tokens, 7);
-    EXPECT_EQ(kind_name(reading->kind), std::string("past"));
-}
-
-TEST(CtxmonLogTokens, DefaultViewHasNoReading) {
-    EXPECT_FALSE(last_token(std::string_view()).has_value());
+TEST(CtxmonTiming, PromptLineIsNotGeneration) {
+    const std::string text = "prompt eval time = 50.0 ms / 10 tokens ( 5.00 ms per token, "
+                             "200.00 tokens per second)\n";
+    const auto speeds = last_speeds(text);
+    EXPECT_FALSE(speeds.gen_tps.has_value());
+    ASSERT_TRUE(speeds.prompt_tps.has_value());
+    EXPECT_DOUBLE_EQ(*speeds.prompt_tps, 200.0);
 }
 ```
-9. Run: `clang-format -i src/ctxmon/core/log_tokens.h src/ctxmon/core/log_tokens.cpp tests/ctxmon/log_tokens_test.cpp; echo "exit=$?"`
-10. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.1`:
-    - `evidence/M1.1/configure.txt` from `cmake -S . -B build`
-    - `evidence/M1.1/build.txt` from `cmake --build build`
-    - `evidence/M1.1/ctest.txt` from `ctest --test-dir build --output-on-failure`
+11. Run: `clang-format -i src/ctxmon/core/log_tokens.h src/ctxmon/core/log_tokens.cpp src/ctxmon/core/timing.h src/ctxmon/core/timing.cpp tests/ctxmon/log_tokens_test.cpp tests/ctxmon/timing_test.cpp; echo "exit=$?"`
+12. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.2`:
+    - `evidence/M1.2/configure.txt` from `cmake -S . -B build`
+    - `evidence/M1.2/build.txt` from `cmake --build build`
+    - `evidence/M1.2/ctest.txt` from `ctest --test-dir build --output-on-failure`
 
-EVIDENCE (raw, AGENTS.md rule 12)
-E1. `git status --short --untracked-files=all`
-E2. `git diff -- tools/ctxmon_oracle.py src/ctxmon/core/CMakeLists.txt tests/ctxmon/CMakeLists.txt`
-E3. `cat -n` of `src/ctxmon/core/log_tokens.h`, `src/ctxmon/core/log_tokens.cpp` and `tests/ctxmon/log_tokens_test.cpp` (after step 9).
-E4. `wc -c tests/ctxmon/fixtures/logs/*.log` and `od -c tests/ctxmon/fixtures/logs/utf8_split.log`.
-E5. The output of steps 3 and 9.
-E6. FILE `evidence/M1.1/last_tokens_json.txt` from `cat tests/ctxmon/fixtures/expected/last_tokens.json`.
-E7. `wc -l` of every created or modified file except the fixture logs.
-E8. `grep -rnE "gtk/|gdk|pango|gtksourceview|vte|std::regex" src/ctxmon/core; echo "exit=$?"`
-E9. For each of the four evidence files: its path, then the raw output of `tail -n 3` on it.
-E10. `grep -E "tests passed|tests failed" evidence/M1.1/ctest.txt`
+EVIDENCE (AGENTS.md rules 12 and 18; FILE items are written by the command itself, then only their `tail -n 3` is pasted)
+E1. Raw: `git status --short --untracked-files=all`
+E2. FILE `evidence/M1.2/diff.txt` from `git diff`
+E3. FILE `evidence/M1.2/new_files.txt` from `cat -n src/ctxmon/core/timing.h src/ctxmon/core/timing.cpp tests/ctxmon/timing_test.cpp`
+E4. FILE `evidence/M1.2/timing_json.txt` from `cat tests/ctxmon/fixtures/expected/timing.json`
+E5. Raw: `wc -c tests/ctxmon/fixtures/timing/*.log`
+E6. Raw: the output of steps 3 and 11.
+E7. Raw: `wc -l` of every created or modified file except the fixture logs.
+E8. Raw: `grep -rnE "gtk/|gdk|pango|gtksourceview|vte|std::regex" src/ctxmon/core; echo "exit=$?"`
+E9. For each of the six evidence files: its path, then the raw output of `tail -n 3` on it.
+E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.2/ctest.txt`
 E11. Unexpected files: any file the commands created that the rails do not name, or "none" (AGENTS.md rule 8).
 
 End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
@@ -348,6 +632,9 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 - 2026-11-07 — M1.0 (`vermilion_ctxmon_core`, oracle script, `fmt_duration`, 69 tests) executed by Qwen, audited PASS WITH NOTES: evidence headers at `f39251b` with mtimes after the edits; flags as intended (`-fno-exceptions` on `format.cpp`, not on the test); reference hash unchanged. Note: the oracle wrote `reference/ctxmon/__pycache__` and Qwen removed it with `rm -rf` unasked; fix 1 makes the oracle write no bytecode.
 - 2026-11-07 — M1.0 fix 1 (oracle sets `sys.dont_write_bytecode`) audited PASS: fixture hash unchanged, `reference/ctxmon` clean. (Adam) **Persistent no-cleanup rule**: AGENTS.md rule 8 now forbids deleting, moving or cleaning up any file the prompt does not name, byproducts included; reports list them under "Unexpected files". AI_ONBOARDING.md section 5 records the drift.
 - 2026-11-07 — (Adam) **UI specifications first**: before the first UI work of any kind (M2.1 window, M2.9 ctxmon cards, every later panel), the Orchestrator tells Adam and discusses his UI specifications before writing a prompt. Marked in `docs/roadmap.md` under M2.
+- 2026-11-07 — M1.1 (`log_tokens`: `tail_start`, `last_token` on GRegex with `G_REGEX_RAW`; six fixture logs; 73 tests) executed by Qwen, audited PASS. Qwen did not paste E3 raw ("see tool output above"); from M1.2 on, `cat -n` of new files and `git diff` are FILE items (AI_ONBOARDING.md 2.8).
+- 2026-11-07 — (Orchestrator) Dictated code is compiled and checked before it is issued: the cloud workspace has g++ 13, clang 18, GLib 2.80 and clang-format 18.1.3 (AI_ONBOARDING.md 2.8). M1.2's code was compiled with the project flags, formatted, and run against the oracle on its fixtures and on the 30 M1.1 cases.
+- 2026-11-07 — (Adam) **The terminal is first built with ctxmon** (M2.9, VTE): it satisfies the terminal requirement. Whether the editor's bottom panel still gets terminal tabs (M4.5, reusing that widget) is open.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.

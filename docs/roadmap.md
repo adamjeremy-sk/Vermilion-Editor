@@ -55,7 +55,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M2.6 | Recent folders, last folder and window size | Restored on start | Qwen |
 | M2.7 | ctxmon settings and server list (`--server` specs, warning levels, opacity) in `src/ctxmon/core` | Tests; names fixed | Plan first (rule 10) |
 | M2.8 | ctxmon I/O on the main loop: log tail with `GFile` async reads, `/slots` and `/props` with libsoup async, a poll timer per server; feeds the M1 logic | Tests with a fake transport and a temp log | Orchestrator plans, Qwen codes |
-| M2.9 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set), VRAM bar, terminal, `GNotification` warnings | Matches the Python behaviour (Adam checks) | Qwen (split as needed) |
+| M2.9 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set), VRAM bar, the terminal (VTE; this is where Vermilion's terminal is first built, Adam 2026-11-07), `GNotification` warnings | Matches the Python behaviour (Adam checks) | Qwen (split as needed) |
 | M2.10 | Standalone `vermilion-ctxmon` executable (own `GtkApplication` window, same cards, no editor) | Runs without the editor; watches a real llama.cpp server | Qwen |
 
 ## M3: Directory sidebar (right-hand side)
@@ -75,7 +75,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M4.2 | Build-system detection presets | Tests on fixture folders | Qwen |
 | M4.3 | Run on `GSubprocess`, Output pane | Builds Vermilion itself. **◆ DOGFOOD 1: Vermilion edits and builds its own source** | Qwen |
 | M4.4 | Problem matchers, Problems list, clickable links | Tests on sample compiler output | Qwen |
-| M4.5 | VTE terminal tabs | Shell in the opened folder | Qwen |
+| M4.5 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M2.9 (whether this gate is still needed is open, Adam decides) | Shell in the opened folder | Qwen |
 | M4.6 | v0.1 review and tag | Adam signs off. **◆ DOGFOOD 2: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam |
 
 ## M5: Agent core (v0.2)

@@ -32,7 +32,8 @@ Every non-trivial task executes under this protocol. No exceptions.
     - Every prompt that creates or changes `.cpp` or `.h` files has one step just before the build: `Run: clang-format -i <exact list of the .cpp and .h files this step creates or changes>; echo "exit=$?"` (AGENTS.md rule 19 is the durable copy; the explicit step is what the local model reliably follows).
     - Never dictate whitespace (indent widths, line breaks); give the code and its meaning and let clang-format lay it out. Any code quoted in a prompt is already in clang-format layout (`.clang-format`: LLVM base, indent 4, 100 columns, access labels flush, `template <...>` on its own line, short functions inline).
     - Every prompt that creates a source or script file states its first lines exactly: the SPDX line, the copyright line and the purpose comment (AGENTS.md rules 5 and 16), because clang-format cannot add them and `SourceCheck.Repo` fails without them.
-    - Long outputs are marked FILE and go to `evidence/<gate>/` (AGENTS.md rule 18); short ones are pasted raw.
+    - Long outputs are marked FILE and go to `evidence/<gate>/` (AGENTS.md rule 18); short ones are pasted raw. `cat -n` of new files and `git diff` are always FILE items: in M1.1 Qwen replaced a long `cat -n` with "see tool output above".
+    - Dictated code is compiled and checked by the Orchestrator before it is issued: the cloud workspace has g++ 13, clang 18, GLib 2.80 and clang-format 18.1.3 (no GoogleTest or json-glib, so tests are checked with a small driver). Dictated files are run through `clang-format` with the project's `.clang-format` first, and the oracle is run on the fixtures.
     - Prompts and AGENTS.md never say what the Orchestrator itself checks or reads.
     - Check every tool option dictated in a prompt against the versions on Adam's machine (clang-format 18.1.3: the key is `AlwaysBreakTemplateDeclarations`, not `BreakTemplateDeclarations`).
 
