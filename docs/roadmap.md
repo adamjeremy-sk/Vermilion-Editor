@@ -57,6 +57,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M2.8 | ctxmon I/O on the main loop: log tail with `GFile` async reads, `/slots` and `/props` with libsoup async, a poll timer per server; feeds the M1 logic | Tests with a fake transport and a temp log | Orchestrator plans, Qwen codes |
 | M2.9 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set), VRAM bar, the terminal (VTE; this is where Vermilion's terminal is first built, Adam 2026-11-07), `GNotification` warnings | Matches the Python behaviour (Adam checks) | Qwen (split as needed) |
 | M2.10 | Standalone `vermilion-ctxmon` executable (own `GtkApplication` window, same cards, no editor) | Runs without the editor; watches a real llama.cpp server | Qwen |
+| M2.11 | Remove all Python (Adam, 2026-11-07): convert the oracle's expected JSON into inline C++ case tables in the ctxmon tests (the fixture `.log` files stay); delete `reference/ctxmon/ctxmon_gtk.py`, `tools/ctxmon_oracle.py` and `tests/ctxmon/fixtures/expected/`; tests no longer link json-glib unless another test needs it; `SourceCheck.Repo` fails on any tracked `.py` file | No `.py` file in `git ls-files`; same test count, all passing | Qwen |
 
 ## M3: Directory sidebar (right-hand side)
 | Gate | Work | Done when | Who |

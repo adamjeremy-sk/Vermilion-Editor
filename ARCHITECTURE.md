@@ -122,7 +122,7 @@ Switching to Unrestricted needs a confirmation dialog and shows a persistent red
 **MCP.** Vermilion is an MCP server over stdio exposing the same tool registry, and an MCP client for stdio tool servers. HTTP transports and ACP are deferred.
 
 ### 7.7 ctxmon (model monitor)  *(Decided)*
-From 2026-11-07 Vermilion's ctxmon is the source of truth and all ctxmon development happens in this repository (Adam). The Python original `reference/ctxmon/ctxmon_gtk.py` (Adam's own code, GPL-3; copied from `~/Projects/llm-suite-test` on 2026-11-05, sha256 `895a34f7...d407`, with its logo `ctxmon.svg`) is frozen: it is never built or linked, it is not re-copied, and it serves only as the oracle for the M1 tests. Whether it is removed once the port is complete is decided at the M2 review.
+From 2026-11-07 Vermilion's ctxmon is the source of truth and all ctxmon development happens in this repository (Adam). The Python original `reference/ctxmon/ctxmon_gtk.py` (Adam's own code, GPL-3; copied from `~/Projects/llm-suite-test` on 2026-11-05, sha256 `895a34f7...d407`, with its logo `ctxmon.svg`) is frozen: it is never built or linked, it is not re-copied, and it serves only as the oracle for the M1 tests and as the behavioural reference for the M2 cards. Gate M2.11 removes all Python from the repository (Adam, 2026-11-07): the expected values become inline C++ tables in the tests, the original and `tools/ctxmon_oracle.py` are deleted, and `SourceCheck.Repo` rejects any `.py` file from then on.
 
 **Layout.** `src/ctxmon/core` holds the logic (no GTK), `src/ctxmon/ui` the cards and the standalone executable, `tests/ctxmon` the tests; core and UI never mix (section 4).
 
