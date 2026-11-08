@@ -1,0 +1,182 @@
+[
+  {
+    "file": "empty.log",
+    "floor": 0,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "empty.log",
+    "floor": 1,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "empty.log",
+    "floor": 0,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "empty.log",
+    "floor": 0,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "empty.log",
+    "floor": 100,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "mixed_partial.log",
+    "floor": 0,
+    "tokens": 16,
+    "kind": "prompt"
+  },
+  {
+    "file": "mixed_partial.log",
+    "floor": 1,
+    "tokens": 16,
+    "kind": "prompt"
+  },
+  {
+    "file": "mixed_partial.log",
+    "floor": 119,
+    "tokens": 16,
+    "kind": "prompt"
+  },
+  {
+    "file": "mixed_partial.log",
+    "floor": 238,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "mixed_partial.log",
+    "floor": 338,
+    "tokens": 16,
+    "kind": "prompt"
+  },
+  {
+    "file": "new_wording.log",
+    "floor": 0,
+    "tokens": 4400,
+    "kind": "prompt"
+  },
+  {
+    "file": "new_wording.log",
+    "floor": 1,
+    "tokens": 4400,
+    "kind": "prompt"
+  },
+  {
+    "file": "new_wording.log",
+    "floor": 235,
+    "tokens": 4400,
+    "kind": "prompt"
+  },
+  {
+    "file": "new_wording.log",
+    "floor": 470,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "new_wording.log",
+    "floor": 570,
+    "tokens": 4400,
+    "kind": "prompt"
+  },
+  {
+    "file": "no_tokens.log",
+    "floor": 0,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "no_tokens.log",
+    "floor": 1,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "no_tokens.log",
+    "floor": 114,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "no_tokens.log",
+    "floor": 228,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "no_tokens.log",
+    "floor": 328,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "old_wording.log",
+    "floor": 0,
+    "tokens": 1100,
+    "kind": "past"
+  },
+  {
+    "file": "old_wording.log",
+    "floor": 1,
+    "tokens": 1100,
+    "kind": "past"
+  },
+  {
+    "file": "old_wording.log",
+    "floor": 151,
+    "tokens": 1100,
+    "kind": "past"
+  },
+  {
+    "file": "old_wording.log",
+    "floor": 303,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "old_wording.log",
+    "floor": 403,
+    "tokens": 1100,
+    "kind": "past"
+  },
+  {
+    "file": "utf8_split.log",
+    "floor": 0,
+    "tokens": 5,
+    "kind": "past"
+  },
+  {
+    "file": "utf8_split.log",
+    "floor": 1,
+    "tokens": 5,
+    "kind": "past"
+  },
+  {
+    "file": "utf8_split.log",
+    "floor": 7,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "utf8_split.log",
+    "floor": 15,
+    "tokens": null,
+    "kind": null
+  },
+  {
+    "file": "utf8_split.log",
+    "floor": 115,
+    "tokens": 5,
+    "kind": "past"
+  }
+]

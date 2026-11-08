@@ -1,0 +1,5 @@
+srv  log_server_r: request: POST /v1/chat/completions 127.0.0.1 200
+slot update_slots: id  0 | task 12 | prompt processing progress, n_tokens = 2048, batch.n_tokens = 2048, progress = 0.50
+slot update_slots: id  0 | task 12 | prompt processing done, n_tokens = 4096, batch.n_tokens = 48
+slot      release: id  0 | task 12 | stop processing: n_tokens = 4321, truncated = 0
+slot update_slots: id  0 | task 13 | prompt processing done, n_tokens = 4400, batch.n_tokens = 79

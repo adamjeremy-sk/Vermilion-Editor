@@ -1,0 +1,4 @@
+main: server is listening on http://127.0.0.1:8080
+slot update_slots: id  0 | task 4 | prompt processing progress, n_tokens = 128, batch.n_tokens = 128, progress = 1.00
+stats: maxn_past = 3
+srv  update_slots: all slots are idle
