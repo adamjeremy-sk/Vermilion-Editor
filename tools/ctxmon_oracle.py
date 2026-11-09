@@ -85,12 +85,205 @@ def http_cases(m):
     return {"slots": slots, "props": props, "models": models}
 
 
+def live_speed_cases(m):
+    inputs = [
+        ([], None),
+        ([[0.0, 5]], None),
+        ([[0.0, 5], [1.0, 5]], None),
+        ([[0.0, 5], [1.0, 25]], None),
+        ([[0.0, 5], [1.0, 3]], None),
+        ([[1.0, 5], [1.0, 25]], None),
+        ([[0.0, 0], [0.5, 10], [1.0, 30], [2.0, 70]], None),
+        ([[0.0, 0], [0.5, 10], [1.0, 30], [2.5, 70]], None),
+        ([[0.0, 0], [0.5, 10], [1.0, 30], [3.0, 70]], None),
+        ([[0.0, 0], [0.5, 10], [4.0, 30], [10.0, 90]], None),
+        ([[0.0, 0], [4.0, 30], [4.5, 30]], None),
+        ([[0.0, 0], [1.0, 10], [2.0, 30]], 1.0),
+        ([[0.0, 0], [1.0, 10], [2.0, 30]], 5.0),
+    ]
+    cases = []
+    for samples, window in inputs:
+        args = [[(t, n) for t, n in samples]] + ([] if window is None else [window])
+        cases.append({"samples": samples, "window": window, "speed": m.live_speed(*args)})
+    return cases
+
+
+def snap(**kw):
+    base = dict(state="up", used=None, used_kind=None, n_ctx=None, busy=False, n_decoded=None,
+                model=None, log_found=True, gen=None, prompt=None, requests=[])
+    base.update(kw)
+    return base
+
+
+def req(gen_tps, gen_tokens=100, prompt_tokens=None, prompt_tps=None, ctx=None, seed=False):
+    return dict(prompt_tokens=prompt_tokens, prompt_tps=prompt_tps, gen_tokens=gen_tokens,
+                gen_tps=gen_tps, ctx=ctx, seed=seed)
+
+
+def run_ticks(start, step, count, make):
+    return [(round(start + i * step, 6), make(i)) for i in range(count)]
+
+
+def state_scenarios():
+    busy = dict(used=2000, used_kind="prompt", n_ctx=8192, busy=True)
+    big = dict(n_ctx=2000000, used=1234567, used_kind="prompt", busy=True)
+    return [
+        {"name": "lifecycle", "default_ctx": 8192, "window": 600, "full": True, "steps": [
+            (0.0, snap(state="slow")),
+            (1.0, snap(state="down")),
+            (2.0, snap()),
+            (3.0, snap(used=1200, used_kind="final", n_ctx=8192, model="qwen", gen=41.5,
+                       prompt=900.25, requests=[req(41.5, 300, 1200, 900.25, 1200)])),
+            (4.0, snap(used=1200, used_kind="final", n_ctx=8192, busy=True, n_decoded=0)),
+            (5.0, snap(**busy, n_decoded=0)),
+            (6.0, snap(**busy, n_decoded=10)),
+            (6.5, snap(**busy, n_decoded=30)),
+            (7.0, snap(**busy, n_decoded=50)),
+            (7.5, snap(state="slow")),
+            (8.0, snap(**busy, n_decoded=90)),
+            (9.0, snap(used=2400, used_kind="final", n_ctx=8192,
+                       requests=[req(40.0, 400, 2000, 800.0, 2400)])),
+            (10.0, snap(state="down")),
+            (11.0, snap(used=2400, used_kind="final", n_ctx=4096)),
+        ]},
+        {"name": "no_request_yet", "default_ctx": 4096, "window": 600, "full": True, "steps": [
+            (0.0, snap(busy=True, n_decoded=0)),
+            (1.0, snap(busy=True, n_decoded=5)),
+            (2.0, snap(busy=True, n_decoded=1500)),
+            (3.0, snap(busy=None)),
+        ]},
+        {"name": "kinds_while_busy", "default_ctx": 8192, "window": 600, "full": True, "steps": [
+            (0.0, snap(used=500, used_kind="past", n_ctx=8192, busy=True, n_decoded=0)),
+            (1.0, snap(used=500, used_kind="past", n_ctx=8192, busy=True, n_decoded=40)),
+            (2.0, snap(used=500, used_kind="final", n_ctx=8192, busy=True, n_decoded=80)),
+            (3.0, snap(used=500, used_kind=None, n_ctx=8192, busy=True, n_decoded=120)),
+            (4.0, snap(used=500, used_kind="final", n_ctx=8192, busy=None, n_decoded=120)),
+        ]},
+        {"name": "full_context", "default_ctx": 4096, "window": 600, "full": True, "steps": [
+            (0.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (1.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+            (2.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=300)),
+            (3.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=1096)),
+            (4.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=1300)),
+        ]},
+        {"name": "big_numbers", "default_ctx": 100, "window": 600, "full": True, "steps": [
+            (0.0, snap(**big, n_decoded=0)),
+            (1.0, snap(**big, n_decoded=999)),
+            (2.0, snap(**big, n_decoded=1000)),
+            (3.0, snap(n_ctx=2000000, used=1000000, used_kind="final")),
+            (4.0, snap(n_ctx=2000000, used=999999, used_kind="final")),
+        ]},
+        {"name": "default_context", "default_ctx": 0, "window": 600, "full": True, "steps": [
+            (0.0, snap(used=100, used_kind="final")),
+            (1.0, snap(used=100, used_kind="final", n_ctx=0)),
+            (2.0, snap(state="down")),
+        ]},
+        {"name": "new_request_resets_samples", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [
+            (0.0, snap(**busy, n_decoded=0)),
+            (0.5, snap(**busy, n_decoded=100)),
+            (1.0, snap(**busy, n_decoded=200)),
+            (1.5, snap(**busy, n_decoded=5)),
+            (2.0, snap(**busy, n_decoded=60)),
+            (2.5, snap(**busy, n_decoded=None)),
+            (3.0, snap(**busy, n_decoded=70)),
+        ]},
+        {"name": "speed_history_spacing", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [
+            (0.0, snap(used=100, used_kind="final", requests=[req(30.0)])),
+            (0.4, snap(used=100, used_kind="final", requests=[req(31.0)])),
+            (1.0, snap(used=100, used_kind="final", requests=[req(32.0)])),
+            (1.2, snap(used=100, used_kind="final", requests=[req(0.0)])),
+            (1.4, snap(used=100, used_kind="final", requests=[req(33.0, seed=True)])),
+            (3.0, snap(**busy, n_decoded=0)),
+            (3.5, snap(**busy, n_decoded=20)),
+            (4.0, snap(**busy, n_decoded=60)),
+            (4.5, snap(used=2100, used_kind="final", n_ctx=8192)),
+            (5.0, snap(used=2100, used_kind="final", n_ctx=8192)),
+            (6.0, snap(state="down")),
+            (7.0, snap(state="down")),
+        ]},
+        {"name": "pruning", "default_ctx": 8192, "window": 10, "full": True, "steps": run_ticks(
+            0.0, 2.5, 14, lambda i: snap(used=100 + 50 * (i // 2), used_kind="final",
+                                         requests=[req(20.0 + i)] if i % 3 == 0 else []))},
+        {"name": "request_history_cap", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [
+            (0.0, snap(used=10, used_kind="final",
+                       requests=[req(float(i + 1), seed=(i % 4 == 0)) for i in range(55)])),
+            (1.0, snap(used=10, used_kind="final", requests=[req(70.0), req(71.0)])),
+        ]},
+        {"name": "context_history_spacing", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [(t, snap(used=500, used_kind="final", n_ctx=8192))
+                   for t in (0.0, 1.0, 2.0, 3.0, 4.0, 6.25, 7.0, 8.0, 8.5)]},
+        {"name": "sample_cap", "default_ctx": 100000, "window": 600, "full": False,
+         "steps": run_ticks(0.0, 0.02, 100, lambda i: snap(
+             used=1000, used_kind="prompt", n_ctx=100000, busy=True,
+             n_decoded=10 * i + i * i // 10))},
+    ]
+
+
+def view_of(result):
+    out = {"state": result["state"]}
+    if result["state"] == "slow":
+        return out
+    for key in ("ctx", "shown", "frac", "kind", "source", "estimating", "live", "gen", "prompt",
+                "eta", "busy", "model"):
+        out[key] = result[key]
+    out["log_found"] = bool(result.get("log_found"))
+    return out
+
+
+def histories_of(state):
+    return {"ctx_hist": [list(p) for p in state.ctx_hist],
+            "speed_hist": [list(p) for p in state.speed_hist],
+            "requests": [dict(r) for r in state.requests]}
+
+
+def server_state_cases(m):
+    cases = []
+    for scenario in state_scenarios():
+        state = m.ServerState(scenario["default_ctx"], history_seconds=scenario["window"])
+        steps = []
+        last = len(scenario["steps"]) - 1
+        for i, (now, snapshot) in enumerate(scenario["steps"]):
+            step = {"now": now, "snapshot": snapshot}
+            step["view"] = view_of(state.update(snapshot, now))
+            if scenario["full"] or i == last:
+                step.update(histories_of(state))
+            steps.append(step)
+        cases.append({"name": scenario["name"], "default_ctx": scenario["default_ctx"],
+                      "window": scenario["window"], "steps": steps})
+    return cases
+
+
 GENERATORS = {
     "fmt_duration": fmt_duration_cases,
     "last_tokens": last_tokens_cases,
     "http": http_cases,
+    "live_speed": live_speed_cases,
+    "server_state": server_state_cases,
     "timing": timing_cases,
 }
+
+
+def server_state_text(cases):
+    """One scenario per block and one step per line, so the file stays readable and diffable."""
+
+    def line(value):
+        return json.dumps(value, separators=(",", ":"))
+
+    out = ["["]
+    for ci, case in enumerate(cases):
+        head = line({k: case[k] for k in ("name", "default_ctx", "window")})
+        out.append(head[:-1] + ',"steps":[')
+        for si, step in enumerate(case["steps"]):
+            out.append(line(step) + ("," if si < len(case["steps"]) - 1 else ""))
+        out.append("]}" + ("," if ci < len(cases) - 1 else ""))
+    out.append("]")
+    return "\n".join(out) + "\n"
+
+
+WRITERS = {"server_state": server_state_text}
 
 
 def main():
@@ -98,7 +291,10 @@ def main():
     EXPECTED.mkdir(parents=True, exist_ok=True)
     for name, generate in sorted(GENERATORS.items()):
         path = EXPECTED / (name + ".json")
-        path.write_text(json.dumps(generate(m), indent=2) + "\n", encoding="utf-8")
+        cases = generate(m)
+        write = WRITERS.get(name)
+        text = write(cases) if write else json.dumps(cases, indent=2) + "\n"
+        path.write_text(text, encoding="utf-8")
         print(path.relative_to(ROOT))
 
 
