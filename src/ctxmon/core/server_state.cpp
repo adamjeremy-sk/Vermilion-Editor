@@ -5,9 +5,13 @@
 #include "ctxmon/core/server_state.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
+
+#include "ctxmon/core/format.h"
 
 namespace vermilion::ctxmon {
 
@@ -27,6 +31,49 @@ std::string with_commas(long long n) {
         out += digits[i];
     }
     return negative ? "-" + out : out;
+}
+
+// pct with no decimals, like Python's f"{pct:.0f}" (halves go to even).
+std::string whole_percent(double pct) {
+    char buffer[32];
+    std::snprintf(buffer, sizeof buffer, "%.0f", pct);
+    return buffer;
+}
+
+// Sets kind, shown, estimating and source of view: exact only when the request has finished and
+// the log says how many tokens the context holds; otherwise an estimate whose source text says
+// which parts are known.
+void classify_count(const Snapshot& s, StateView& v) {
+    const long long gen_now = s.busy && s.n_decoded && *s.n_decoded != 0 ? *s.n_decoded : 0;
+    if (!s.used) {
+        v.kind = CountKind::None;
+        v.shown = gen_now;
+        v.estimating = gen_now != 0;
+        v.source = v.estimating ? "estimate: " + with_commas(gen_now) +
+                                      " generated, prompt size not in the log yet"
+                                : "no request in the log yet";
+    } else if (!s.busy) {
+        v.kind = CountKind::Exact;
+        v.shown = *s.used;
+        v.source = "exact: from the server log";
+    } else if (s.used_kind == TokenKind::Final && gen_now == 0) {
+        // Busy, but the newest log line is the previous request's end: its prompt is not known.
+        v.kind = CountKind::Processing;
+        v.shown = *s.used;
+        v.estimating = true;
+        v.source = "estimate: new prompt loading (last known " + with_commas(*s.used) + ")";
+    } else if (gen_now == 0) {
+        v.kind = CountKind::Processing;
+        v.shown = *s.used;
+        v.estimating = true;
+        v.source = "estimate: prompt loading, " + with_commas(*s.used) + " so far";
+    } else {
+        v.kind = CountKind::Estimate;
+        v.shown = *s.used + gen_now;
+        v.estimating = true;
+        v.source = "estimate: prompt " + with_commas(*s.used) + " + " + with_commas(gen_now) +
+                   " generated";
+    }
 }
 
 // Drops points from the front while the second one is older than the window: one point older
@@ -110,28 +157,26 @@ void ServerState::add_requests(const std::vector<SnapshotRequest>& requests, dou
     }
 }
 
-StateView ServerState::update(const Snapshot& s, double now) {
-    StateView v;
-    v.state = s.state;
-    if (s.state == LinkState::Slow) {
-        return v;
-    }
-    add_requests(s.requests, now);
+ServerState::ServerState(long long default_ctx, std::vector<int> warn_levels,
+                         double history_seconds)
+    : default_ctx_(default_ctx), levels_(std::move(warn_levels)), window_(history_seconds) {
+    std::sort(levels_.begin(), levels_.end());
+}
 
-    if (s.state == LinkState::Down) {
-        v.ctx = last_ctx_ != 0 ? last_ctx_ : default_ctx_;
-        v.kind = CountKind::Down;
-        push_ctx(now, 0);
-        push_speed(now, std::nullopt);
-        samples_.clear();
-        was_busy_ = false;
-        return v;
-    }
+void ServerState::mark_down(StateView& view, double now) {
+    view.ctx = last_ctx_ != 0 ? last_ctx_ : default_ctx_;
+    view.kind = CountKind::Down;
+    push_ctx(now, 0);
+    push_speed(now, std::nullopt);
+    samples_.clear();
+    warned_.clear();
+    eta_warned_ = false;
+    first_ = true;
+    was_busy_ = false;
+}
 
-    const long long ctx = s.n_ctx && *s.n_ctx != 0 ? *s.n_ctx : default_ctx_;
-    last_ctx_ = ctx;
-
-    // Live speed from the tokens generated so far by the running request.
+// Live speed from the tokens generated so far by the running request.
+std::optional<double> ServerState::track_live_speed(const Snapshot& s, double now) {
     std::optional<double> live;
     if (s.busy && s.n_decoded) {
         if (!samples_.empty() && *s.n_decoded < samples_.back().n_decoded) {
@@ -151,54 +196,88 @@ StateView ServerState::update(const Snapshot& s, double now) {
         push_speed(now, std::nullopt); // break the line between requests
     }
     was_busy_ = s.busy;
+    return live;
+}
 
-    // Exact versus estimate.
-    const long long gen_now = s.busy && s.n_decoded && *s.n_decoded != 0 ? *s.n_decoded : 0;
-    if (!s.used) {
-        v.kind = CountKind::None;
-        v.shown = gen_now;
-        v.estimating = gen_now != 0;
-        v.source = v.estimating ? "estimate: " + with_commas(gen_now) +
-                                      " generated, prompt size not in the log yet"
-                                : "no request in the log yet";
-    } else if (!s.busy) {
-        v.kind = CountKind::Exact;
-        v.shown = *s.used;
-        v.source = "exact: from the server log";
-    } else if (s.used_kind == TokenKind::Final && gen_now == 0) {
-        // Busy, but the newest log line is the previous request's end: its prompt is not known.
-        v.kind = CountKind::Processing;
-        v.shown = *s.used;
-        v.estimating = true;
-        v.source = "estimate: new prompt loading (last known " + with_commas(*s.used) + ")";
-    } else if (gen_now == 0) {
-        v.kind = CountKind::Processing;
-        v.shown = *s.used;
-        v.estimating = true;
-        v.source = "estimate: prompt loading, " + with_commas(*s.used) + " so far";
+// _warnings of the Python original: fills view.alerts and view.level.
+void ServerState::add_warnings(StateView& v) {
+    const double pct = v.frac * 100.0;
+    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
+    if (first_) {
+        warned_.clear(); // do not alert about the past
+        for (int lv : levels_) {
+            if (pct >= lv) {
+                warned_.insert(lv);
+            }
+        }
+        first_ = false;
     } else {
-        v.kind = CountKind::Estimate;
-        v.shown = *s.used + gen_now;
-        v.estimating = true;
-        v.source = "estimate: prompt " + with_commas(*s.used) + " + " + with_commas(gen_now) +
-                   " generated";
+        std::vector<int> newly;
+        for (int lv : levels_) {
+            if (pct >= lv && warned_.count(lv) == 0) {
+                newly.push_back(lv);
+            }
+        }
+        warned_.insert(newly.begin(), newly.end());
+        if (!newly.empty()) {
+            const int lv = newly.back();
+            v.alerts.push_back({lv,
+                                "Context " + whole_percent(pct) + "% full (" +
+                                    with_commas(v.shown) + " / " + with_commas(v.ctx) +
+                                    " tokens, " + with_commas(free_tokens) + " free)",
+                                lv >= levels_.back()});
+        }
+    }
+    for (auto it = warned_.begin(); it != warned_.end();) { // re-arm once usage drops well below
+        it = pct < *it - 10 ? warned_.erase(it) : std::next(it);
+    }
+    if (!v.busy) {
+        eta_warned_ = false;
+    } else if (v.eta && *v.eta < kEtaWarnSeconds && !eta_warned_) {
+        eta_warned_ = true;
+        v.alerts.push_back({std::nullopt,
+                            "Context will be full in ~" + fmt_duration(*v.eta) +
+                                " at the current speed (" + with_commas(free_tokens) +
+                                " tokens free)",
+                            true});
+    }
+    for (int lv : levels_) {
+        if (pct >= lv) {
+            v.level = lv;
+        }
+    }
+}
+
+StateView ServerState::update(const Snapshot& s, double now) {
+    StateView v;
+    v.state = s.state;
+    if (s.state == LinkState::Slow) {
+        return v;
+    }
+    add_requests(s.requests, now);
+    if (s.state == LinkState::Down) {
+        mark_down(v, now);
+        return v;
     }
 
-    v.ctx = ctx;
+    v.ctx = s.n_ctx && *s.n_ctx != 0 ? *s.n_ctx : default_ctx_;
+    last_ctx_ = v.ctx;
+    v.live = track_live_speed(s, now);
+    classify_count(s, v);
     v.frac =
-        ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(ctx), 1.0) : 0.0;
-    const long long free_tokens = std::max(ctx - v.shown, 0LL);
-    if (s.busy && live && free_tokens > 0) {
-        v.eta = static_cast<double>(free_tokens) / *live;
+        v.ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(v.ctx), 1.0) : 0.0;
+    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
+    if (s.busy && v.live && free_tokens > 0) {
+        v.eta = static_cast<double>(free_tokens) / *v.live;
     }
     push_ctx(now, v.shown);
 
-    v.live = live;
     v.gen = s.gen;
     v.prompt = s.prompt;
     v.busy = s.busy;
     v.model = s.model;
     v.log_found = s.log_found;
+    add_warnings(v);
     return v;
 }
 

@@ -8,9 +8,11 @@
 #include <deque>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "ctxmon/core/server_state.h"
 
+using vermilion::ctxmon::Alert;
 using vermilion::ctxmon::count_kind_name;
 using vermilion::ctxmon::CountKind;
 using vermilion::ctxmon::LinkState;
@@ -159,6 +161,16 @@ void expect_view(JsonObject* e, const StateView& v) {
     EXPECT_EQ(v.busy, json_object_get_boolean_member(e, "busy") != FALSE);
     expect_string(v.model, member(e, "model"));
     EXPECT_EQ(v.log_found, json_object_get_boolean_member(e, "log_found") != FALSE);
+    EXPECT_EQ(v.level, json_object_get_int_member(e, "level"));
+    JsonArray* alerts = json_object_get_array_member(e, "alerts");
+    ASSERT_EQ(json_array_get_length(alerts), v.alerts.size());
+    for (guint i = 0; i < json_array_get_length(alerts); ++i) {
+        JsonObject* a = json_array_get_object_element(alerts, i);
+        const Alert& alert = v.alerts[i];
+        expect_int(alert.level, member(a, "level"));
+        EXPECT_EQ(alert.message, std::string(json_object_get_string_member(a, "message")));
+        EXPECT_EQ(alert.critical, json_object_get_boolean_member(a, "critical") != FALSE);
+    }
 }
 
 // The histories, when the step records them (long scenarios record only the last step).
@@ -221,11 +233,16 @@ TEST(CtxmonServerState, StateMatchesOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
     JsonArray* scenarios = load_cases(parser, "server_state.json");
     ASSERT_NE(scenarios, nullptr);
-    ASSERT_EQ(json_array_get_length(scenarios), 12u);
+    ASSERT_EQ(json_array_get_length(scenarios), 22u);
     for (guint i = 0; i < json_array_get_length(scenarios); ++i) {
         JsonObject* scenario = json_array_get_object_element(scenarios, i);
         SCOPED_TRACE(json_object_get_string_member(scenario, "name"));
-        ServerState state(json_object_get_int_member(scenario, "default_ctx"),
+        std::vector<int> levels;
+        JsonArray* level_list = json_object_get_array_member(scenario, "levels");
+        for (guint k = 0; k < json_array_get_length(level_list); ++k) {
+            levels.push_back(static_cast<int>(json_array_get_int_element(level_list, k)));
+        }
+        ServerState state(json_object_get_int_member(scenario, "default_ctx"), levels,
                           json_object_get_double_member(scenario, "window"));
         JsonArray* steps = json_object_get_array_member(scenario, "steps");
         for (guint k = 0; k < json_array_get_length(steps); ++k) {
@@ -265,4 +282,28 @@ TEST(CtxmonServerState, SlowSnapshotChangesNothing) {
     EXPECT_EQ(state.ctx_history().size(), 1u);
     EXPECT_TRUE(state.speed_history().empty());
     EXPECT_TRUE(state.requests().empty());
+}
+
+TEST(CtxmonServerState, DefaultLevelsAre80And95) {
+    ServerState state(1000);
+    Snapshot snapshot;
+    snapshot.used_kind = TokenKind::Final;
+    snapshot.used = 100;
+    EXPECT_TRUE(state.update(snapshot, 1.0).alerts.empty());
+
+    snapshot.used = 850;
+    StateView view = state.update(snapshot, 2.0);
+    ASSERT_EQ(view.alerts.size(), 1u);
+    EXPECT_EQ(view.level, 80);
+    EXPECT_EQ(view.alerts[0].level, std::optional<int>(80));
+    EXPECT_EQ(view.alerts[0].message,
+              std::string("Context 85% full (850 / 1,000 tokens, 150 free)"));
+    EXPECT_FALSE(view.alerts[0].critical);
+
+    snapshot.used = 960;
+    view = state.update(snapshot, 3.0);
+    ASSERT_EQ(view.alerts.size(), 1u);
+    EXPECT_EQ(view.level, 95);
+    EXPECT_EQ(view.alerts[0].level, std::optional<int>(95));
+    EXPECT_TRUE(view.alerts[0].critical);
 }

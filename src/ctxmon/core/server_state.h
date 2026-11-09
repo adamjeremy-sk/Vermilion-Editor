@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <deque>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,7 @@ namespace vermilion::ctxmon {
 constexpr double kLiveWindow = 2.0;      // seconds of samples used for the live speed
 constexpr std::size_t kMaxRequests = 50; // request history length per server
 constexpr std::size_t kMaxSamples = 64;  // live-speed samples kept per server
+constexpr double kEtaWarnSeconds = 60.0; // warn when the context would fill within this
 
 // How many tokens a running request has generated, and when that was read.
 struct Sample {
@@ -68,6 +70,14 @@ enum class CountKind {
 // "estimate").
 const char* count_kind_name(CountKind kind);
 
+// A warning raised by update. level is the context percentage that was crossed, absent for the
+// time-to-full alert. critical marks the highest level and the time-to-full alert.
+struct Alert {
+    std::optional<int> level;
+    std::string message;
+    bool critical = false;
+};
+
 // What update returns. With state Slow nothing else is set: the caller keeps the old numbers.
 struct StateView {
     LinkState state = LinkState::Up;
@@ -84,6 +94,8 @@ struct StateView {
     bool busy = false;
     std::optional<std::string> model;
     bool log_found = false;
+    std::vector<Alert> alerts; // raised by this snapshot
+    int level = 0;             // highest warning level reached now, 0 if none
 };
 
 struct CtxPoint {
@@ -101,11 +113,13 @@ struct RequestRecord {
     std::optional<double> time; // absent for seed requests
 };
 
-// ServerState of the Python original, without the warnings (they come in the next gate).
+// ServerState of the Python original.
 class ServerState {
 public:
-    explicit ServerState(long long default_ctx, double history_seconds = 600.0)
-        : default_ctx_(default_ctx), window_(history_seconds) {}
+    // warn_levels are context percentages (80 and 95 in the original); history_seconds is how
+    // long the histories reach back.
+    explicit ServerState(long long default_ctx, std::vector<int> warn_levels = {80, 95},
+                         double history_seconds = 600.0);
 
     // Digests one snapshot taken at time now (seconds).
     StateView update(const Snapshot& snapshot, double now);
@@ -118,8 +132,12 @@ private:
     void push_ctx(double now, long long tokens);
     void push_speed(double now, std::optional<double> tps);
     void add_requests(const std::vector<SnapshotRequest>& requests, double now);
+    void mark_down(StateView& view, double now);
+    std::optional<double> track_live_speed(const Snapshot& snapshot, double now);
+    void add_warnings(StateView& view);
 
     long long default_ctx_;
+    std::vector<int> levels_; // sorted
     double window_;
     std::deque<CtxPoint> ctx_hist_;
     std::deque<SpeedPoint> speed_hist_;
@@ -127,6 +145,9 @@ private:
     std::deque<Sample> samples_;
     long long last_ctx_ = 0; // 0: none yet
     bool was_busy_ = false;
+    std::set<int> warned_;    // levels already announced
+    bool eta_warned_ = false; // the time-to-full alert was raised for the running request
+    bool first_ = true;       // no snapshot seen since start or since the server went down
 };
 
 } // namespace vermilion::ctxmon

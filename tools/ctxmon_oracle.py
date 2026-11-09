@@ -215,6 +215,62 @@ def state_scenarios():
         {"name": "context_history_spacing", "default_ctx": 8192, "window": 600, "full": True,
          "steps": [(t, snap(used=500, used_kind="final", n_ctx=8192))
                    for t in (0.0, 1.0, 2.0, 3.0, 4.0, 6.25, 7.0, 8.0, 8.5)]},
+        {"name": "warning_levels", "default_ctx": 1000, "window": 600, "full": False, "steps": [
+            (float(i), snap(used=used, used_kind="final", n_ctx=1000))
+            for i, used in enumerate([900, 920, 960, 960, 850, 840, 700, 690, 810, 970, 985])]},
+        {"name": "jump_over_both_levels", "default_ctx": 1000, "window": 600, "full": False,
+         "steps": [(0.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=970, used_kind="final", n_ctx=1000)),
+                   (2.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (3.0, snap(used=800, used_kind="final", n_ctx=1000))]},
+        {"name": "down_resets_warnings", "default_ctx": 1000, "window": 600, "full": False,
+         "steps": [(0.0, snap(used=900, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=960, used_kind="final", n_ctx=1000)),
+                   (2.0, snap(state="down")),
+                   (3.0, snap(used=960, used_kind="final", n_ctx=1000)),
+                   (4.0, snap(used=650, used_kind="final", n_ctx=1000)),
+                   (5.0, snap(used=850, used_kind="final", n_ctx=1000))]},
+        {"name": "percent_rounds_half_even", "default_ctx": 8000, "levels": [10],
+         "window": 600, "full": False,
+         "steps": [(0.0, snap(used=80, used_kind="final", n_ctx=8000)),
+                   (1.0, snap(used=1000, used_kind="final", n_ctx=8000))]},
+        {"name": "percent_rounds_up", "default_ctx": 8000, "levels": [13], "window": 600,
+         "full": False,
+         "steps": [(0.0, snap(used=80, used_kind="final", n_ctx=8000)),
+                   (1.0, snap(used=1080, used_kind="final", n_ctx=8000))]},
+        {"name": "unsorted_levels", "default_ctx": 1000, "levels": [95, 50, 80], "window": 600,
+         "full": False,
+         "steps": [(0.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=600, used_kind="final", n_ctx=1000)),
+                   (2.0, snap(used=990, used_kind="final", n_ctx=1000))]},
+        {"name": "no_levels", "default_ctx": 1000, "levels": [], "window": 600, "full": False,
+         "steps": [(0.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=990, used_kind="final", n_ctx=1000))]},
+        {"name": "time_to_full_alert", "default_ctx": 4096, "window": 600, "full": False,
+         "steps": [
+            (0.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (1.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+            (2.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=200)),
+            (3.0, snap(used=3200, used_kind="final", n_ctx=4096)),
+            (4.0, snap(used=3200, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (5.0, snap(used=3200, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=300)),
+            (6.0, snap(used=3200, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=600)),
+            (7.0, snap(used=100, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (8.0, snap(used=100, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=5)),
+            (9.0, snap(used=100, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=8)),
+        ]},
+        {"name": "hysteresis_boundary", "default_ctx": 1000, "levels": [95], "window": 600,
+         "full": False,
+         "steps": [(float(i), snap(used=used, used_kind="final", n_ctx=1000))
+                   for i, used in enumerate([900, 960, 855, 960, 850, 960, 849, 960])]},
+        {"name": "time_to_full_after_down", "default_ctx": 4096, "window": 600, "full": False,
+         "steps": [
+            (0.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (1.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+            (2.0, snap(state="down")),
+            (3.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (4.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+        ]},
         {"name": "sample_cap", "default_ctx": 100000, "window": 600, "full": False,
          "steps": run_ticks(0.0, 0.02, 100, lambda i: snap(
              used=1000, used_kind="prompt", n_ctx=100000, busy=True,
@@ -230,6 +286,9 @@ def view_of(result):
                 "eta", "busy", "model"):
         out[key] = result[key]
     out["log_found"] = bool(result.get("log_found"))
+    out["alerts"] = [{"level": lv if isinstance(lv, int) else None, "message": text,
+                      "critical": critical} for lv, text, critical in result["alerts"]]
+    out["level"] = result["level"]
     return out
 
 
@@ -242,7 +301,9 @@ def histories_of(state):
 def server_state_cases(m):
     cases = []
     for scenario in state_scenarios():
-        state = m.ServerState(scenario["default_ctx"], history_seconds=scenario["window"])
+        levels = scenario.get("levels", [80, 95])
+        state = m.ServerState(scenario["default_ctx"], warn_levels=tuple(levels),
+                              history_seconds=scenario["window"])
         steps = []
         last = len(scenario["steps"]) - 1
         for i, (now, snapshot) in enumerate(scenario["steps"]):
@@ -252,7 +313,7 @@ def server_state_cases(m):
                 step.update(histories_of(state))
             steps.append(step)
         cases.append({"name": scenario["name"], "default_ctx": scenario["default_ctx"],
-                      "window": scenario["window"], "steps": steps})
+                      "levels": levels, "window": scenario["window"], "steps": steps})
     return cases
 
 
@@ -274,7 +335,7 @@ def server_state_text(cases):
 
     out = ["["]
     for ci, case in enumerate(cases):
-        head = line({k: case[k] for k in ("name", "default_ctx", "window")})
+        head = line({k: case[k] for k in ("name", "default_ctx", "levels", "window")})
         out.append(head[:-1] + ',"steps":[')
         for si, step in enumerate(case["steps"]):
             out.append(line(step) + ("," if si < len(case["steps"]) - 1 else ""))
