@@ -4,17 +4,17 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-08 ~21:30 (M1.4b audited PASS; gate commit, docs commit and push pending with Adam) |
+| Updated | 2026-11-08 ~22:00 (M1.5 audited PASS, awaiting commit; session handoff, Adam wants a discussion first) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info` first; if `connectedFolders` already lists `/home/adam/Projects/vermilion-editor`, no request is needed. Otherwise call `device_request_folder_access` for that path once (the grant is recursive). If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Note: `device_bash` runs in a VM on Adam's machine, so tool versions seen there (python 3.10, awk) are not Adam's host versions. Editing rights are unchanged: root orchestration docs and `docs/` only, never code. |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, model monitor (ctxmon), GPL-3.0-or-later. Written from scratch. |
-| Repo state | HEAD `9bd72c4`, in sync with `origin/main`. Uncommitted: the M1.4b gate (`server_state.h/.cpp`, `server_state_test.cpp`, `server_state.json`, `ctxmon_oracle.py`) plus ` M HANDOFF.md` (Orchestrator) and an untracked folder `Claude outputs/` that Adam deletes and never commits. Adam commits the gate as "M1.4b: ctxmon server state warnings (88 tests)", then the docs as "docs: handoff after M1.4b", and pushes. |
-| Version / HEAD | `9bd72c4`. ctxmon core: `format`, `log_tokens`, `timing`, `server_api`, `server_state` (`live_speed`, `ServerState` without warnings; M1.4b adds the warnings). Oracle generators `fmt_duration`, `last_tokens`, `timing`, `http`, `live_speed`, `server_state`. |
-| Tests | 88, all passing (M1.4b). |
-| Active task | **M1, ctxmon logic** (M1.0 to M1.4a done; M1.4b issued). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
-| Gate position | M1.4b executed and audited PASS (uncommitted until Adam commits). Next: M1.5 (graph geometry), then M1.6 (VRAM readers), then the M1 milestone review. Open discussion with Adam before M1.5: the size of gate prompts (see Decision Log 2026-11-08, context budget). |
-| Awaiting | Adam: delete `Claude outputs/`, commit M1.4b and the docs, push, send the new short HEAD; and his view on the prompt-size discussion. |
-| Last prompt issued | M1.4b (issued 2026-11-08, verbatim below; audited PASS). |
-| Next action | Discuss the prompt-size question with Adam (no rule yet), then write M1.5: `graph_segments`, `nice_max`, `graph_span` (read ctxmon_gtk.py lines 562 to 618 first; compile and oracle-check the dictated code with a driver plus mutation check, as for M1.4). Then M1.6 (VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing), then the M1 milestone review with Adam (AI_ONBOARDING.md 2.7). Before any UI gate, talk with Adam about his UI specifications. Long prompts are given inline in the reply from now on. README.md only at the end-of-day handoff. |
+| Repo state | HEAD `69bbcdf` ("docs: handoff after M1.4b"), in sync with `origin/main`. Uncommitted: the M1.5 gate files (` M src/ctxmon/core/CMakeLists.txt`, ` M tests/ctxmon/CMakeLists.txt`, ` M tools/ctxmon_oracle.py`, `?? src/ctxmon/core/graph.cpp`, `?? src/ctxmon/core/graph.h`, `?? tests/ctxmon/fixtures/expected/graph.json`, `?? tests/ctxmon/graph_test.cpp`) and ` M HANDOFF.md`. The stray file `-1` is gone. |
+| Version / HEAD | `69bbcdf` plus the uncommitted M1.5 gate. ctxmon core: `format`, `log_tokens`, `timing`, `server_api`, `server_state` (complete with warnings), `graph`. Oracle generators `fmt_duration`, `last_tokens`, `timing`, `http`, `live_speed`, `server_state`, `graph`. |
+| Tests | 93, all passing (M1.5, Adam's build). |
+| Active task | **M1, ctxmon logic** (M1.0 to M1.5 done; M1.6 next, not yet written). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
+| Gate position | **M1.5** (`graph_segments`, `nice_max`, `graph_span`) run by Qwen and audited PASS; not yet committed. Adam asked the Orchestrator NOT to write the next prompt: there is something to discuss first, in the next chat. |
+| Awaiting | Adam: commit and push M1.5 (lines below in the decision log entry), then the discussion he wants to have; no M1.6 prompt until that is done. |
+| Last prompt issued | M1.5 (verbatim below; executed and audited). |
+| Next action | 1. Ask Adam for the new HEAD and what he wants to discuss (he did not say; it may be about prompt size, process or the plan). 2. Then M1.6 (VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing; read ctxmon_gtk.py lines 620 to 668 first; fake sysfs trees are created by commands in the prompt, no Python needed for them), then the M1 milestone review with Adam (AI_ONBOARDING.md 2.7, output `docs/milestones/M1-review.md`). Before any UI gate, talk with Adam about his UI specifications. README.md only at the end-of-day handoff. |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. Adam codes only at home on this computer with the chat linked, so the Orchestrator can always read `evidence/`. |
 
 **Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: none open in code. Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every C++ line they dictate within 100 columns; Qwen replaced raw output with summaries twice (M0.5d1, M0.5d2), answered from M0.5c1 on by AGENTS.md rule 18 (evidence files the Orchestrator reads itself; Adam trusts Qwen not to fabricate them, the Orchestrator still checks headers and mtimes for staleness); clang-format is 18.1.3 on Adam's machine and not installed in the Orchestrator's VM; do not run dependent Orchestrator tool calls in parallel; **prompts and AGENTS.md never mention what the Orchestrator checks or reads (Adam, 2026-11-06)**; check clang-format option names against version 18 before dictating them. Prompt-authoring practices (format step, no dictated whitespace, header lines for new files, FILE evidence, silence about the Orchestrator's checks, tool-version check) are in AI_ONBOARDING.md section 2 item 8. Topics already collected for the M0 review: raw-output summarising and rule 18; format-style choice and rule 19 (the Orchestrator's wrong clang-format key); prompt bugs found by Qwen (`EXPECT_EQ` on `const char*`, over-long dictated lines); GLib weak-pointer quirk; gate sizes. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
@@ -22,19 +22,19 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 
 ## Last prompt (verbatim)
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: New task; HEAD 9bd72c4 with exactly one uncommitted file, HANDOFF.md (a documentation edit; it is expected, so do not touch, revert or build on it, and do not list it under E11). Otherwise the tree is clean.
+Last verified: New task; HEAD 69bbcdf with exactly one uncommitted file, HANDOFF.md (a documentation edit; it is expected, so do not touch, revert or build on it, and do not list it under E11). Otherwise the tree is clean.
 
-TASK: Gate M1.4b, ctxmon server state warnings. One step.
+TASK: Gate M1.5, ctxmon graph geometry. One step.
 
 CONTEXT (BINDING)
 - ctxmon logic lives in `src/ctxmon/core` (library `vermilion_ctxmon_core`, namespace `vermilion::ctxmon`, no GTK headers; GLib and json-glib are allowed). Tests live in `tests/ctxmon` (executable `vermilion_ctxmon_tests`). Expected values come from the frozen Python original `reference/ctxmon/ctxmon_gtk.py` (read-only) through `tools/ctxmon_oracle.py`.
-- Gate M1.4a ported `ServerState` without warnings. This gate adds the warnings (`_warnings`, ctxmon_gtk.py lines 534 to 559): context-percentage levels (80 and 95 by default, configurable), re-arming with a 10-point hysteresis, no alert about the past on the first snapshot, and the time-to-full alert. `update` now returns the alerts it raised and the highest level reached; the `down` state also resets the warning state. `ServerState::update` is split into helpers because it had grown past 50 lines.
-- All four files below are replaced as a whole. The oracle scripts more snapshot sequences (22 scenarios now) and records alerts and level for every step; the answers are written into `tests/ctxmon/fixtures/expected/server_state.json`.
-- Test count: 87 now, 88 after this gate.
+- This gate ports the three pure graph functions `graph_segments`, `nice_max` and `graph_span` (ctxmon_gtk.py lines 562 to 616) as a new module `graph`. The oracle runs the Python functions on scripted point series and frames and writes inputs and answers together into `tests/ctxmon/fixtures/expected/graph.json` (one case per line).
+- Test count: 88 now, 93 after this gate.
 
 STRICT RAILS
-- Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/server_state.h`, `src/ctxmon/core/server_state.cpp`, `tests/ctxmon/server_state_test.cpp`, and `tests/ctxmon/fixtures/expected/server_state.json` (rewritten by the oracle, never by hand).
-- Create no file. Re-running the oracle rewrites the other five expected JSON files with identical content: `git status` must not list them as modified.
+- Create exactly these files: `src/ctxmon/core/graph.h`, `src/ctxmon/core/graph.cpp`, `tests/ctxmon/graph_test.cpp`, and `tests/ctxmon/fixtures/expected/graph.json` (written by the oracle, never by hand).
+- Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/CMakeLists.txt`, `tests/ctxmon/CMakeLists.txt`.
+- Re-running the oracle rewrites the other six expected JSON files with identical content: `git status` must not list them as modified.
 - No other change. No new dependency.
 
 STEP 1
@@ -320,6 +320,72 @@ def state_scenarios():
     ]
 
 
+GRAPH_SERIES = {
+    "empty": [],
+    "single": [(95, 5)],
+    "rising": [(60, 0), (70, 10), (80, 20), (90, 30), (100, 40)],
+    "with_gaps": [(60, 10), (70, 20), (80, None), (90, 30), (95, None), (100, 50)],
+    "old_then_new": [(10, 7), (20, 9), (50, 12), (70, 15), (90, 20)],
+    "old_gap_new": [(10, 3), (20, None), (30, 4), (90, 5)],
+    "leading_gaps": [(50, None), (60, 5), (70, None), (80, None), (90, 6)],
+    "trailing_gap_now": [(60, 5), (70, 6), (100, None)],
+    "trailing_gap_future": [(60, 5), (120, None)],
+    "out_of_range": [(70, -5), (80, 500), (90, 12.5)],
+    "future_points": [(90, 3), (110, 4)],
+    "same_times": [(80, 1), (80, 2)],
+}
+
+# (now, span, ymax, w, h): normal sizes, a long span with fractional sizes, a short span
+GRAPH_FRAMES = [(100, 60, 50, 300, 100), (100, 600, 100, 99.5, 47.25), (100, 30, 20, 200, 80)]
+
+# degenerate frames: no or negative span, ceiling, width and height
+GRAPH_EMPTY_FRAMES = [(100, 0, 50, 300, 100), (100, 60, 0, 300, 100), (100, 60, 50, 0, 100),
+                      (100, 60, 50, 300, 0), (100, -60, 50, 300, 100), (100, 60, -1, 300, 100),
+                      (100, 60, 50, -300, 100), (100, 60, 50, 300, -1)]
+
+
+def graph_segments_cases(m):
+    cases = []
+    jobs = [(name, frame) for name in GRAPH_SERIES for frame in GRAPH_FRAMES]
+    jobs += [("rising", frame) for frame in GRAPH_EMPTY_FRAMES]
+    for name, (now, span, ymax, w, h) in jobs:
+        points = GRAPH_SERIES[name]
+        for step in (False, True):
+            segments = m.graph_segments(points, now, span, ymax, w, h, step)
+            cases.append({"series": name, "points": [list(p) for p in points], "now": now,
+                          "span": span, "ymax": ymax, "w": w, "h": h, "step": step,
+                          "segments": [[list(p) for p in seg] for seg in segments]})
+    return cases
+
+
+def nice_max_cases(m):
+    values = [0, 1, 9.99, 10, 10.0001, 11, 19, 20, 21, 49.9, 50, 51, 99, 100, 101, 249, 250,
+              251, 499.5, 500, 501, 999, 1000, 1001, 2499, 2500, 2501, 2999, 3000, 12345.6,
+              9.999999999999998, 10.000000000000002, 50.00000000000001, 100.00000000000001,
+              250.00000000000003, 1e6, -5, 0.1 + 0.2]
+    cases = [{"v": v, "minimum": None, "result": m.nice_max(v)} for v in values]
+    for v, minimum in [(5, 20), (30, 100), (0, 0), (-5, -10), (7.5, 7), (2600, 3000)]:
+        cases.append({"v": v, "minimum": minimum, "result": m.nice_max(v, minimum)})
+    return cases
+
+
+def graph_span_cases(m):
+    cases = []
+    for name, points in GRAPH_SERIES.items():
+        for now, window, minimum in [(100, 600, None), (100, 30, None), (100, 600, 120),
+                                     (1000, 600, None), (1000, 600, 5)]:
+            args = [now, window] + ([] if minimum is None else [minimum])
+            cases.append({"series": name, "points": [list(p) for p in points], "now": now,
+                          "window": window, "minimum": minimum,
+                          "span": m.graph_span(points, *args)})
+    return cases
+
+
+def graph_cases(m):
+    return {"segments": graph_segments_cases(m), "nice_max": nice_max_cases(m),
+            "span": graph_span_cases(m)}
+
+
 def view_of(result):
     out = {"state": result["state"]}
     if result["state"] == "slow":
@@ -362,6 +428,7 @@ def server_state_cases(m):
 GENERATORS = {
     "fmt_duration": fmt_duration_cases,
     "last_tokens": last_tokens_cases,
+    "graph": graph_cases,
     "http": http_cases,
     "live_speed": live_speed_cases,
     "server_state": server_state_cases,
@@ -386,7 +453,24 @@ def server_state_text(cases):
     return "\n".join(out) + "\n"
 
 
-WRITERS = {"server_state": server_state_text}
+def graph_text(cases):
+    """Every case on its own line, grouped by kind."""
+
+    def line(value):
+        return json.dumps(value, separators=(",", ":"))
+
+    out = ["{"]
+    kinds = list(cases)
+    for ki, kind in enumerate(kinds):
+        out.append(json.dumps(kind) + ":[")
+        for ci, case in enumerate(cases[kind]):
+            out.append(line(case) + ("," if ci < len(cases[kind]) - 1 else ""))
+        out.append("]" + ("," if ki < len(kinds) - 1 else ""))
+    out.append("}")
+    return "\n".join(out) + "\n"
+
+
+WRITERS = {"server_state": server_state_text, "graph": graph_text}
 
 
 def main():
@@ -405,778 +489,304 @@ if __name__ == "__main__":
     main()
 ```
 2. Run: `python3 tools/ctxmon_oracle.py; echo "exit=$?"`
-3. Replace the whole content of `src/ctxmon/core/server_state.h` with exactly:
+3. Create `src/ctxmon/core/graph.h` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Turns server snapshots into what the monitor shows and keeps the histories.
+// Geometry of the monitor graphs: pixel polylines, tidy axis ceilings and the time span.
 
 #pragma once
 
-#include <cstddef>
-#include <deque>
 #include <optional>
-#include <set>
-#include <string>
 #include <vector>
-
-#include "ctxmon/core/log_tokens.h"
-#include "ctxmon/core/timing.h"
 
 namespace vermilion::ctxmon {
 
-constexpr double kLiveWindow = 2.0;      // seconds of samples used for the live speed
-constexpr std::size_t kMaxRequests = 50; // request history length per server
-constexpr std::size_t kMaxSamples = 64;  // live-speed samples kept per server
-constexpr double kEtaWarnSeconds = 60.0; // warn when the context would fill within this
-
-// How many tokens a running request has generated, and when that was read.
-struct Sample {
+// One sample of a history: a time in seconds and a value, or no value for a gap in the line.
+struct GraphPoint {
     double time = 0.0;
-    long long n_decoded = 0;
+    std::optional<double> value;
 };
 
-// live_speed of the Python original: tokens per second from the samples within window seconds
-// of the newest one. Absent with fewer than two samples in the window or without growth.
-std::optional<double> live_speed(const std::deque<Sample>& samples, double window = kLiveWindow);
-
-// Whether the server answered: Up, Down (nothing listening) or Slow (no timely answer, which a
-// busy server can give, so it is not treated as down).
-enum class LinkState { Up, Down, Slow };
-
-// A finished request handed over with a snapshot. seed is true for history that was already in
-// the log when the monitor started, so its time is unknown.
-struct SnapshotRequest {
-    FinishedRequest request;
-    bool seed = false;
+struct PixelPoint {
+    double x = 0.0;
+    double y = 0.0;
 };
 
-// Everything one poll found, as the Python original's poll_once returns it.
-struct Snapshot {
-    LinkState state = LinkState::Up;
-    std::optional<long long> used; // newest token count in the log
-    std::optional<TokenKind> used_kind;
-    std::optional<long long> n_ctx;
-    bool busy = false;
-    std::optional<long long> n_decoded;
-    std::optional<std::string> model;
-    bool log_found = false;
-    std::optional<double> gen;    // tokens per second of the latest finished request
-    std::optional<double> prompt; // prompt speed of the latest finished request
-    std::vector<SnapshotRequest> requests;
-};
+using PixelPath = std::vector<PixelPoint>;
 
-// How trustworthy the shown token count is.
-enum class CountKind {
-    Down,       // the server is down
-    None,       // no request in the log yet
-    Exact,      // idle, and the log says how many tokens the context holds
-    Processing, // a request is loading its prompt: the count is the last known one
-    Estimate,   // a request is generating: prompt size plus what /slots reports
-};
+// graph_segments of the Python original: pixel polylines for points, oldest first. x runs over
+// the last span seconds before now (clamped to 0..w), y is value / ymax from the bottom of a
+// graph h pixels high (clamped to 0..h). A gap (no value) ends the line. With step the value is
+// held until the next point and up to now, which is right for "tokens in context". Nothing is
+// drawn when span, ymax, w or h is not positive.
+std::vector<PixelPath> graph_segments(const std::vector<GraphPoint>& points, double now,
+                                      double span, double ymax, double w, double h,
+                                      bool step = false);
 
-// The name the Python original uses for a kind ("down", "none", "exact", "processing",
-// "estimate").
-const char* count_kind_name(CountKind kind);
+// nice_max of the Python original: a speed ceiling of at least minimum, rounded up to a tidy
+// number (a multiple of 10, 20, 50, 100, 200, 500 or 1000 depending on its size).
+double nice_max(double v, double minimum = 10.0);
 
-// A warning raised by update. level is the context percentage that was crossed, absent for the
-// time-to-full alert. critical marks the highest level and the time-to-full alert.
-struct Alert {
-    std::optional<int> level;
-    std::string message;
-    bool critical = false;
-};
-
-// What update returns. With state Slow nothing else is set: the caller keeps the old numbers.
-struct StateView {
-    LinkState state = LinkState::Up;
-    long long ctx = 0;
-    long long shown = 0;
-    double frac = 0.0; // shown / ctx, at most 1
-    CountKind kind = CountKind::None;
-    std::string source; // says which parts of the count are known
-    bool estimating = false;
-    std::optional<double> live; // live generation speed
-    std::optional<double> gen;
-    std::optional<double> prompt;
-    std::optional<double> eta; // seconds until the context is full at the live speed
-    bool busy = false;
-    std::optional<std::string> model;
-    bool log_found = false;
-    std::vector<Alert> alerts; // raised by this snapshot
-    int level = 0;             // highest warning level reached now, 0 if none
-};
-
-struct CtxPoint {
-    double time = 0.0;
-    long long tokens = 0;
-};
-
-struct SpeedPoint {
-    double time = 0.0;
-    std::optional<double> tps; // absent: a gap between requests
-};
-
-struct RequestRecord {
-    FinishedRequest request;
-    std::optional<double> time; // absent for seed requests
-};
-
-// ServerState of the Python original.
-class ServerState {
-public:
-    // warn_levels are context percentages (80 and 95 in the original); history_seconds is how
-    // long the histories reach back.
-    explicit ServerState(long long default_ctx, std::vector<int> warn_levels = {80, 95},
-                         double history_seconds = 600.0);
-
-    // Digests one snapshot taken at time now (seconds).
-    StateView update(const Snapshot& snapshot, double now);
-
-    const std::deque<CtxPoint>& ctx_history() const { return ctx_hist_; }
-    const std::deque<SpeedPoint>& speed_history() const { return speed_hist_; }
-    const std::deque<RequestRecord>& requests() const { return requests_; }
-
-private:
-    void push_ctx(double now, long long tokens);
-    void push_speed(double now, std::optional<double> tps);
-    void add_requests(const std::vector<SnapshotRequest>& requests, double now);
-    void mark_down(StateView& view, double now);
-    std::optional<double> track_live_speed(const Snapshot& snapshot, double now);
-    void add_warnings(StateView& view);
-
-    long long default_ctx_;
-    std::vector<int> levels_; // sorted
-    double window_;
-    std::deque<CtxPoint> ctx_hist_;
-    std::deque<SpeedPoint> speed_hist_;
-    std::deque<RequestRecord> requests_;
-    std::deque<Sample> samples_;
-    long long last_ctx_ = 0; // 0: none yet
-    bool was_busy_ = false;
-    std::set<int> warned_;    // levels already announced
-    bool eta_warned_ = false; // the time-to-full alert was raised for the running request
-    bool first_ = true;       // no snapshot seen since start or since the server went down
-};
+// graph_span of the Python original: the time span to show, as much history as exists, but not
+// less than minimum and not more than window seconds.
+double graph_span(const std::vector<GraphPoint>& points, double now, double window,
+                  double minimum = 60.0);
 
 } // namespace vermilion::ctxmon
 ```
-4. Replace the whole content of `src/ctxmon/core/server_state.cpp` with exactly:
+4. Create `src/ctxmon/core/graph.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// ServerState of the Python original: histories, exact versus estimated token counts.
+// Graph geometry: graph_segments, nice_max and graph_span of the Python original.
 
-#include "ctxmon/core/server_state.h"
+#include "ctxmon/core/graph.h"
 
 #include <algorithm>
-#include <cstdio>
+#include <cmath>
+#include <initializer_list>
 #include <optional>
-#include <string>
 #include <utility>
 #include <vector>
 
-#include "ctxmon/core/format.h"
-
 namespace vermilion::ctxmon {
 
-namespace {
-
-// n with comma thousands separators, like Python's f"{n:,}".
-std::string with_commas(long long n) {
-    const bool negative = n < 0;
-    const unsigned long long magnitude =
-        negative ? 0ULL - static_cast<unsigned long long>(n) : static_cast<unsigned long long>(n);
-    const std::string digits = std::to_string(magnitude);
-    std::string out;
-    for (std::size_t i = 0; i < digits.size(); ++i) {
-        if (i > 0 && (digits.size() - i) % 3 == 0) {
-            out += ',';
-        }
-        out += digits[i];
+std::vector<PixelPath> graph_segments(const std::vector<GraphPoint>& points, double now,
+                                      double span, double ymax, double w, double h, bool step) {
+    std::vector<PixelPath> segments;
+    if (span <= 0 || ymax <= 0 || w <= 0 || h <= 0) {
+        return segments;
     }
-    return negative ? "-" + out : out;
-}
+    const double t0 = now - span;
+    const auto x_of = [&](double t) { return std::max(0.0, std::min(w, (t - t0) / span * w)); };
+    const auto y_of = [&](double v) { return h - std::min(std::max(v, 0.0) / ymax, 1.0) * h; };
 
-// pct with no decimals, like Python's f"{pct:.0f}" (halves go to even).
-std::string whole_percent(double pct) {
-    char buffer[32];
-    std::snprintf(buffer, sizeof buffer, "%.0f", pct);
-    return buffer;
-}
-
-// Sets kind, shown, estimating and source of view: exact only when the request has finished and
-// the log says how many tokens the context holds; otherwise an estimate whose source text says
-// which parts are known.
-void classify_count(const Snapshot& s, StateView& v) {
-    const long long gen_now = s.busy && s.n_decoded && *s.n_decoded != 0 ? *s.n_decoded : 0;
-    if (!s.used) {
-        v.kind = CountKind::None;
-        v.shown = gen_now;
-        v.estimating = gen_now != 0;
-        v.source = v.estimating ? "estimate: " + with_commas(gen_now) +
-                                      " generated, prompt size not in the log yet"
-                                : "no request in the log yet";
-    } else if (!s.busy) {
-        v.kind = CountKind::Exact;
-        v.shown = *s.used;
-        v.source = "exact: from the server log";
-    } else if (s.used_kind == TokenKind::Final && gen_now == 0) {
-        // Busy, but the newest log line is the previous request's end: its prompt is not known.
-        v.kind = CountKind::Processing;
-        v.shown = *s.used;
-        v.estimating = true;
-        v.source = "estimate: new prompt loading (last known " + with_commas(*s.used) + ")";
-    } else if (gen_now == 0) {
-        v.kind = CountKind::Processing;
-        v.shown = *s.used;
-        v.estimating = true;
-        v.source = "estimate: prompt loading, " + with_commas(*s.used) + " so far";
-    } else {
-        v.kind = CountKind::Estimate;
-        v.shown = *s.used + gen_now;
-        v.estimating = true;
-        v.source = "estimate: prompt " + with_commas(*s.used) + " + " + with_commas(gen_now) +
-                   " generated";
-    }
-}
-
-// Drops points from the front while the second one is older than the window: one point older
-// than the window stays, so lines enter from the left edge.
-template <typename History>
-void prune(History& history, double now, double window) {
-    while (history.size() > 1 && history[1].time < now - window) {
-        history.pop_front();
-    }
-}
-
-} // namespace
-
-std::optional<double> live_speed(const std::deque<Sample>& samples, double window) {
-    if (samples.size() < 2) {
-        return std::nullopt;
-    }
-    const double t_end = samples.back().time;
-    const Sample* first = nullptr;
-    for (const Sample& s : samples) {
-        if (t_end - s.time <= window) {
-            first = &s;
-            break;
-        }
-    }
-    const Sample& last = samples.back();
-    if (first == nullptr || first == &last) {
-        return std::nullopt; // fewer than two samples in the window
-    }
-    if (last.time <= first->time || last.n_decoded <= first->n_decoded) {
-        return std::nullopt;
-    }
-    return static_cast<double>(last.n_decoded - first->n_decoded) / (last.time - first->time);
-}
-
-const char* count_kind_name(CountKind kind) {
-    switch (kind) {
-    case CountKind::Down:
-        return "down";
-    case CountKind::None:
-        return "none";
-    case CountKind::Exact:
-        return "exact";
-    case CountKind::Processing:
-        return "processing";
-    case CountKind::Estimate:
-        return "estimate";
-    }
-    return "";
-}
-
-void ServerState::push_ctx(double now, long long tokens) {
-    if (ctx_hist_.empty() || tokens != ctx_hist_.back().tokens ||
-        now - ctx_hist_.back().time >= 2.0) {
-        ctx_hist_.push_back({now, tokens});
-    }
-    prune(ctx_hist_, now, window_);
-}
-
-void ServerState::push_speed(double now, std::optional<double> tps) {
-    if (!tps) {
-        if (!speed_hist_.empty() && speed_hist_.back().tps) {
-            speed_hist_.push_back({now, std::nullopt});
-        }
-    } else if (speed_hist_.empty() || !speed_hist_.back().tps ||
-               now - speed_hist_.back().time >= 1.0) {
-        speed_hist_.push_back({now, tps});
-    }
-    prune(speed_hist_, now, window_);
-}
-
-void ServerState::add_requests(const std::vector<SnapshotRequest>& requests, double now) {
-    for (const SnapshotRequest& r : requests) {
-        requests_.push_back({r.request, r.seed ? std::nullopt : std::optional<double>(now)});
-        if (requests_.size() > kMaxRequests) {
-            requests_.pop_front();
-        }
-        if (!r.seed && r.request.gen_tps != 0.0) {
-            push_speed(now, r.request.gen_tps);
-        }
-    }
-}
-
-ServerState::ServerState(long long default_ctx, std::vector<int> warn_levels,
-                         double history_seconds)
-    : default_ctx_(default_ctx), levels_(std::move(warn_levels)), window_(history_seconds) {
-    std::sort(levels_.begin(), levels_.end());
-}
-
-void ServerState::mark_down(StateView& view, double now) {
-    view.ctx = last_ctx_ != 0 ? last_ctx_ : default_ctx_;
-    view.kind = CountKind::Down;
-    push_ctx(now, 0);
-    push_speed(now, std::nullopt);
-    samples_.clear();
-    warned_.clear();
-    eta_warned_ = false;
-    first_ = true;
-    was_busy_ = false;
-}
-
-// Live speed from the tokens generated so far by the running request.
-std::optional<double> ServerState::track_live_speed(const Snapshot& s, double now) {
-    std::optional<double> live;
-    if (s.busy && s.n_decoded) {
-        if (!samples_.empty() && *s.n_decoded < samples_.back().n_decoded) {
-            samples_.clear(); // a new request started
-        }
-        samples_.push_back({now, *s.n_decoded});
-        if (samples_.size() > kMaxSamples) {
-            samples_.pop_front();
-        }
-        live = live_speed(samples_);
-    } else {
-        samples_.clear();
-    }
-    if (live) {
-        push_speed(now, live);
-    } else if (was_busy_ && !s.busy) {
-        push_speed(now, std::nullopt); // break the line between requests
-    }
-    was_busy_ = s.busy;
-    return live;
-}
-
-// _warnings of the Python original: fills view.alerts and view.level.
-void ServerState::add_warnings(StateView& v) {
-    const double pct = v.frac * 100.0;
-    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
-    if (first_) {
-        warned_.clear(); // do not alert about the past
-        for (int lv : levels_) {
-            if (pct >= lv) {
-                warned_.insert(lv);
+    PixelPath current;
+    std::optional<double> before; // the newest value older than the shown span
+    for (const GraphPoint& p : points) {
+        if (!p.value) {
+            if (!current.empty()) {
+                if (step) {
+                    current.push_back({p.time >= now ? w : x_of(p.time), current.back().y});
+                }
+                segments.push_back(std::move(current));
             }
+            current.clear();
+            before.reset();
+            continue;
         }
-        first_ = false;
-    } else {
-        std::vector<int> newly;
-        for (int lv : levels_) {
-            if (pct >= lv && warned_.count(lv) == 0) {
-                newly.push_back(lv);
-            }
+        if (p.time < t0) {
+            before = p.value;
+            continue;
         }
-        warned_.insert(newly.begin(), newly.end());
-        if (!newly.empty()) {
-            const int lv = newly.back();
-            v.alerts.push_back({lv,
-                                "Context " + whole_percent(pct) + "% full (" +
-                                    with_commas(v.shown) + " / " + with_commas(v.ctx) +
-                                    " tokens, " + with_commas(free_tokens) + " free)",
-                                lv >= levels_.back()});
+        if (current.empty() && before) {
+            current.push_back({0.0, y_of(*before)}); // the line enters from the left edge
         }
-    }
-    for (auto it = warned_.begin(); it != warned_.end();) { // re-arm once usage drops well below
-        it = pct < *it - 10 ? warned_.erase(it) : std::next(it);
-    }
-    if (!v.busy) {
-        eta_warned_ = false;
-    } else if (v.eta && *v.eta < kEtaWarnSeconds && !eta_warned_) {
-        eta_warned_ = true;
-        v.alerts.push_back({std::nullopt,
-                            "Context will be full in ~" + fmt_duration(*v.eta) +
-                                " at the current speed (" + with_commas(free_tokens) +
-                                " tokens free)",
-                            true});
-    }
-    for (int lv : levels_) {
-        if (pct >= lv) {
-            v.level = lv;
+        if (step && !current.empty()) {
+            current.push_back({x_of(p.time), current.back().y});
         }
+        current.push_back({x_of(p.time), y_of(*p.value)});
     }
+    if (!current.empty()) {
+        if (step) {
+            current.push_back({w, current.back().y});
+        }
+        segments.push_back(std::move(current));
+    }
+    return segments;
 }
 
-StateView ServerState::update(const Snapshot& s, double now) {
-    StateView v;
-    v.state = s.state;
-    if (s.state == LinkState::Slow) {
-        return v;
+double nice_max(double v, double minimum) {
+    v = std::max(v, minimum);
+    for (const double step : {10.0, 20.0, 50.0, 100.0, 200.0, 500.0}) {
+        if (v <= step * 5) {
+            return std::ceil(v / step) * step;
+        }
     }
-    add_requests(s.requests, now);
-    if (s.state == LinkState::Down) {
-        mark_down(v, now);
-        return v;
-    }
+    return std::ceil(v / 1000.0) * 1000.0;
+}
 
-    v.ctx = s.n_ctx && *s.n_ctx != 0 ? *s.n_ctx : default_ctx_;
-    last_ctx_ = v.ctx;
-    v.live = track_live_speed(s, now);
-    classify_count(s, v);
-    v.frac =
-        v.ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(v.ctx), 1.0) : 0.0;
-    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
-    if (s.busy && v.live && free_tokens > 0) {
-        v.eta = static_cast<double>(free_tokens) / *v.live;
+double graph_span(const std::vector<GraphPoint>& points, double now, double window,
+                  double minimum) {
+    if (points.empty()) {
+        return minimum;
     }
-    push_ctx(now, v.shown);
-
-    v.gen = s.gen;
-    v.prompt = s.prompt;
-    v.busy = s.busy;
-    v.model = s.model;
-    v.log_found = s.log_found;
-    add_warnings(v);
-    return v;
+    return std::max(minimum, std::min(window, now - points.front().time));
 }
 
 } // namespace vermilion::ctxmon
 ```
-5. Replace the whole content of `tests/ctxmon/server_state_test.cpp` with exactly:
+5. In `src/ctxmon/core/CMakeLists.txt`, change the first line to `add_library(vermilion_ctxmon_core STATIC format.cpp log_tokens.cpp timing.cpp server_api.cpp server_state.cpp graph.cpp)`.
+6. In `tests/ctxmon/CMakeLists.txt`, change the first line to `add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp server_api_test.cpp server_state_test.cpp graph_test.cpp)`.
+7. Create `tests/ctxmon/graph_test.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Tests for live_speed and ServerState against the values of the Python original.
+// Tests for the ctxmon graph geometry against the values of the Python original.
 
 #include <gtest/gtest.h>
 #include <json-glib/json-glib.h>
 
-#include <deque>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "ctxmon/core/server_state.h"
+#include "ctxmon/core/graph.h"
 
-using vermilion::ctxmon::Alert;
-using vermilion::ctxmon::count_kind_name;
-using vermilion::ctxmon::CountKind;
-using vermilion::ctxmon::LinkState;
-using vermilion::ctxmon::live_speed;
-using vermilion::ctxmon::Sample;
-using vermilion::ctxmon::ServerState;
-using vermilion::ctxmon::Snapshot;
-using vermilion::ctxmon::SnapshotRequest;
-using vermilion::ctxmon::StateView;
-using vermilion::ctxmon::TokenKind;
+using vermilion::ctxmon::graph_segments;
+using vermilion::ctxmon::graph_span;
+using vermilion::ctxmon::GraphPoint;
+using vermilion::ctxmon::nice_max;
+using vermilion::ctxmon::PixelPath;
 
 namespace {
-
-JsonNode* member(JsonObject* object, const char* name) {
-    return json_object_get_member(object, name);
-}
 
 bool is_null(JsonNode* node) {
     return node == nullptr || JSON_NODE_HOLDS_NULL(node);
 }
 
-std::optional<double> opt_double(JsonNode* node) {
-    return is_null(node) ? std::nullopt : std::optional<double>(json_node_get_double(node));
-}
-
-std::optional<long long> opt_int(JsonNode* node) {
-    return is_null(node) ? std::nullopt : std::optional<long long>(json_node_get_int(node));
-}
-
-std::optional<std::string> opt_string(JsonNode* node) {
-    return is_null(node) ? std::nullopt : std::optional<std::string>(json_node_get_string(node));
-}
-
-bool as_bool(JsonNode* node) {
-    return !is_null(node) && json_node_get_boolean(node) != FALSE;
-}
-
-// The cases in file under expected/ (an array); parser owns them.
-JsonArray* load_cases(JsonParser* parser, const char* file) {
-    const std::string path = std::string(CTXMON_FIXTURE_DIR) + "/expected/" + file;
+// The cases of one kind ("segments", "nice_max" or "span") in graph.json; parser owns them.
+JsonArray* load_cases(JsonParser* parser, const char* kind) {
+    const std::string path = std::string(CTXMON_FIXTURE_DIR) + "/expected/graph.json";
     if (!json_parser_load_from_file(parser, path.c_str(), nullptr)) {
         return nullptr;
     }
     JsonNode* root = json_parser_get_root(parser);
-    return root != nullptr && JSON_NODE_HOLDS_ARRAY(root) ? json_node_get_array(root) : nullptr;
+    if (root == nullptr || !JSON_NODE_HOLDS_OBJECT(root)) {
+        return nullptr;
+    }
+    return json_object_get_array_member(json_node_get_object(root), kind);
 }
 
-// Each compares a value that may be absent with a JSON node that may be null.
-void expect_double(const std::optional<double>& actual, JsonNode* expected) {
-    if (is_null(expected)) {
-        EXPECT_FALSE(actual.has_value());
-    } else {
-        ASSERT_TRUE(actual.has_value());
-        EXPECT_DOUBLE_EQ(*actual, json_node_get_double(expected));
+// The history points of a case: a list of [time, value or null].
+std::vector<GraphPoint> points_of(JsonObject* c) {
+    std::vector<GraphPoint> points;
+    JsonArray* list = json_object_get_array_member(c, "points");
+    for (guint i = 0; i < json_array_get_length(list); ++i) {
+        JsonArray* pair = json_array_get_array_element(list, i);
+        GraphPoint p;
+        p.time = json_array_get_double_element(pair, 0);
+        JsonNode* value = json_array_get_element(pair, 1);
+        if (!is_null(value)) {
+            p.value = json_node_get_double(value);
+        }
+        points.push_back(p);
     }
+    return points;
 }
 
-void expect_int(const std::optional<long long>& actual, JsonNode* expected) {
-    if (is_null(expected)) {
-        EXPECT_FALSE(actual.has_value());
-    } else {
-        ASSERT_TRUE(actual.has_value());
-        EXPECT_EQ(*actual, json_node_get_int(expected));
-    }
-}
-
-void expect_string(const std::optional<std::string>& actual, JsonNode* expected) {
-    if (is_null(expected)) {
-        EXPECT_FALSE(actual.has_value());
-    } else {
-        ASSERT_TRUE(actual.has_value());
-        EXPECT_EQ(*actual, std::string(json_node_get_string(expected)));
-    }
-}
-
-const char* link_name(LinkState state) {
-    switch (state) {
-    case LinkState::Up:
-        return "up";
-    case LinkState::Down:
-        return "down";
-    case LinkState::Slow:
-        return "slow";
-    }
-    return "";
-}
-
-std::optional<TokenKind> token_kind_of(JsonNode* node) {
-    const std::optional<std::string> name = opt_string(node);
-    if (!name) {
-        return std::nullopt;
-    }
-    return *name == "final" ? TokenKind::Final
-                            : (*name == "prompt" ? TokenKind::Prompt : TokenKind::Past);
-}
-
-SnapshotRequest request_of(JsonObject* o) {
-    SnapshotRequest r;
-    r.request.prompt_tokens = opt_int(member(o, "prompt_tokens"));
-    r.request.prompt_tps = opt_double(member(o, "prompt_tps"));
-    r.request.gen_tokens = json_object_get_int_member(o, "gen_tokens");
-    r.request.gen_tps = json_object_get_double_member(o, "gen_tps");
-    r.request.ctx = opt_int(member(o, "ctx"));
-    r.seed = as_bool(member(o, "seed"));
-    return r;
-}
-
-Snapshot snapshot_of(JsonObject* o) {
-    Snapshot s;
-    const std::string state = json_object_get_string_member(o, "state");
-    s.state =
-        state == "down" ? LinkState::Down : (state == "slow" ? LinkState::Slow : LinkState::Up);
-    s.used = opt_int(member(o, "used"));
-    s.used_kind = token_kind_of(member(o, "used_kind"));
-    s.n_ctx = opt_int(member(o, "n_ctx"));
-    s.busy = as_bool(member(o, "busy"));
-    s.n_decoded = opt_int(member(o, "n_decoded"));
-    s.model = opt_string(member(o, "model"));
-    s.log_found = as_bool(member(o, "log_found"));
-    s.gen = opt_double(member(o, "gen"));
-    s.prompt = opt_double(member(o, "prompt"));
-    JsonArray* requests = json_object_get_array_member(o, "requests");
-    for (guint i = 0; i < json_array_get_length(requests); ++i) {
-        s.requests.push_back(request_of(json_array_get_object_element(requests, i)));
-    }
-    return s;
-}
-
-void expect_view(JsonObject* e, const StateView& v) {
-    EXPECT_EQ(std::string(link_name(v.state)),
-              std::string(json_object_get_string_member(e, "state")));
-    if (v.state == LinkState::Slow) {
-        return; // the original returns only the state; the caller keeps the old numbers
-    }
-    EXPECT_EQ(v.ctx, json_object_get_int_member(e, "ctx"));
-    EXPECT_EQ(v.shown, json_object_get_int_member(e, "shown"));
-    EXPECT_DOUBLE_EQ(v.frac, json_object_get_double_member(e, "frac"));
-    EXPECT_EQ(std::string(count_kind_name(v.kind)),
-              std::string(json_object_get_string_member(e, "kind")));
-    EXPECT_EQ(v.source, std::string(json_object_get_string_member(e, "source")));
-    EXPECT_EQ(v.estimating, json_object_get_boolean_member(e, "estimating") != FALSE);
-    expect_double(v.live, member(e, "live"));
-    expect_double(v.gen, member(e, "gen"));
-    expect_double(v.prompt, member(e, "prompt"));
-    expect_double(v.eta, member(e, "eta"));
-    EXPECT_EQ(v.busy, json_object_get_boolean_member(e, "busy") != FALSE);
-    expect_string(v.model, member(e, "model"));
-    EXPECT_EQ(v.log_found, json_object_get_boolean_member(e, "log_found") != FALSE);
-    EXPECT_EQ(v.level, json_object_get_int_member(e, "level"));
-    JsonArray* alerts = json_object_get_array_member(e, "alerts");
-    ASSERT_EQ(json_array_get_length(alerts), v.alerts.size());
-    for (guint i = 0; i < json_array_get_length(alerts); ++i) {
-        JsonObject* a = json_array_get_object_element(alerts, i);
-        const Alert& alert = v.alerts[i];
-        expect_int(alert.level, member(a, "level"));
-        EXPECT_EQ(alert.message, std::string(json_object_get_string_member(a, "message")));
-        EXPECT_EQ(alert.critical, json_object_get_boolean_member(a, "critical") != FALSE);
-    }
-}
-
-// The histories, when the step records them (long scenarios record only the last step).
-void expect_histories(JsonObject* step, const ServerState& state) {
-    if (!json_object_has_member(step, "ctx_hist")) {
-        return;
-    }
-    JsonArray* ctx = json_object_get_array_member(step, "ctx_hist");
-    ASSERT_EQ(json_array_get_length(ctx), state.ctx_history().size());
-    for (guint i = 0; i < json_array_get_length(ctx); ++i) {
-        JsonArray* point = json_array_get_array_element(ctx, i);
-        EXPECT_DOUBLE_EQ(state.ctx_history()[i].time, json_array_get_double_element(point, 0));
-        EXPECT_EQ(state.ctx_history()[i].tokens, json_array_get_int_element(point, 1));
-    }
-    JsonArray* speed = json_object_get_array_member(step, "speed_hist");
-    ASSERT_EQ(json_array_get_length(speed), state.speed_history().size());
-    for (guint i = 0; i < json_array_get_length(speed); ++i) {
-        JsonArray* point = json_array_get_array_element(speed, i);
-        EXPECT_DOUBLE_EQ(state.speed_history()[i].time, json_array_get_double_element(point, 0));
-        expect_double(state.speed_history()[i].tps, json_array_get_element(point, 1));
-    }
-    JsonArray* requests = json_object_get_array_member(step, "requests");
-    ASSERT_EQ(json_array_get_length(requests), state.requests().size());
-    for (guint i = 0; i < json_array_get_length(requests); ++i) {
-        JsonObject* e = json_array_get_object_element(requests, i);
-        const auto& r = state.requests()[i];
-        expect_int(r.request.prompt_tokens, member(e, "prompt_tokens"));
-        expect_double(r.request.prompt_tps, member(e, "prompt_tps"));
-        EXPECT_EQ(r.request.gen_tokens, json_object_get_int_member(e, "gen_tokens"));
-        EXPECT_DOUBLE_EQ(r.request.gen_tps, json_object_get_double_member(e, "gen_tps"));
-        expect_int(r.request.ctx, member(e, "ctx"));
-        expect_double(r.time, member(e, "t"));
-    }
+// The optional argument of a case, or fallback when the case leaves it out (null).
+double optional_arg(JsonObject* c, const char* name, double fallback) {
+    JsonNode* node = json_object_get_member(c, name);
+    return is_null(node) ? fallback : json_node_get_double(node);
 }
 
 } // namespace
 
-TEST(CtxmonServerState, LiveSpeedMatchesOracle) {
+TEST(CtxmonGraph, SegmentsMatchOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
-    JsonArray* cases = load_cases(parser, "live_speed.json");
+    JsonArray* cases = load_cases(parser, "segments");
     ASSERT_NE(cases, nullptr);
-    ASSERT_EQ(json_array_get_length(cases), 13u);
+    ASSERT_EQ(json_array_get_length(cases), 88u);
     for (guint i = 0; i < json_array_get_length(cases); ++i) {
-        SCOPED_TRACE(i);
         JsonObject* c = json_array_get_object_element(cases, i);
-        std::deque<Sample> samples;
-        JsonArray* list = json_object_get_array_member(c, "samples");
-        for (guint k = 0; k < json_array_get_length(list); ++k) {
-            JsonArray* pair = json_array_get_array_element(list, k);
-            samples.push_back(
-                {json_array_get_double_element(pair, 0), json_array_get_int_element(pair, 1)});
+        SCOPED_TRACE(json_object_get_string_member(c, "series"));
+        SCOPED_TRACE(i);
+        const std::vector<PixelPath> actual = graph_segments(
+            points_of(c), json_object_get_double_member(c, "now"),
+            json_object_get_double_member(c, "span"), json_object_get_double_member(c, "ymax"),
+            json_object_get_double_member(c, "w"), json_object_get_double_member(c, "h"),
+            json_object_get_boolean_member(c, "step") != FALSE);
+        JsonArray* expected = json_object_get_array_member(c, "segments");
+        ASSERT_EQ(json_array_get_length(expected), actual.size());
+        for (guint k = 0; k < json_array_get_length(expected); ++k) {
+            JsonArray* path = json_array_get_array_element(expected, k);
+            ASSERT_EQ(json_array_get_length(path), actual[k].size());
+            for (guint j = 0; j < json_array_get_length(path); ++j) {
+                JsonArray* xy = json_array_get_array_element(path, j);
+                EXPECT_DOUBLE_EQ(actual[k][j].x, json_array_get_double_element(xy, 0));
+                EXPECT_DOUBLE_EQ(actual[k][j].y, json_array_get_double_element(xy, 1));
+            }
         }
-        const std::optional<double> window = opt_double(member(c, "window"));
-        expect_double(window ? live_speed(samples, *window) : live_speed(samples),
-                      member(c, "speed"));
     }
 }
 
-TEST(CtxmonServerState, StateMatchesOracle) {
+TEST(CtxmonGraph, NiceMaxMatchesOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
-    JsonArray* scenarios = load_cases(parser, "server_state.json");
-    ASSERT_NE(scenarios, nullptr);
-    ASSERT_EQ(json_array_get_length(scenarios), 22u);
-    for (guint i = 0; i < json_array_get_length(scenarios); ++i) {
-        JsonObject* scenario = json_array_get_object_element(scenarios, i);
-        SCOPED_TRACE(json_object_get_string_member(scenario, "name"));
-        std::vector<int> levels;
-        JsonArray* level_list = json_object_get_array_member(scenario, "levels");
-        for (guint k = 0; k < json_array_get_length(level_list); ++k) {
-            levels.push_back(static_cast<int>(json_array_get_int_element(level_list, k)));
-        }
-        ServerState state(json_object_get_int_member(scenario, "default_ctx"), levels,
-                          json_object_get_double_member(scenario, "window"));
-        JsonArray* steps = json_object_get_array_member(scenario, "steps");
-        for (guint k = 0; k < json_array_get_length(steps); ++k) {
-            SCOPED_TRACE(k);
-            JsonObject* step = json_array_get_object_element(steps, k);
-            const Snapshot snapshot = snapshot_of(json_object_get_object_member(step, "snapshot"));
-            const StateView view =
-                state.update(snapshot, json_object_get_double_member(step, "now"));
-            expect_view(json_object_get_object_member(step, "view"), view);
-            expect_histories(step, state);
-        }
+    JsonArray* cases = load_cases(parser, "nice_max");
+    ASSERT_NE(cases, nullptr);
+    ASSERT_EQ(json_array_get_length(cases), 44u);
+    for (guint i = 0; i < json_array_get_length(cases); ++i) {
+        JsonObject* c = json_array_get_object_element(cases, i);
+        SCOPED_TRACE(i);
+        const double v = json_object_get_double_member(c, "v");
+        const double actual = is_null(json_object_get_member(c, "minimum"))
+                                  ? nice_max(v)
+                                  : nice_max(v, json_object_get_double_member(c, "minimum"));
+        EXPECT_DOUBLE_EQ(actual, json_object_get_double_member(c, "result"));
     }
 }
 
-TEST(CtxmonServerState, CountKindNames) {
-    EXPECT_STREQ(count_kind_name(CountKind::Down), "down");
-    EXPECT_STREQ(count_kind_name(CountKind::None), "none");
-    EXPECT_STREQ(count_kind_name(CountKind::Exact), "exact");
-    EXPECT_STREQ(count_kind_name(CountKind::Processing), "processing");
-    EXPECT_STREQ(count_kind_name(CountKind::Estimate), "estimate");
+TEST(CtxmonGraph, SpanMatchesOracle) {
+    g_autoptr(JsonParser) parser = json_parser_new();
+    JsonArray* cases = load_cases(parser, "span");
+    ASSERT_NE(cases, nullptr);
+    ASSERT_EQ(json_array_get_length(cases), 60u);
+    for (guint i = 0; i < json_array_get_length(cases); ++i) {
+        JsonObject* c = json_array_get_object_element(cases, i);
+        SCOPED_TRACE(json_object_get_string_member(c, "series"));
+        SCOPED_TRACE(i);
+        const double actual = graph_span(points_of(c), json_object_get_double_member(c, "now"),
+                                         json_object_get_double_member(c, "window"),
+                                         optional_arg(c, "minimum", 60.0));
+        EXPECT_DOUBLE_EQ(actual, json_object_get_double_member(c, "span"));
+    }
 }
 
-TEST(CtxmonServerState, SlowSnapshotChangesNothing) {
-    ServerState state(1000);
-    Snapshot up;
-    up.used = 100;
-    up.used_kind = TokenKind::Final;
-    state.update(up, 1.0);
-    ASSERT_EQ(state.ctx_history().size(), 1u);
-
-    Snapshot slow;
-    slow.state = LinkState::Slow;
-    slow.requests.resize(1);
-    slow.requests[0].request.gen_tps = 30.0;
-    const StateView view = state.update(slow, 2.0);
-    EXPECT_EQ(view.state, LinkState::Slow);
-    EXPECT_EQ(state.ctx_history().size(), 1u);
-    EXPECT_TRUE(state.speed_history().empty());
-    EXPECT_TRUE(state.requests().empty());
+TEST(CtxmonGraph, DegenerateFramesGiveNoSegments) {
+    const std::vector<GraphPoint> points = {{90.0, 10.0}, {100.0, 20.0}};
+    EXPECT_FALSE(graph_segments(points, 100.0, 60.0, 50.0, 300.0, 100.0).empty());
+    EXPECT_TRUE(graph_segments(points, 100.0, 0.0, 50.0, 300.0, 100.0).empty());
+    EXPECT_TRUE(graph_segments(points, 100.0, 60.0, 0.0, 300.0, 100.0).empty());
+    EXPECT_TRUE(graph_segments(points, 100.0, 60.0, 50.0, 0.0, 100.0).empty());
+    EXPECT_TRUE(graph_segments(points, 100.0, 60.0, 50.0, 300.0, 0.0).empty());
+    EXPECT_TRUE(graph_segments({}, 100.0, 60.0, 50.0, 300.0, 100.0).empty());
 }
 
-TEST(CtxmonServerState, DefaultLevelsAre80And95) {
-    ServerState state(1000);
-    Snapshot snapshot;
-    snapshot.used_kind = TokenKind::Final;
-    snapshot.used = 100;
-    EXPECT_TRUE(state.update(snapshot, 1.0).alerts.empty());
+TEST(CtxmonGraph, StepHoldsTheValueUpToNow) {
+    const std::vector<GraphPoint> points = {{90.0, 10.0}};
+    const std::vector<PixelPath> plain = graph_segments(points, 100.0, 100.0, 20.0, 200.0, 100.0);
+    ASSERT_EQ(plain.size(), 1u);
+    ASSERT_EQ(plain[0].size(), 1u);
+    EXPECT_DOUBLE_EQ(plain[0][0].x, 180.0);
+    EXPECT_DOUBLE_EQ(plain[0][0].y, 50.0);
 
-    snapshot.used = 850;
-    StateView view = state.update(snapshot, 2.0);
-    ASSERT_EQ(view.alerts.size(), 1u);
-    EXPECT_EQ(view.level, 80);
-    EXPECT_EQ(view.alerts[0].level, std::optional<int>(80));
-    EXPECT_EQ(view.alerts[0].message,
-              std::string("Context 85% full (850 / 1,000 tokens, 150 free)"));
-    EXPECT_FALSE(view.alerts[0].critical);
-
-    snapshot.used = 960;
-    view = state.update(snapshot, 3.0);
-    ASSERT_EQ(view.alerts.size(), 1u);
-    EXPECT_EQ(view.level, 95);
-    EXPECT_EQ(view.alerts[0].level, std::optional<int>(95));
-    EXPECT_TRUE(view.alerts[0].critical);
+    const std::vector<PixelPath> held =
+        graph_segments(points, 100.0, 100.0, 20.0, 200.0, 100.0, true);
+    ASSERT_EQ(held.size(), 1u);
+    ASSERT_EQ(held[0].size(), 2u);
+    EXPECT_DOUBLE_EQ(held[0][1].x, 200.0);
+    EXPECT_DOUBLE_EQ(held[0][1].y, 50.0);
 }
 ```
-6. Run: `clang-format -i src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp; echo "exit=$?"`
-7. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.4b`:
-    - `evidence/M1.4b/configure.txt` from `cmake -S . -B build`
-    - `evidence/M1.4b/build.txt` from `cmake --build build`
-    - `evidence/M1.4b/ctest.txt` from `ctest --test-dir build --output-on-failure`
+8. Run: `clang-format -i src/ctxmon/core/graph.h src/ctxmon/core/graph.cpp tests/ctxmon/graph_test.cpp; echo "exit=$?"`
+9. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.5`:
+    - `evidence/M1.5/configure.txt` from `cmake -S . -B build`
+    - `evidence/M1.5/build.txt` from `cmake --build build`
+    - `evidence/M1.5/ctest.txt` from `ctest --test-dir build --output-on-failure`
 
 EVIDENCE (AGENTS.md rules 12 and 18; FILE items are written by the command itself, then only their `tail -n 3` is pasted)
 E1. Raw: `git status --short --untracked-files=all`
-E2. FILE `evidence/M1.4b/diff.txt` from `git diff -- src tests/ctxmon/server_state_test.cpp tools`
-E3. FILE `evidence/M1.4b/new_files.txt` from `cat -n src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp`
+E2. FILE `evidence/M1.5/diff.txt` from `git diff -- src tests/ctxmon/CMakeLists.txt tools`
+E3. FILE `evidence/M1.5/new_files.txt` from `cat -n src/ctxmon/core/graph.h src/ctxmon/core/graph.cpp tests/ctxmon/graph_test.cpp`
 E4. Raw: `wc -lc tests/ctxmon/fixtures/expected/*.json`
-E5. Raw: `grep -o '^{"name":"[a-z_]*"' tests/ctxmon/fixtures/expected/server_state.json`
-E6. Raw: the output of steps 2 and 6.
-E7. Raw: `wc -l` of every modified file except the expected JSON files.
+E5. Raw: `grep -nE '^"(segments|nice_max|span)":' tests/ctxmon/fixtures/expected/graph.json`
+E6. Raw: the output of steps 2 and 8.
+E7. Raw: `wc -l` of every created or modified file except the expected JSON files.
 E8. Raw: `grep -rnE "gtk/|gdk|pango|gtksourceview|vte|std::regex" src/ctxmon/core; echo "exit=$?"`
 E9. For each of the five evidence files: its path, then the raw output of `tail -n 3` on it.
-E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.4b/ctest.txt`
+E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.5/ctest.txt`
 E11. Unexpected files: any file the commands created that the rails do not name, or "none" (AGENTS.md rule 8).
 
 End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
@@ -1245,6 +855,9 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 - 2026-11-08 — M1.4a committed (`4871de4`) and pushed (docs `9bd72c4`), 87 tests. M1.4b prompt issued: warnings (levels, hysteresis, first-update rule, time-to-full), alerts and level in `StateView`, constructor takes the warn levels (second parameter, before the history window), `update` split into `mark_down`, `track_live_speed`, `classify_count`, `add_warnings`.
 - 2026-11-08 — M1.4b (warnings: levels, hysteresis, first-snapshot rule, time-to-full alert; alerts and level in `StateView`; `update` split into `mark_down`, `track_live_speed`, `classify_count`, `add_warnings`; 22 oracle scenarios; 88 tests) executed by Qwen, audited PASS: evidence headers at `9bd72c4`, mtimes after the edits, the four code files byte-identical to the prompt, `server_state.json` byte-identical (sha256) to the one the Orchestrator generated and checked, the other five expected files unmodified, longest function 47 lines. The `Claude outputs/` folder was still present during the run; Qwen listed it and left it alone.
 - 2026-11-08 — (Adam) **Long prompts go inline in the reply from now on** (no sent file). (Adam) **Context budget under discussion, no rule yet**: the M1.4b Qwen session ended at 108k of 131k context tokens with no fix loop; a gate that also needs fixes should stay clearly below that. Orchestrator options to discuss: replace-by-hunks instead of whole-file dictation for existing files, scenario data outside the oracle script, oracle and C++ in separate gates, an expected size for each prompt.
+- 2026-11-08 — (Adam) **Prompt size: keep the current method** (whole-file dictation, inline in the reply). The M1.4b session ended at 108k of 131k context tokens, which is acceptable; if a session ever runs out of context it is recorded, fixed, and only then are limits set. The VRAM gate (M1.6) will show how much room is left.
+- 2026-11-08 — M1.4b committed (`8339ce6`) and pushed (docs `69bbcdf`), 88 tests. M1.5 prompt issued: new module `graph` (`graph_segments`, `nice_max`, `graph_span`), oracle generator `graph` writing `graph.json` (one case per line), 5 new tests.
+- 2026-11-08 — M1.5 (`graph`: `graph_segments`, `nice_max`, `graph_span`; oracle generator `graph`, 192 cases in `graph.json`, one per line; 5 new tests; 93 tests) executed by Qwen, audited PASS: evidence headers at `69bbcdf`, mtimes after the edits, `graph.h`, `graph.cpp`, `graph_test.cpp` and the oracle byte-identical (sha256) to the Orchestrator's verified copies, `graph.json` byte-identical (sha256 300851842efc…) to the Orchestrator's, both CMake first lines as dictated, the six older expected files unmodified, no GTK names in ctxmon core, longest function 44 lines, stray file `-1` gone. Qwen's report matched the evidence files. (Adam) Next prompt NOT to be written yet: a discussion first, in the next chat. Commit lines given: gate commit "M1.5: ctxmon graph geometry (93 tests)", then docs commit "docs: handoff after M1.5" and push.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -1263,7 +876,7 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 
 ## 4. Session Log  *(newest first, keep 10)*
 ### 2026-11-08 (evening) — M1.3
-- Resumed at `f3b2b8e` (clean, synced). Adam: the ctxmon terminal is good enough as the terminal; M4.5 only if it proves burdensome. M1.3 issued, first stopped by my "tree clean" error, then run and audited PASS (83 tests). M1.3 committed (`cfd1179`) and pushed (`86671be`). M1.4 split; M1.4a prompt issued. M1.4a audited PASS, committed (`4871de4`), pushed (`9bd72c4`). M1.4b prompt issued. M1.4b audited PASS. Open: commits, push, prompt-size discussion, M1.5.
+- Resumed at `f3b2b8e` (clean, synced). Adam: the ctxmon terminal is good enough as the terminal; M4.5 only if it proves burdensome. M1.3 issued, first stopped by my "tree clean" error, then run and audited PASS (83 tests). M1.3 committed (`cfd1179`) and pushed (`86671be`). M1.4 split; M1.4a prompt issued. M1.4a audited PASS, committed (`4871de4`), pushed (`9bd72c4`). M1.4b prompt issued. M1.4b committed (`8339ce6`) and pushed (`69bbcdf`); prompt size settled (keep the method). M1.5 prompt issued. M1.5 run and audited PASS (93 tests); Adam asked for a discussion before M1.6. Open: M1.5 commits and push, the discussion, M1.6, M1 review.
 
 ### 2026-11-07 (late night) — M1.0 to M1.2, M1.3 written, evening handoff
 - M1.0 (fix 1: oracle writes no bytecode), M1.1 and M1.2 all PASS and pushed (HEAD `b97b1ac`, 77 tests). Decisions: AGENTS.md rule 8 forbids cleaning up unnamed files; UI specifications are discussed before any UI gate; the terminal is first built with ctxmon (M2.9); all Python removed at M2.11, expected values becoming inline C++ tables. The Orchestrator now compiles and oracle-checks dictated code in the cloud workspace before issuing (json-glib is missing there, so M1.3 was checked with stand-ins). README swept at the end of the day; HANDOFF.md restored after a stale write. Open: commit and push the sweep; issue M1.3.
