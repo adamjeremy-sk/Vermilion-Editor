@@ -278,6 +278,72 @@ def state_scenarios():
     ]
 
 
+GRAPH_SERIES = {
+    "empty": [],
+    "single": [(95, 5)],
+    "rising": [(60, 0), (70, 10), (80, 20), (90, 30), (100, 40)],
+    "with_gaps": [(60, 10), (70, 20), (80, None), (90, 30), (95, None), (100, 50)],
+    "old_then_new": [(10, 7), (20, 9), (50, 12), (70, 15), (90, 20)],
+    "old_gap_new": [(10, 3), (20, None), (30, 4), (90, 5)],
+    "leading_gaps": [(50, None), (60, 5), (70, None), (80, None), (90, 6)],
+    "trailing_gap_now": [(60, 5), (70, 6), (100, None)],
+    "trailing_gap_future": [(60, 5), (120, None)],
+    "out_of_range": [(70, -5), (80, 500), (90, 12.5)],
+    "future_points": [(90, 3), (110, 4)],
+    "same_times": [(80, 1), (80, 2)],
+}
+
+# (now, span, ymax, w, h): normal sizes, a long span with fractional sizes, a short span
+GRAPH_FRAMES = [(100, 60, 50, 300, 100), (100, 600, 100, 99.5, 47.25), (100, 30, 20, 200, 80)]
+
+# degenerate frames: no or negative span, ceiling, width and height
+GRAPH_EMPTY_FRAMES = [(100, 0, 50, 300, 100), (100, 60, 0, 300, 100), (100, 60, 50, 0, 100),
+                      (100, 60, 50, 300, 0), (100, -60, 50, 300, 100), (100, 60, -1, 300, 100),
+                      (100, 60, 50, -300, 100), (100, 60, 50, 300, -1)]
+
+
+def graph_segments_cases(m):
+    cases = []
+    jobs = [(name, frame) for name in GRAPH_SERIES for frame in GRAPH_FRAMES]
+    jobs += [("rising", frame) for frame in GRAPH_EMPTY_FRAMES]
+    for name, (now, span, ymax, w, h) in jobs:
+        points = GRAPH_SERIES[name]
+        for step in (False, True):
+            segments = m.graph_segments(points, now, span, ymax, w, h, step)
+            cases.append({"series": name, "points": [list(p) for p in points], "now": now,
+                          "span": span, "ymax": ymax, "w": w, "h": h, "step": step,
+                          "segments": [[list(p) for p in seg] for seg in segments]})
+    return cases
+
+
+def nice_max_cases(m):
+    values = [0, 1, 9.99, 10, 10.0001, 11, 19, 20, 21, 49.9, 50, 51, 99, 100, 101, 249, 250,
+              251, 499.5, 500, 501, 999, 1000, 1001, 2499, 2500, 2501, 2999, 3000, 12345.6,
+              9.999999999999998, 10.000000000000002, 50.00000000000001, 100.00000000000001,
+              250.00000000000003, 1e6, -5, 0.1 + 0.2]
+    cases = [{"v": v, "minimum": None, "result": m.nice_max(v)} for v in values]
+    for v, minimum in [(5, 20), (30, 100), (0, 0), (-5, -10), (7.5, 7), (2600, 3000)]:
+        cases.append({"v": v, "minimum": minimum, "result": m.nice_max(v, minimum)})
+    return cases
+
+
+def graph_span_cases(m):
+    cases = []
+    for name, points in GRAPH_SERIES.items():
+        for now, window, minimum in [(100, 600, None), (100, 30, None), (100, 600, 120),
+                                     (1000, 600, None), (1000, 600, 5)]:
+            args = [now, window] + ([] if minimum is None else [minimum])
+            cases.append({"series": name, "points": [list(p) for p in points], "now": now,
+                          "window": window, "minimum": minimum,
+                          "span": m.graph_span(points, *args)})
+    return cases
+
+
+def graph_cases(m):
+    return {"segments": graph_segments_cases(m), "nice_max": nice_max_cases(m),
+            "span": graph_span_cases(m)}
+
+
 def view_of(result):
     out = {"state": result["state"]}
     if result["state"] == "slow":
@@ -320,6 +386,7 @@ def server_state_cases(m):
 GENERATORS = {
     "fmt_duration": fmt_duration_cases,
     "last_tokens": last_tokens_cases,
+    "graph": graph_cases,
     "http": http_cases,
     "live_speed": live_speed_cases,
     "server_state": server_state_cases,
@@ -344,7 +411,24 @@ def server_state_text(cases):
     return "\n".join(out) + "\n"
 
 
-WRITERS = {"server_state": server_state_text}
+def graph_text(cases):
+    """Every case on its own line, grouped by kind."""
+
+    def line(value):
+        return json.dumps(value, separators=(",", ":"))
+
+    out = ["{"]
+    kinds = list(cases)
+    for ki, kind in enumerate(kinds):
+        out.append(json.dumps(kind) + ":[")
+        for ci, case in enumerate(cases[kind]):
+            out.append(line(case) + ("," if ci < len(cases[kind]) - 1 else ""))
+        out.append("]" + ("," if ki < len(kinds) - 1 else ""))
+    out.append("}")
+    return "\n".join(out) + "\n"
+
+
+WRITERS = {"server_state": server_state_text, "graph": graph_text}
 
 
 def main():

@@ -1,4 +1,4 @@
-add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp server_api_test.cpp server_state_test.cpp)
+add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp server_api_test.cpp server_state_test.cpp graph_test.cpp)
 target_compile_definitions(vermilion_ctxmon_tests PRIVATE
     CTXMON_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
 target_link_libraries(vermilion_ctxmon_tests PRIVATE
