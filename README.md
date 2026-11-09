@@ -11,7 +11,8 @@
 
 > **Status: pre-alpha. Not usable yet.**
 > Vermilion Editor is being written from scratch. Milestone M0 (foundation) is done, and M1 (the CTXMon monitor logic)
-> is under way: log and timing parsing are ported, with 77 tests. Editing and the CTXMon window arrive with M2.
+> has all of its code: log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory
+> readers are ported and tested, with 100 tests. Editing and the CTXMon window arrive with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 ---
@@ -53,11 +54,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 in progress: CTXMon logic (log token lines, timing lines and finished requests done) |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 code complete (review pending): CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory); the window comes with M2 |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 in progress: `src/ctxmon/core` parses llama.cpp log token lines and timing lines, tested against the Python original; 77 tests. Next: the `/slots` and `/props` responses. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 code complete: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original; 100 tests. Next: the M1 review, then M2 (editor window, CTXMon UI). |
 | Releases | None |
 
 ---
@@ -257,7 +258,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `src/ctxmon/ui/` | *(M2)* The CTXMon cards, graphs and terminal, shared by the CTXMon tab and the standalone `vermilion-ctxmon`. |
 | `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. |
 | `src/ui/` | The GTK application, and `gtkx/`, a small helper layer (GObject reference pointer, signal connection by lambda, string conversion). |
-| `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses in `fixtures/`. |
+| `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M2.11). |
 | `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M2.11) and its logo (`ctxmon.svg`). Not built. |
