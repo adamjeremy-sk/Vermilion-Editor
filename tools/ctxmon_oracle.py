@@ -7,7 +7,9 @@ import importlib.util
 import io
 import json
 import pathlib
+import subprocess
 import sys
+import types
 import urllib.error
 import urllib.parse
 
@@ -17,6 +19,8 @@ EXPECTED = ROOT / "tests" / "ctxmon" / "fixtures" / "expected"
 LOGS = ROOT / "tests" / "ctxmon" / "fixtures" / "logs"
 TIMING = ROOT / "tests" / "ctxmon" / "fixtures" / "timing"
 HTTP = ROOT / "tests" / "ctxmon" / "fixtures" / "http"
+DRM = ROOT / "tests" / "ctxmon" / "fixtures" / "drm"
+NVIDIA = ROOT / "tests" / "ctxmon" / "fixtures" / "nvidia"
 URL = "http://127.0.0.1:8080"
 
 
@@ -344,6 +348,49 @@ def graph_cases(m):
             "span": graph_span_cases(m)}
 
 
+def smi_answering(m, run, call):
+    """Runs call() while the original's subprocess module answers nvidia-smi through run."""
+    saved = m.subprocess
+    m.subprocess = types.SimpleNamespace(run=run, SubprocessError=subprocess.SubprocessError)
+    try:
+        return call()
+    finally:
+        m.subprocess = saved
+
+
+def no_smi(*_args, **_kwargs):
+    raise FileNotFoundError("nvidia-smi")
+
+
+def smi_printing(text):
+    return lambda *_args, **_kwargs: types.SimpleNamespace(stdout=text)
+
+
+def vram_of(info):
+    if info is None:
+        return None
+    used, total, name, vendor = info
+    return {"used": used, "total": total, "name": name, "vendor": vendor}
+
+
+def vram_cases(m):
+    sysfs = []
+    roots = sorted(p.name for p in DRM.iterdir() if p.is_dir()) + ["missing"]
+    for name in roots:
+        info = smi_answering(m, no_smi, lambda: m.read_vram(str(DRM / name)))
+        sysfs.append({"root": "drm/" + name, "result": vram_of(info)})
+    nvidia = []
+    for path in sorted(NVIDIA.glob("*.txt")):
+        text = path.read_bytes().decode("utf-8")
+        info = smi_answering(m, smi_printing(text), lambda: m.read_vram(str(DRM / "missing")))
+        nvidia.append({"file": path.name, "result": vram_of(info)})
+    sizes = [0, 1, 268435456, 536870912, 805306368, 1073741824, 1610612736, 3489660928,
+             4026531840, 8589934592, 17163091968, 25769803776, 1099511627776]
+    gib = [{"bytes": n, "text": m.fmt_gib(n)} for n in sizes]
+    vendors = [{"key": key, "label": label} for key, label in m.VENDOR_NAMES.items()]
+    return {"sysfs": sysfs, "nvidia": nvidia, "gib": gib, "vendors": vendors}
+
+
 def view_of(result):
     out = {"state": result["state"]}
     if result["state"] == "slow":
@@ -387,6 +434,7 @@ GENERATORS = {
     "fmt_duration": fmt_duration_cases,
     "last_tokens": last_tokens_cases,
     "graph": graph_cases,
+    "vram": vram_cases,
     "http": http_cases,
     "live_speed": live_speed_cases,
     "server_state": server_state_cases,
@@ -411,8 +459,8 @@ def server_state_text(cases):
     return "\n".join(out) + "\n"
 
 
-def graph_text(cases):
-    """Every case on its own line, grouped by kind."""
+def lines_by_kind_text(cases):
+    """Every case on its own line, grouped by kind (graph.json and vram.json)."""
 
     def line(value):
         return json.dumps(value, separators=(",", ":"))
@@ -428,7 +476,8 @@ def graph_text(cases):
     return "\n".join(out) + "\n"
 
 
-WRITERS = {"server_state": server_state_text, "graph": graph_text}
+WRITERS = {"server_state": server_state_text, "graph": lines_by_kind_text,
+           "vram": lines_by_kind_text}
 
 
 def main():

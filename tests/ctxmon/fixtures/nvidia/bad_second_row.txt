@@ -1,0 +1,2 @@
+GPU A, 1, 2
+GPU B, abc, 5

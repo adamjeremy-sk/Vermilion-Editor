@@ -1,0 +1,59 @@
+{
+"sysfs":[
+{"root":"drm/amd_single","result":{"used":1234567168,"total":17163091968,"name":"card0","vendor":"amd"}},
+{"root":"drm/connector_name","result":{"used":5,"total":500,"name":"card0-DP-1","vendor":"amd"}},
+{"root":"drm/device_is_file","result":{"used":3,"total":300,"name":"card1","vendor":"amd"}},
+{"root":"drm/largest_first","result":{"used":200,"total":17163091968,"name":"card0","vendor":"amd"}},
+{"root":"drm/largest_second","result":{"used":200,"total":17163091968,"name":"card1","vendor":"amd"}},
+{"root":"drm/name_pattern","result":{"used":1,"total":1000,"name":"card1","vendor":"amd"}},
+{"root":"drm/no_cards","result":null},
+{"root":"drm/no_newline","result":{"used":512,"total":4096,"name":"card0","vendor":"nvidia"}},
+{"root":"drm/no_vendor","result":{"used":1073741824,"total":8589934592,"name":"card0","vendor":"amd"}},
+{"root":"drm/padded_values","result":{"used":512,"total":4096,"name":"card0","vendor":"amd"}},
+{"root":"drm/skips_incomplete","result":{"used":10,"total":2000,"name":"card2","vendor":"intel"}},
+{"root":"drm/vendor_intel","result":{"used":536870912,"total":2147483648,"name":"card0","vendor":"intel"}},
+{"root":"drm/vendor_nvidia","result":{"used":4294967296,"total":25769803776,"name":"card0","vendor":"nvidia"}},
+{"root":"drm/vendor_unknown","result":{"used":268435456,"total":1073741824,"name":"card0","vendor":"other"}},
+{"root":"drm/zero_total","result":{"used":0,"total":0,"name":"card0","vendor":"amd"}},
+{"root":"drm/missing","result":null}
+],
+"nvidia":[
+{"file":"bad_second_row.txt","result":null},
+{"file":"blank_inside.txt","result":null},
+{"file":"comma_in_name.txt","result":{"used":104857600,"total":8589934592,"name":"NVIDIA, Special Edition","vendor":"nvidia"}},
+{"file":"crlf.txt","result":{"used":3145728,"total":4194304,"name":"GPU B","vendor":"nvidia"}},
+{"file":"driver_error.txt","result":null},
+{"file":"empty.txt","result":null},
+{"file":"empty_name.txt","result":{"used":1048576,"total":2097152,"name":"","vendor":"nvidia"}},
+{"file":"na_values.txt","result":null},
+{"file":"no_newline.txt","result":{"used":10485760,"total":20971520,"name":"GPU","vendor":"nvidia"}},
+{"file":"only_blank.txt","result":null},
+{"file":"padded.txt","result":{"used":1048576,"total":9437184,"name":"GPU B","vendor":"nvidia"}},
+{"file":"single.txt","result":{"used":1073741824,"total":25769803776,"name":"NVIDIA GeForce RTX 3090","vendor":"nvidia"}},
+{"file":"tie.txt","result":{"used":104857600,"total":8589934592,"name":"GPU A","vendor":"nvidia"}},
+{"file":"too_few_fields.txt","result":null},
+{"file":"two_gpus.txt","result":{"used":2147483648,"total":25757220864,"name":"NVIDIA GeForce RTX 4090","vendor":"nvidia"}},
+{"file":"zero_values.txt","result":{"used":0,"total":0,"name":"GPU","vendor":"nvidia"}}
+],
+"gib":[
+{"bytes":0,"text":"0.0"},
+{"bytes":1,"text":"0.0"},
+{"bytes":268435456,"text":"0.2"},
+{"bytes":536870912,"text":"0.5"},
+{"bytes":805306368,"text":"0.8"},
+{"bytes":1073741824,"text":"1.0"},
+{"bytes":1610612736,"text":"1.5"},
+{"bytes":3489660928,"text":"3.2"},
+{"bytes":4026531840,"text":"3.8"},
+{"bytes":8589934592,"text":"8.0"},
+{"bytes":17163091968,"text":"16.0"},
+{"bytes":25769803776,"text":"24.0"},
+{"bytes":1099511627776,"text":"1024.0"}
+],
+"vendors":[
+{"key":"amd","label":"AMD"},
+{"key":"nvidia","label":"NVIDIA"},
+{"key":"intel","label":"Intel"},
+{"key":"other","label":"GPU"}
+]
+}
