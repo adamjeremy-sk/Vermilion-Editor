@@ -4,17 +4,17 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-08 ~21:15 (M1.4a audited PASS; gate commit, docs commit and push pending with Adam) |
+| Updated | 2026-11-08 ~21:30 (M1.4b audited PASS; gate commit, docs commit and push pending with Adam) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info` first; if `connectedFolders` already lists `/home/adam/Projects/vermilion-editor`, no request is needed. Otherwise call `device_request_folder_access` for that path once (the grant is recursive). If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Note: `device_bash` runs in a VM on Adam's machine, so tool versions seen there (python 3.10, awk) are not Adam's host versions. Editing rights are unchanged: root orchestration docs and `docs/` only, never code. |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, model monitor (ctxmon), GPL-3.0-or-later. Written from scratch. |
-| Repo state | HEAD `86671be`, in sync with `origin/main`. Uncommitted: the M1.4a gate (`server_state.h/.cpp`, `server_state_test.cpp`, `live_speed.json`, `server_state.json`, modified oracle and two CMake files) plus ` M HANDOFF.md`, ` M docs/roadmap.md` (Orchestrator). Also an untracked folder `Claude outputs/` (a file the Orchestrator sent with SendUserFile landed in the repo folder): Adam deletes it, never commits it. Adam commits the gate as "M1.4a: ctxmon live speed and server state (87 tests)", then the docs as "docs: handoff after M1.4a", and pushes. |
-| Version / HEAD | `86671be`. ctxmon core: `format` (`fmt_duration`), `log_tokens`, `timing`, `server_api`; M1.4a adds `server_state` (`live_speed`, `ServerState` without warnings). Oracle generators `fmt_duration`, `last_tokens`, `timing`, `http`, and after M1.4a `live_speed`, `server_state`. |
-| Tests | 87, all passing (M1.4a). |
-| Active task | **M1, ctxmon logic** (M1.0 to M1.3 done; M1.4a issued). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
-| Gate position | M1.4a executed and audited PASS (uncommitted until Adam commits). Next: M1.4b (warnings). |
-| Awaiting | Adam: delete `Claude outputs/`, commit M1.4a and the docs, push, send the new short HEAD. Then the Orchestrator writes M1.4b. |
-| Last prompt issued | M1.4a (issued 2026-11-08, verbatim below; audited PASS). |
-| Next action | On Adam's HEAD: write **M1.4b**: port `_warnings` (levels 80 and 95, hysteresis 10 points, first-update rule, time-to-full alert under `ETA_WARN_SECONDS`); the constructor gains the warn levels; `StateView` gains `alerts` and `level`; the `down` branch also resets `warned`, `eta_warned` and `first` (left out of M1.4a on purpose); split `ServerState::update` (91 lines after M1.4a, flagged by rule 16) into helpers such as the exact-versus-estimate classification; the oracle records alerts and level. Compile and oracle-check the dictated code first (driver plus mutation check, as for M1.4a). Then M1.5 (graph geometry), M1.6 (VRAM readers). Before any UI gate, talk with Adam about his UI specifications. README.md only at the end-of-day handoff. |
+| Repo state | HEAD `9bd72c4`, in sync with `origin/main`. Uncommitted: the M1.4b gate (`server_state.h/.cpp`, `server_state_test.cpp`, `server_state.json`, `ctxmon_oracle.py`) plus ` M HANDOFF.md` (Orchestrator) and an untracked folder `Claude outputs/` that Adam deletes and never commits. Adam commits the gate as "M1.4b: ctxmon server state warnings (88 tests)", then the docs as "docs: handoff after M1.4b", and pushes. |
+| Version / HEAD | `9bd72c4`. ctxmon core: `format`, `log_tokens`, `timing`, `server_api`, `server_state` (`live_speed`, `ServerState` without warnings; M1.4b adds the warnings). Oracle generators `fmt_duration`, `last_tokens`, `timing`, `http`, `live_speed`, `server_state`. |
+| Tests | 88, all passing (M1.4b). |
+| Active task | **M1, ctxmon logic** (M1.0 to M1.4a done; M1.4b issued). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
+| Gate position | M1.4b executed and audited PASS (uncommitted until Adam commits). Next: M1.5 (graph geometry), then M1.6 (VRAM readers), then the M1 milestone review. Open discussion with Adam before M1.5: the size of gate prompts (see Decision Log 2026-11-08, context budget). |
+| Awaiting | Adam: delete `Claude outputs/`, commit M1.4b and the docs, push, send the new short HEAD; and his view on the prompt-size discussion. |
+| Last prompt issued | M1.4b (issued 2026-11-08, verbatim below; audited PASS). |
+| Next action | Discuss the prompt-size question with Adam (no rule yet), then write M1.5: `graph_segments`, `nice_max`, `graph_span` (read ctxmon_gtk.py lines 562 to 618 first; compile and oracle-check the dictated code with a driver plus mutation check, as for M1.4). Then M1.6 (VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing), then the M1 milestone review with Adam (AI_ONBOARDING.md 2.7). Before any UI gate, talk with Adam about his UI specifications. Long prompts are given inline in the reply from now on. README.md only at the end-of-day handoff. |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. Adam codes only at home on this computer with the chat linked, so the Orchestrator can always read `evidence/`. |
 
 **Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: none open in code. Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every C++ line they dictate within 100 columns; Qwen replaced raw output with summaries twice (M0.5d1, M0.5d2), answered from M0.5c1 on by AGENTS.md rule 18 (evidence files the Orchestrator reads itself; Adam trusts Qwen not to fabricate them, the Orchestrator still checks headers and mtimes for staleness); clang-format is 18.1.3 on Adam's machine and not installed in the Orchestrator's VM; do not run dependent Orchestrator tool calls in parallel; **prompts and AGENTS.md never mention what the Orchestrator checks or reads (Adam, 2026-11-06)**; check clang-format option names against version 18 before dictating them. Prompt-authoring practices (format step, no dictated whitespace, header lines for new files, FILE evidence, silence about the Orchestrator's checks, tool-version check) are in AI_ONBOARDING.md section 2 item 8. Topics already collected for the M0 review: raw-output summarising and rule 18; format-style choice and rule 19 (the Orchestrator's wrong clang-format key); prompt bugs found by Qwen (`EXPECT_EQ` on `const char*`, over-long dictated lines); GLib weak-pointer quirk; gate sizes. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
@@ -22,20 +22,19 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 
 ## Last prompt (verbatim)
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: New task; HEAD 86671be with exactly two uncommitted files, HANDOFF.md and docs/roadmap.md (documentation edits; they are expected, so do not touch, revert or build on them, and do not list them under E11). Otherwise the tree is clean.
+Last verified: New task; HEAD 9bd72c4 with exactly one uncommitted file, HANDOFF.md (a documentation edit; it is expected, so do not touch, revert or build on it, and do not list it under E11). Otherwise the tree is clean.
 
-TASK: Gate M1.4a, ctxmon live speed and server state. One step.
+TASK: Gate M1.4b, ctxmon server state warnings. One step.
 
 CONTEXT (BINDING)
 - ctxmon logic lives in `src/ctxmon/core` (library `vermilion_ctxmon_core`, namespace `vermilion::ctxmon`, no GTK headers; GLib and json-glib are allowed). Tests live in `tests/ctxmon` (executable `vermilion_ctxmon_tests`). Expected values come from the frozen Python original `reference/ctxmon/ctxmon_gtk.py` (read-only) through `tools/ctxmon_oracle.py`.
-- This gate ports `live_speed` and the class `ServerState` (ctxmon_gtk.py lines 275 to 290 and 410 to 532) as a new module `server_state`: the histories with pruning, the request history, the live speed, and the exact-versus-estimate token count. The warnings (`_warnings`, the 80% and 95% levels, the time-to-full alert) are NOT part of this gate; they come in M1.4b.
-- The oracle feeds scripted snapshot sequences to the Python `ServerState` and records, after each step, what `update` returned and the three histories. Those scripts are defined in the oracle itself and written into `tests/ctxmon/fixtures/expected/server_state.json` together with the answers, so the C++ test reads its inputs from that file too.
-- Test count: 83 now, 87 after this gate.
+- Gate M1.4a ported `ServerState` without warnings. This gate adds the warnings (`_warnings`, ctxmon_gtk.py lines 534 to 559): context-percentage levels (80 and 95 by default, configurable), re-arming with a 10-point hysteresis, no alert about the past on the first snapshot, and the time-to-full alert. `update` now returns the alerts it raised and the highest level reached; the `down` state also resets the warning state. `ServerState::update` is split into helpers because it had grown past 50 lines.
+- All four files below are replaced as a whole. The oracle scripts more snapshot sequences (22 scenarios now) and records alerts and level for every step; the answers are written into `tests/ctxmon/fixtures/expected/server_state.json`.
+- Test count: 87 now, 88 after this gate.
 
 STRICT RAILS
-- Create exactly these files: `src/ctxmon/core/server_state.h`, `src/ctxmon/core/server_state.cpp`, `tests/ctxmon/server_state_test.cpp`, and `tests/ctxmon/fixtures/expected/live_speed.json` and `tests/ctxmon/fixtures/expected/server_state.json` (both written by the oracle, never by hand).
-- Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/CMakeLists.txt`, `tests/ctxmon/CMakeLists.txt`.
-- Re-running the oracle rewrites the other four expected JSON files with identical content: `git status` must not list them as modified.
+- Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/server_state.h`, `src/ctxmon/core/server_state.cpp`, `tests/ctxmon/server_state_test.cpp`, and `tests/ctxmon/fixtures/expected/server_state.json` (rewritten by the oracle, never by hand).
+- Create no file. Re-running the oracle rewrites the other five expected JSON files with identical content: `git status` must not list them as modified.
 - No other change. No new dependency.
 
 STEP 1
@@ -258,6 +257,62 @@ def state_scenarios():
         {"name": "context_history_spacing", "default_ctx": 8192, "window": 600, "full": True,
          "steps": [(t, snap(used=500, used_kind="final", n_ctx=8192))
                    for t in (0.0, 1.0, 2.0, 3.0, 4.0, 6.25, 7.0, 8.0, 8.5)]},
+        {"name": "warning_levels", "default_ctx": 1000, "window": 600, "full": False, "steps": [
+            (float(i), snap(used=used, used_kind="final", n_ctx=1000))
+            for i, used in enumerate([900, 920, 960, 960, 850, 840, 700, 690, 810, 970, 985])]},
+        {"name": "jump_over_both_levels", "default_ctx": 1000, "window": 600, "full": False,
+         "steps": [(0.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=970, used_kind="final", n_ctx=1000)),
+                   (2.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (3.0, snap(used=800, used_kind="final", n_ctx=1000))]},
+        {"name": "down_resets_warnings", "default_ctx": 1000, "window": 600, "full": False,
+         "steps": [(0.0, snap(used=900, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=960, used_kind="final", n_ctx=1000)),
+                   (2.0, snap(state="down")),
+                   (3.0, snap(used=960, used_kind="final", n_ctx=1000)),
+                   (4.0, snap(used=650, used_kind="final", n_ctx=1000)),
+                   (5.0, snap(used=850, used_kind="final", n_ctx=1000))]},
+        {"name": "percent_rounds_half_even", "default_ctx": 8000, "levels": [10],
+         "window": 600, "full": False,
+         "steps": [(0.0, snap(used=80, used_kind="final", n_ctx=8000)),
+                   (1.0, snap(used=1000, used_kind="final", n_ctx=8000))]},
+        {"name": "percent_rounds_up", "default_ctx": 8000, "levels": [13], "window": 600,
+         "full": False,
+         "steps": [(0.0, snap(used=80, used_kind="final", n_ctx=8000)),
+                   (1.0, snap(used=1080, used_kind="final", n_ctx=8000))]},
+        {"name": "unsorted_levels", "default_ctx": 1000, "levels": [95, 50, 80], "window": 600,
+         "full": False,
+         "steps": [(0.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=600, used_kind="final", n_ctx=1000)),
+                   (2.0, snap(used=990, used_kind="final", n_ctx=1000))]},
+        {"name": "no_levels", "default_ctx": 1000, "levels": [], "window": 600, "full": False,
+         "steps": [(0.0, snap(used=100, used_kind="final", n_ctx=1000)),
+                   (1.0, snap(used=990, used_kind="final", n_ctx=1000))]},
+        {"name": "time_to_full_alert", "default_ctx": 4096, "window": 600, "full": False,
+         "steps": [
+            (0.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (1.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+            (2.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=200)),
+            (3.0, snap(used=3200, used_kind="final", n_ctx=4096)),
+            (4.0, snap(used=3200, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (5.0, snap(used=3200, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=300)),
+            (6.0, snap(used=3200, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=600)),
+            (7.0, snap(used=100, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (8.0, snap(used=100, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=5)),
+            (9.0, snap(used=100, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=8)),
+        ]},
+        {"name": "hysteresis_boundary", "default_ctx": 1000, "levels": [95], "window": 600,
+         "full": False,
+         "steps": [(float(i), snap(used=used, used_kind="final", n_ctx=1000))
+                   for i, used in enumerate([900, 960, 855, 960, 850, 960, 849, 960])]},
+        {"name": "time_to_full_after_down", "default_ctx": 4096, "window": 600, "full": False,
+         "steps": [
+            (0.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (1.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+            (2.0, snap(state="down")),
+            (3.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (4.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+        ]},
         {"name": "sample_cap", "default_ctx": 100000, "window": 600, "full": False,
          "steps": run_ticks(0.0, 0.02, 100, lambda i: snap(
              used=1000, used_kind="prompt", n_ctx=100000, busy=True,
@@ -273,6 +328,9 @@ def view_of(result):
                 "eta", "busy", "model"):
         out[key] = result[key]
     out["log_found"] = bool(result.get("log_found"))
+    out["alerts"] = [{"level": lv if isinstance(lv, int) else None, "message": text,
+                      "critical": critical} for lv, text, critical in result["alerts"]]
+    out["level"] = result["level"]
     return out
 
 
@@ -285,7 +343,9 @@ def histories_of(state):
 def server_state_cases(m):
     cases = []
     for scenario in state_scenarios():
-        state = m.ServerState(scenario["default_ctx"], history_seconds=scenario["window"])
+        levels = scenario.get("levels", [80, 95])
+        state = m.ServerState(scenario["default_ctx"], warn_levels=tuple(levels),
+                              history_seconds=scenario["window"])
         steps = []
         last = len(scenario["steps"]) - 1
         for i, (now, snapshot) in enumerate(scenario["steps"]):
@@ -295,7 +355,7 @@ def server_state_cases(m):
                 step.update(histories_of(state))
             steps.append(step)
         cases.append({"name": scenario["name"], "default_ctx": scenario["default_ctx"],
-                      "window": scenario["window"], "steps": steps})
+                      "levels": levels, "window": scenario["window"], "steps": steps})
     return cases
 
 
@@ -317,7 +377,7 @@ def server_state_text(cases):
 
     out = ["["]
     for ci, case in enumerate(cases):
-        head = line({k: case[k] for k in ("name", "default_ctx", "window")})
+        head = line({k: case[k] for k in ("name", "default_ctx", "levels", "window")})
         out.append(head[:-1] + ',"steps":[')
         for si, step in enumerate(case["steps"]):
             out.append(line(step) + ("," if si < len(case["steps"]) - 1 else ""))
@@ -345,7 +405,7 @@ if __name__ == "__main__":
     main()
 ```
 2. Run: `python3 tools/ctxmon_oracle.py; echo "exit=$?"`
-3. Create `src/ctxmon/core/server_state.h` with exactly:
+3. Replace the whole content of `src/ctxmon/core/server_state.h` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
@@ -356,6 +416,7 @@ if __name__ == "__main__":
 #include <cstddef>
 #include <deque>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -367,6 +428,7 @@ namespace vermilion::ctxmon {
 constexpr double kLiveWindow = 2.0;      // seconds of samples used for the live speed
 constexpr std::size_t kMaxRequests = 50; // request history length per server
 constexpr std::size_t kMaxSamples = 64;  // live-speed samples kept per server
+constexpr double kEtaWarnSeconds = 60.0; // warn when the context would fill within this
 
 // How many tokens a running request has generated, and when that was read.
 struct Sample {
@@ -417,6 +479,14 @@ enum class CountKind {
 // "estimate").
 const char* count_kind_name(CountKind kind);
 
+// A warning raised by update. level is the context percentage that was crossed, absent for the
+// time-to-full alert. critical marks the highest level and the time-to-full alert.
+struct Alert {
+    std::optional<int> level;
+    std::string message;
+    bool critical = false;
+};
+
 // What update returns. With state Slow nothing else is set: the caller keeps the old numbers.
 struct StateView {
     LinkState state = LinkState::Up;
@@ -433,6 +503,8 @@ struct StateView {
     bool busy = false;
     std::optional<std::string> model;
     bool log_found = false;
+    std::vector<Alert> alerts; // raised by this snapshot
+    int level = 0;             // highest warning level reached now, 0 if none
 };
 
 struct CtxPoint {
@@ -450,11 +522,13 @@ struct RequestRecord {
     std::optional<double> time; // absent for seed requests
 };
 
-// ServerState of the Python original, without the warnings (they come in the next gate).
+// ServerState of the Python original.
 class ServerState {
 public:
-    explicit ServerState(long long default_ctx, double history_seconds = 600.0)
-        : default_ctx_(default_ctx), window_(history_seconds) {}
+    // warn_levels are context percentages (80 and 95 in the original); history_seconds is how
+    // long the histories reach back.
+    explicit ServerState(long long default_ctx, std::vector<int> warn_levels = {80, 95},
+                         double history_seconds = 600.0);
 
     // Digests one snapshot taken at time now (seconds).
     StateView update(const Snapshot& snapshot, double now);
@@ -467,8 +541,12 @@ private:
     void push_ctx(double now, long long tokens);
     void push_speed(double now, std::optional<double> tps);
     void add_requests(const std::vector<SnapshotRequest>& requests, double now);
+    void mark_down(StateView& view, double now);
+    std::optional<double> track_live_speed(const Snapshot& snapshot, double now);
+    void add_warnings(StateView& view);
 
     long long default_ctx_;
+    std::vector<int> levels_; // sorted
     double window_;
     std::deque<CtxPoint> ctx_hist_;
     std::deque<SpeedPoint> speed_hist_;
@@ -476,11 +554,14 @@ private:
     std::deque<Sample> samples_;
     long long last_ctx_ = 0; // 0: none yet
     bool was_busy_ = false;
+    std::set<int> warned_;    // levels already announced
+    bool eta_warned_ = false; // the time-to-full alert was raised for the running request
+    bool first_ = true;       // no snapshot seen since start or since the server went down
 };
 
 } // namespace vermilion::ctxmon
 ```
-4. Create `src/ctxmon/core/server_state.cpp` with exactly:
+4. Replace the whole content of `src/ctxmon/core/server_state.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
@@ -489,9 +570,13 @@ private:
 #include "ctxmon/core/server_state.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
+
+#include "ctxmon/core/format.h"
 
 namespace vermilion::ctxmon {
 
@@ -511,6 +596,49 @@ std::string with_commas(long long n) {
         out += digits[i];
     }
     return negative ? "-" + out : out;
+}
+
+// pct with no decimals, like Python's f"{pct:.0f}" (halves go to even).
+std::string whole_percent(double pct) {
+    char buffer[32];
+    std::snprintf(buffer, sizeof buffer, "%.0f", pct);
+    return buffer;
+}
+
+// Sets kind, shown, estimating and source of view: exact only when the request has finished and
+// the log says how many tokens the context holds; otherwise an estimate whose source text says
+// which parts are known.
+void classify_count(const Snapshot& s, StateView& v) {
+    const long long gen_now = s.busy && s.n_decoded && *s.n_decoded != 0 ? *s.n_decoded : 0;
+    if (!s.used) {
+        v.kind = CountKind::None;
+        v.shown = gen_now;
+        v.estimating = gen_now != 0;
+        v.source = v.estimating ? "estimate: " + with_commas(gen_now) +
+                                      " generated, prompt size not in the log yet"
+                                : "no request in the log yet";
+    } else if (!s.busy) {
+        v.kind = CountKind::Exact;
+        v.shown = *s.used;
+        v.source = "exact: from the server log";
+    } else if (s.used_kind == TokenKind::Final && gen_now == 0) {
+        // Busy, but the newest log line is the previous request's end: its prompt is not known.
+        v.kind = CountKind::Processing;
+        v.shown = *s.used;
+        v.estimating = true;
+        v.source = "estimate: new prompt loading (last known " + with_commas(*s.used) + ")";
+    } else if (gen_now == 0) {
+        v.kind = CountKind::Processing;
+        v.shown = *s.used;
+        v.estimating = true;
+        v.source = "estimate: prompt loading, " + with_commas(*s.used) + " so far";
+    } else {
+        v.kind = CountKind::Estimate;
+        v.shown = *s.used + gen_now;
+        v.estimating = true;
+        v.source = "estimate: prompt " + with_commas(*s.used) + " + " + with_commas(gen_now) +
+                   " generated";
+    }
 }
 
 // Drops points from the front while the second one is older than the window: one point older
@@ -594,28 +722,26 @@ void ServerState::add_requests(const std::vector<SnapshotRequest>& requests, dou
     }
 }
 
-StateView ServerState::update(const Snapshot& s, double now) {
-    StateView v;
-    v.state = s.state;
-    if (s.state == LinkState::Slow) {
-        return v;
-    }
-    add_requests(s.requests, now);
+ServerState::ServerState(long long default_ctx, std::vector<int> warn_levels,
+                         double history_seconds)
+    : default_ctx_(default_ctx), levels_(std::move(warn_levels)), window_(history_seconds) {
+    std::sort(levels_.begin(), levels_.end());
+}
 
-    if (s.state == LinkState::Down) {
-        v.ctx = last_ctx_ != 0 ? last_ctx_ : default_ctx_;
-        v.kind = CountKind::Down;
-        push_ctx(now, 0);
-        push_speed(now, std::nullopt);
-        samples_.clear();
-        was_busy_ = false;
-        return v;
-    }
+void ServerState::mark_down(StateView& view, double now) {
+    view.ctx = last_ctx_ != 0 ? last_ctx_ : default_ctx_;
+    view.kind = CountKind::Down;
+    push_ctx(now, 0);
+    push_speed(now, std::nullopt);
+    samples_.clear();
+    warned_.clear();
+    eta_warned_ = false;
+    first_ = true;
+    was_busy_ = false;
+}
 
-    const long long ctx = s.n_ctx && *s.n_ctx != 0 ? *s.n_ctx : default_ctx_;
-    last_ctx_ = ctx;
-
-    // Live speed from the tokens generated so far by the running request.
+// Live speed from the tokens generated so far by the running request.
+std::optional<double> ServerState::track_live_speed(const Snapshot& s, double now) {
     std::optional<double> live;
     if (s.busy && s.n_decoded) {
         if (!samples_.empty() && *s.n_decoded < samples_.back().n_decoded) {
@@ -635,62 +761,94 @@ StateView ServerState::update(const Snapshot& s, double now) {
         push_speed(now, std::nullopt); // break the line between requests
     }
     was_busy_ = s.busy;
+    return live;
+}
 
-    // Exact versus estimate.
-    const long long gen_now = s.busy && s.n_decoded && *s.n_decoded != 0 ? *s.n_decoded : 0;
-    if (!s.used) {
-        v.kind = CountKind::None;
-        v.shown = gen_now;
-        v.estimating = gen_now != 0;
-        v.source = v.estimating ? "estimate: " + with_commas(gen_now) +
-                                      " generated, prompt size not in the log yet"
-                                : "no request in the log yet";
-    } else if (!s.busy) {
-        v.kind = CountKind::Exact;
-        v.shown = *s.used;
-        v.source = "exact: from the server log";
-    } else if (s.used_kind == TokenKind::Final && gen_now == 0) {
-        // Busy, but the newest log line is the previous request's end: its prompt is not known.
-        v.kind = CountKind::Processing;
-        v.shown = *s.used;
-        v.estimating = true;
-        v.source = "estimate: new prompt loading (last known " + with_commas(*s.used) + ")";
-    } else if (gen_now == 0) {
-        v.kind = CountKind::Processing;
-        v.shown = *s.used;
-        v.estimating = true;
-        v.source = "estimate: prompt loading, " + with_commas(*s.used) + " so far";
+// _warnings of the Python original: fills view.alerts and view.level.
+void ServerState::add_warnings(StateView& v) {
+    const double pct = v.frac * 100.0;
+    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
+    if (first_) {
+        warned_.clear(); // do not alert about the past
+        for (int lv : levels_) {
+            if (pct >= lv) {
+                warned_.insert(lv);
+            }
+        }
+        first_ = false;
     } else {
-        v.kind = CountKind::Estimate;
-        v.shown = *s.used + gen_now;
-        v.estimating = true;
-        v.source = "estimate: prompt " + with_commas(*s.used) + " + " + with_commas(gen_now) +
-                   " generated";
+        std::vector<int> newly;
+        for (int lv : levels_) {
+            if (pct >= lv && warned_.count(lv) == 0) {
+                newly.push_back(lv);
+            }
+        }
+        warned_.insert(newly.begin(), newly.end());
+        if (!newly.empty()) {
+            const int lv = newly.back();
+            v.alerts.push_back({lv,
+                                "Context " + whole_percent(pct) + "% full (" +
+                                    with_commas(v.shown) + " / " + with_commas(v.ctx) +
+                                    " tokens, " + with_commas(free_tokens) + " free)",
+                                lv >= levels_.back()});
+        }
+    }
+    for (auto it = warned_.begin(); it != warned_.end();) { // re-arm once usage drops well below
+        it = pct < *it - 10 ? warned_.erase(it) : std::next(it);
+    }
+    if (!v.busy) {
+        eta_warned_ = false;
+    } else if (v.eta && *v.eta < kEtaWarnSeconds && !eta_warned_) {
+        eta_warned_ = true;
+        v.alerts.push_back({std::nullopt,
+                            "Context will be full in ~" + fmt_duration(*v.eta) +
+                                " at the current speed (" + with_commas(free_tokens) +
+                                " tokens free)",
+                            true});
+    }
+    for (int lv : levels_) {
+        if (pct >= lv) {
+            v.level = lv;
+        }
+    }
+}
+
+StateView ServerState::update(const Snapshot& s, double now) {
+    StateView v;
+    v.state = s.state;
+    if (s.state == LinkState::Slow) {
+        return v;
+    }
+    add_requests(s.requests, now);
+    if (s.state == LinkState::Down) {
+        mark_down(v, now);
+        return v;
     }
 
-    v.ctx = ctx;
+    v.ctx = s.n_ctx && *s.n_ctx != 0 ? *s.n_ctx : default_ctx_;
+    last_ctx_ = v.ctx;
+    v.live = track_live_speed(s, now);
+    classify_count(s, v);
     v.frac =
-        ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(ctx), 1.0) : 0.0;
-    const long long free_tokens = std::max(ctx - v.shown, 0LL);
-    if (s.busy && live && free_tokens > 0) {
-        v.eta = static_cast<double>(free_tokens) / *live;
+        v.ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(v.ctx), 1.0) : 0.0;
+    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
+    if (s.busy && v.live && free_tokens > 0) {
+        v.eta = static_cast<double>(free_tokens) / *v.live;
     }
     push_ctx(now, v.shown);
 
-    v.live = live;
     v.gen = s.gen;
     v.prompt = s.prompt;
     v.busy = s.busy;
     v.model = s.model;
     v.log_found = s.log_found;
+    add_warnings(v);
     return v;
 }
 
 } // namespace vermilion::ctxmon
 ```
-5. In `src/ctxmon/core/CMakeLists.txt`, change the first line to `add_library(vermilion_ctxmon_core STATIC format.cpp log_tokens.cpp timing.cpp server_api.cpp server_state.cpp)`.
-6. In `tests/ctxmon/CMakeLists.txt`, change the first line to `add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp server_api_test.cpp server_state_test.cpp)`.
-7. Create `tests/ctxmon/server_state_test.cpp` with exactly:
+5. Replace the whole content of `tests/ctxmon/server_state_test.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
@@ -702,9 +860,11 @@ StateView ServerState::update(const Snapshot& s, double now) {
 #include <deque>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "ctxmon/core/server_state.h"
 
+using vermilion::ctxmon::Alert;
 using vermilion::ctxmon::count_kind_name;
 using vermilion::ctxmon::CountKind;
 using vermilion::ctxmon::LinkState;
@@ -853,6 +1013,16 @@ void expect_view(JsonObject* e, const StateView& v) {
     EXPECT_EQ(v.busy, json_object_get_boolean_member(e, "busy") != FALSE);
     expect_string(v.model, member(e, "model"));
     EXPECT_EQ(v.log_found, json_object_get_boolean_member(e, "log_found") != FALSE);
+    EXPECT_EQ(v.level, json_object_get_int_member(e, "level"));
+    JsonArray* alerts = json_object_get_array_member(e, "alerts");
+    ASSERT_EQ(json_array_get_length(alerts), v.alerts.size());
+    for (guint i = 0; i < json_array_get_length(alerts); ++i) {
+        JsonObject* a = json_array_get_object_element(alerts, i);
+        const Alert& alert = v.alerts[i];
+        expect_int(alert.level, member(a, "level"));
+        EXPECT_EQ(alert.message, std::string(json_object_get_string_member(a, "message")));
+        EXPECT_EQ(alert.critical, json_object_get_boolean_member(a, "critical") != FALSE);
+    }
 }
 
 // The histories, when the step records them (long scenarios record only the last step).
@@ -915,11 +1085,16 @@ TEST(CtxmonServerState, StateMatchesOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
     JsonArray* scenarios = load_cases(parser, "server_state.json");
     ASSERT_NE(scenarios, nullptr);
-    ASSERT_EQ(json_array_get_length(scenarios), 12u);
+    ASSERT_EQ(json_array_get_length(scenarios), 22u);
     for (guint i = 0; i < json_array_get_length(scenarios); ++i) {
         JsonObject* scenario = json_array_get_object_element(scenarios, i);
         SCOPED_TRACE(json_object_get_string_member(scenario, "name"));
-        ServerState state(json_object_get_int_member(scenario, "default_ctx"),
+        std::vector<int> levels;
+        JsonArray* level_list = json_object_get_array_member(scenario, "levels");
+        for (guint k = 0; k < json_array_get_length(level_list); ++k) {
+            levels.push_back(static_cast<int>(json_array_get_int_element(level_list, k)));
+        }
+        ServerState state(json_object_get_int_member(scenario, "default_ctx"), levels,
                           json_object_get_double_member(scenario, "window"));
         JsonArray* steps = json_object_get_array_member(scenario, "steps");
         for (guint k = 0; k < json_array_get_length(steps); ++k) {
@@ -960,24 +1135,48 @@ TEST(CtxmonServerState, SlowSnapshotChangesNothing) {
     EXPECT_TRUE(state.speed_history().empty());
     EXPECT_TRUE(state.requests().empty());
 }
+
+TEST(CtxmonServerState, DefaultLevelsAre80And95) {
+    ServerState state(1000);
+    Snapshot snapshot;
+    snapshot.used_kind = TokenKind::Final;
+    snapshot.used = 100;
+    EXPECT_TRUE(state.update(snapshot, 1.0).alerts.empty());
+
+    snapshot.used = 850;
+    StateView view = state.update(snapshot, 2.0);
+    ASSERT_EQ(view.alerts.size(), 1u);
+    EXPECT_EQ(view.level, 80);
+    EXPECT_EQ(view.alerts[0].level, std::optional<int>(80));
+    EXPECT_EQ(view.alerts[0].message,
+              std::string("Context 85% full (850 / 1,000 tokens, 150 free)"));
+    EXPECT_FALSE(view.alerts[0].critical);
+
+    snapshot.used = 960;
+    view = state.update(snapshot, 3.0);
+    ASSERT_EQ(view.alerts.size(), 1u);
+    EXPECT_EQ(view.level, 95);
+    EXPECT_EQ(view.alerts[0].level, std::optional<int>(95));
+    EXPECT_TRUE(view.alerts[0].critical);
+}
 ```
-8. Run: `clang-format -i src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp; echo "exit=$?"`
-9. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.4a`:
-    - `evidence/M1.4a/configure.txt` from `cmake -S . -B build`
-    - `evidence/M1.4a/build.txt` from `cmake --build build`
-    - `evidence/M1.4a/ctest.txt` from `ctest --test-dir build --output-on-failure`
+6. Run: `clang-format -i src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp; echo "exit=$?"`
+7. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.4b`:
+    - `evidence/M1.4b/configure.txt` from `cmake -S . -B build`
+    - `evidence/M1.4b/build.txt` from `cmake --build build`
+    - `evidence/M1.4b/ctest.txt` from `ctest --test-dir build --output-on-failure`
 
 EVIDENCE (AGENTS.md rules 12 and 18; FILE items are written by the command itself, then only their `tail -n 3` is pasted)
 E1. Raw: `git status --short --untracked-files=all`
-E2. FILE `evidence/M1.4a/diff.txt` from `git diff`
-E3. FILE `evidence/M1.4a/new_files.txt` from `cat -n src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp`
+E2. FILE `evidence/M1.4b/diff.txt` from `git diff -- src tests/ctxmon/server_state_test.cpp tools`
+E3. FILE `evidence/M1.4b/new_files.txt` from `cat -n src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp`
 E4. Raw: `wc -lc tests/ctxmon/fixtures/expected/*.json`
 E5. Raw: `grep -o '^{"name":"[a-z_]*"' tests/ctxmon/fixtures/expected/server_state.json`
-E6. Raw: the output of steps 2 and 8.
-E7. Raw: `wc -l` of every created or modified file except the two expected JSON files.
+E6. Raw: the output of steps 2 and 6.
+E7. Raw: `wc -l` of every modified file except the expected JSON files.
 E8. Raw: `grep -rnE "gtk/|gdk|pango|gtksourceview|vte|std::regex" src/ctxmon/core; echo "exit=$?"`
 E9. For each of the five evidence files: its path, then the raw output of `tail -n 3` on it.
-E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.4a/ctest.txt`
+E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.4b/ctest.txt`
 E11. Unexpected files: any file the commands created that the rails do not name, or "none" (AGENTS.md rule 8).
 
 End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
@@ -1042,6 +1241,10 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 - 2026-11-08 — M1.3 (`server_api`: `parse_slots`, `model_from_props`, `model_from_models` on json-glib; 17 http fixtures; oracle generator `http`; 83 tests) executed by Qwen, audited PASS: evidence headers at `f3b2b8e`, mtimes after the edits, all four code files and all 17 fixtures byte-identical to the prompt, `http.json` values as expected, other expected JSON unmodified, no GTK names in ctxmon core. The first attempt stopped correctly because the prompt said "tree clean" while two Orchestrator doc edits were uncommitted; a continuation prompt named them. Lesson: when the Orchestrator edits docs before issuing a prompt, the "Last verified" line lists those files.
 - 2026-11-08 — (Orchestrator, within the gate-size rule) **M1.4 split**: M1.4a `live_speed` and `ServerState` without warnings, M1.4b the warnings. The oracle defines the scripted snapshot sequences itself and writes inputs and answers together into `server_state.json` (one step per line, so the 100-step sample-cap scenario stays reviewable); `live_speed.json` holds the window cases. Process: the Orchestrator ran a C++ driver against the Python original and mutation-tested it before issuing; the "Last verified" line of a prompt lists uncommitted Orchestrator doc edits.
 - 2026-11-08 — M1.4a (`server_state`: `live_speed`, `ServerState` without warnings; oracle generators `live_speed` and `server_state`, 12 scripted scenarios; 87 tests) executed by Qwen, audited PASS: evidence headers at `86671be`, mtimes after the edits, all four code files byte-identical to the prompt, CMake lines as dictated, the two new expected files byte-identical (sha256) to the ones the Orchestrator generated and tested against a C++ driver, four older expected files unmodified. Qwen flagged `ServerState::update` at 91 lines (rule 16 flag, justified as one pass); M1.4b splits it. Process: a file sent with SendUserFile landed in the repo folder as `Claude outputs/prompt_M1.4a.txt`; Qwen left it alone (rule 8) and listed it; how long prompts are delivered (inline in the reply, or as a sent file that Adam deletes from the repo folder afterwards) is Adam's choice.
+- 2026-11-08 — (Adam) Long prompts: inline in the reply or as a sent file, whichever the Orchestrator prefers; a sent file lands in the repo folder as `Claude outputs/<name>` and Adam deletes the folder before the agent run.
+- 2026-11-08 — M1.4a committed (`4871de4`) and pushed (docs `9bd72c4`), 87 tests. M1.4b prompt issued: warnings (levels, hysteresis, first-update rule, time-to-full), alerts and level in `StateView`, constructor takes the warn levels (second parameter, before the history window), `update` split into `mark_down`, `track_live_speed`, `classify_count`, `add_warnings`.
+- 2026-11-08 — M1.4b (warnings: levels, hysteresis, first-snapshot rule, time-to-full alert; alerts and level in `StateView`; `update` split into `mark_down`, `track_live_speed`, `classify_count`, `add_warnings`; 22 oracle scenarios; 88 tests) executed by Qwen, audited PASS: evidence headers at `9bd72c4`, mtimes after the edits, the four code files byte-identical to the prompt, `server_state.json` byte-identical (sha256) to the one the Orchestrator generated and checked, the other five expected files unmodified, longest function 47 lines. The `Claude outputs/` folder was still present during the run; Qwen listed it and left it alone.
+- 2026-11-08 — (Adam) **Long prompts go inline in the reply from now on** (no sent file). (Adam) **Context budget under discussion, no rule yet**: the M1.4b Qwen session ended at 108k of 131k context tokens with no fix loop; a gate that also needs fixes should stay clearly below that. Orchestrator options to discuss: replace-by-hunks instead of whole-file dictation for existing files, scenario data outside the oracle script, oracle and C++ in separate gates, an expected size for each prompt.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -1060,7 +1263,7 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 
 ## 4. Session Log  *(newest first, keep 10)*
 ### 2026-11-08 (evening) — M1.3
-- Resumed at `f3b2b8e` (clean, synced). Adam: the ctxmon terminal is good enough as the terminal; M4.5 only if it proves burdensome. M1.3 issued, first stopped by my "tree clean" error, then run and audited PASS (83 tests). M1.3 committed (`cfd1179`) and pushed (`86671be`). M1.4 split; M1.4a prompt issued. Open: M1.4a run and audit, commits, push, M1.4b.
+- Resumed at `f3b2b8e` (clean, synced). Adam: the ctxmon terminal is good enough as the terminal; M4.5 only if it proves burdensome. M1.3 issued, first stopped by my "tree clean" error, then run and audited PASS (83 tests). M1.3 committed (`cfd1179`) and pushed (`86671be`). M1.4 split; M1.4a prompt issued. M1.4a audited PASS, committed (`4871de4`), pushed (`9bd72c4`). M1.4b prompt issued. M1.4b audited PASS. Open: commits, push, prompt-size discussion, M1.5.
 
 ### 2026-11-07 (late night) — M1.0 to M1.2, M1.3 written, evening handoff
 - M1.0 (fix 1: oracle writes no bytecode), M1.1 and M1.2 all PASS and pushed (HEAD `b97b1ac`, 77 tests). Decisions: AGENTS.md rule 8 forbids cleaning up unnamed files; UI specifications are discussed before any UI gate; the terminal is first built with ctxmon (M2.9); all Python removed at M2.11, expected values becoming inline C++ tables. The Orchestrator now compiles and oracle-checks dictated code in the cloud workspace before issuing (json-glib is missing there, so M1.3 was checked with stand-ins). README swept at the end of the day; HANDOFF.md restored after a stale write. Open: commit and push the sweep; issue M1.3.
