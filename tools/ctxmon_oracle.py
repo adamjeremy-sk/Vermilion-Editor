@@ -4,15 +4,20 @@
 # Writes the expected values for the ctxmon tests by running the frozen Python original.
 """Usage: python3 tools/ctxmon_oracle.py  (rewrites tests/ctxmon/fixtures/expected/)"""
 import importlib.util
+import io
 import json
 import pathlib
 import sys
+import urllib.error
+import urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ORIGINAL = ROOT / "reference" / "ctxmon" / "ctxmon_gtk.py"
 EXPECTED = ROOT / "tests" / "ctxmon" / "fixtures" / "expected"
 LOGS = ROOT / "tests" / "ctxmon" / "fixtures" / "logs"
 TIMING = ROOT / "tests" / "ctxmon" / "fixtures" / "timing"
+HTTP = ROOT / "tests" / "ctxmon" / "fixtures" / "http"
+URL = "http://127.0.0.1:8080"
 
 
 def load_original():
@@ -48,9 +53,42 @@ def timing_cases(m):
     return cases
 
 
+def answering(m, routes, call):
+    """Runs call() while the original's urlopen answers from routes (URL path -> file)."""
+
+    def fake_urlopen(url, timeout=None):
+        path = urllib.parse.urlparse(url).path
+        if path not in routes:
+            raise urllib.error.URLError("connection refused")
+        return io.BytesIO(routes[path].read_bytes())
+
+    saved = m.urlopen
+    m.urlopen = fake_urlopen
+    try:
+        return call()
+    finally:
+        m.urlopen = saved
+
+
+def http_cases(m):
+    slots, props, models = [], [], []
+    for path in sorted(HTTP.glob("slots_*.json")):
+        n_ctx, busy, n_decoded, _state = answering(m, {"/slots": path}, lambda: m.slot_info(URL))
+        slots.append({"file": path.name, "n_ctx": n_ctx, "is_processing": busy,
+                      "n_decoded": n_decoded})
+    for path in sorted(HTTP.glob("props_*.json")):
+        model = answering(m, {"/props": path}, lambda: m.server_info(URL))
+        props.append({"file": path.name, "model": model})
+    for path in sorted(HTTP.glob("models_*.json")):
+        model = answering(m, {"/v1/models": path}, lambda: m.server_info(URL))
+        models.append({"file": path.name, "model": model})
+    return {"slots": slots, "props": props, "models": models}
+
+
 GENERATORS = {
     "fmt_duration": fmt_duration_cases,
     "last_tokens": last_tokens_cases,
+    "http": http_cases,
     "timing": timing_cases,
 }
 

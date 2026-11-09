@@ -1,0 +1,92 @@
+{
+  "slots": [
+    {
+      "file": "slots_busy.json",
+      "n_ctx": 131072,
+      "is_processing": true,
+      "n_decoded": 57
+    },
+    {
+      "file": "slots_empty_tokens.json",
+      "n_ctx": 8192,
+      "is_processing": false,
+      "n_decoded": null
+    },
+    {
+      "file": "slots_error.json",
+      "n_ctx": null,
+      "is_processing": null,
+      "n_decoded": null
+    },
+    {
+      "file": "slots_idle.json",
+      "n_ctx": 131072,
+      "is_processing": false,
+      "n_decoded": null
+    },
+    {
+      "file": "slots_invalid.json",
+      "n_ctx": null,
+      "is_processing": null,
+      "n_decoded": null
+    },
+    {
+      "file": "slots_none.json",
+      "n_ctx": null,
+      "is_processing": null,
+      "n_decoded": null
+    },
+    {
+      "file": "slots_old.json",
+      "n_ctx": 32768,
+      "is_processing": true,
+      "n_decoded": 12
+    },
+    {
+      "file": "slots_two.json",
+      "n_ctx": 4096,
+      "is_processing": false,
+      "n_decoded": null
+    }
+  ],
+  "props": [
+    {
+      "file": "props_alias.json",
+      "model": "qwen3.8-27b"
+    },
+    {
+      "file": "props_invalid.json",
+      "model": null
+    },
+    {
+      "file": "props_null.json",
+      "model": null
+    },
+    {
+      "file": "props_path.json",
+      "model": "Qwen3.8-27B-Q4_K_M.gguf"
+    },
+    {
+      "file": "props_trailing_slash.json",
+      "model": null
+    }
+  ],
+  "models": [
+    {
+      "file": "models_blank_id.json",
+      "model": ""
+    },
+    {
+      "file": "models_empty.json",
+      "model": null
+    },
+    {
+      "file": "models_invalid.json",
+      "model": null
+    },
+    {
+      "file": "models_one.json",
+      "model": "qwen3.8-27b"
+    }
+  ]
+}
