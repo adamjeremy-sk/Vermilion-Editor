@@ -36,6 +36,8 @@ Every non-trivial task executes under this protocol. No exceptions.
     - Dictated code is compiled and checked by the Orchestrator before it is issued: the cloud workspace has g++ 13, clang 18, GLib 2.80 and clang-format 18.1.3 (no GoogleTest or json-glib, so tests are checked with a small driver). Dictated files are run through `clang-format` with the project's `.clang-format` first, and the oracle is run on the fixtures.
     - Prompts and AGENTS.md never say what the Orchestrator itself checks or reads.
     - Check every tool option dictated in a prompt against the versions on Adam's machine (clang-format 18.1.3: the key is `AlwaysBreakTemplateDeclarations`, not `BreakTemplateDeclarations`).
+    - Prompts never ask for, or allow, a check that writes files as a side effect (`py_compile`, caches); AGENTS.md rule 21.
+9.  **Engineering options are discussed with Adam (Adam, 2026-11-08).** Adam wants to take part in technical decisions and must not be excluded from them. The Orchestrator explains each option in plain words (what it means, what it costs, what could go wrong), gives a recommendation, and then they decide together. Adam may say "you decide" for a particular item; that is his choice each time, never the default. Questions are put one topic at a time, in terms he can judge, not as a bundle of jargon.
 
 ## 3. Architectural Rails (Decided; see ARCHITECTURE.md)
 1.  **Greenfield.** Written from scratch. Licence GPL-3.0-or-later; every source file carries the SPDX line and the copyright line (AGENTS.md rule 5).

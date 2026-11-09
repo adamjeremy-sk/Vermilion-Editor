@@ -12,7 +12,7 @@
 > **Status: pre-alpha. Not usable yet.**
 > Vermilion Editor is being written from scratch. Milestone M0 (foundation) is done, and M1 (the CTXMon monitor logic)
 > has all of its code: log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory
-> readers are ported and tested, with 100 tests. Editing and the CTXMon window arrive with M2.
+> readers are ported and tested, with 100 tests; one hardening gate (M1.7) follows. Editing and the CTXMon window arrive with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 ---
@@ -54,11 +54,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 code complete (review pending): CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory); the window comes with M2 |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 code complete (review held; a hardening gate, M1.7, comes next): CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory); the window comes with M2 |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 code complete: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original; 100 tests. Next: the M1 review, then M2 (editor window, CTXMon UI). |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 code complete: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original; 100 tests. Next: M1.7 (parser hardening), then M2 (editor window, CTXMon UI). |
 | Releases | None |
 
 ---
@@ -179,7 +179,7 @@ What a card shows (one per server, several servers side by side):
   context is full.
 - **Graphs:** context over time and speed over time.
 - **Recent requests:** the newest finished requests with prompt and generated tokens, speeds and the context size afterwards.
-- **Warnings:** at 80% and 95% of the context, and when the context would fill within a minute at the current speed, as a banner
+- **Warnings:** at 80% and 95% of the context, as a banner
   in the card and as a desktop notification.
 - **GPU memory:** VRAM used and total (AMD through sysfs, or `nvidia-smi`).
 - **Terminal:** shell tabs (VTE) so you can restart a server without leaving the window.
