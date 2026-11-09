@@ -4,17 +4,17 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
 |---|---|
-| Updated | 2026-11-08 ~20:35 (M1.3 audited PASS; gate commit, docs commit and push pending with Adam) |
+| Updated | 2026-11-08 ~21:15 (M1.4a audited PASS; gate commit, docs commit and push pending with Adam) |
 | FIRST ACTION on every new chat | **HANDOFF.md and AI_ONBOARDING.md live in the claude.ai Project (read them with the Projects tool, `claude/HANDOFF.md`), not on disk: a fresh chat's working directory is empty, so do not look for them there. Once they are read, and before any work on the repo, get access to the repo folder.** Call `get_device_info` first; if `connectedFolders` already lists `/home/adam/Projects/vermilion-editor`, no request is needed. Otherwise call `device_request_folder_access` for that path once (the grant is recursive). If it is denied or unanswered, do not repeat it: say so, and either ask Adam to attach the folder or fall back to gated Qwen prompts. Then work through `device_bash` (the folder is mounted at `$HOME/mnt/vermilion-editor`; read-only git with `git --no-optional-locks`). Note: `device_bash` runs in a VM on Adam's machine, so tool versions seen there (python 3.10, awk) are not Adam's host versions. Editing rights are unchanged: root orchestration docs and `docs/` only, never code. |
 | Project | Vermilion Editor: native Linux text and code editor, C++17, GTK 4, GtkSourceView 5, built-in AI agent, build/debug/terminal, model monitor (ctxmon), GPL-3.0-or-later. Written from scratch. |
-| Repo state | HEAD `f3b2b8e`, in sync with `origin/main`. Uncommitted: the M1.3 gate (3 new source files, 17 fixtures, `http.json`, 3 modified files) plus ` M HANDOFF.md` and ` M docs/roadmap.md` (Orchestrator). Adam commits the gate as "M1.3: ctxmon server API parsing (83 tests)", then the docs as "docs: handoff after M1.3", and pushes. |
-| Version / HEAD | `f3b2b8e` plus the M1.3 gate commit and docs commit. ctxmon core: `format` (`fmt_duration`), `log_tokens` (`tail_start`, `token_matches`, `last_token`), `timing` (`last_speeds`, `parse_requests`), `server_api` (`parse_slots`, `model_from_props`, `model_from_models`); oracle generators `fmt_duration`, `last_tokens`, `timing`, `http`. |
-| Tests | 83, all passing (M1.3). |
-| Active task | **M1, ctxmon logic** (gate M1.0 next). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
-| Gate position | M1.3 executed and audited PASS (uncommitted until Adam commits). Next: M1.4. |
-| Awaiting | Adam: commit M1.3 and the docs, push, send the new short HEAD. Then the Orchestrator writes M1.4 (its "Last verified" line needs that hash). |
-| Last prompt issued | M1.3 (issued 2026-11-08, verbatim below; audited PASS). |
-| Next action | On Adam's HEAD: write M1.4 (`live_speed`, `ServerState`, warnings; read ctxmon_gtk.py for the exact logic, split if over ~10 context-needing hits; compile and oracle-check the dictated code first, AI_ONBOARDING.md 2.8). Then M1.5 (graph geometry), M1.6 (VRAM readers). Before any UI gate, talk with Adam about his UI specifications. README.md only at the end-of-day handoff. |
+| Repo state | HEAD `86671be`, in sync with `origin/main`. Uncommitted: the M1.4a gate (`server_state.h/.cpp`, `server_state_test.cpp`, `live_speed.json`, `server_state.json`, modified oracle and two CMake files) plus ` M HANDOFF.md`, ` M docs/roadmap.md` (Orchestrator). Also an untracked folder `Claude outputs/` (a file the Orchestrator sent with SendUserFile landed in the repo folder): Adam deletes it, never commits it. Adam commits the gate as "M1.4a: ctxmon live speed and server state (87 tests)", then the docs as "docs: handoff after M1.4a", and pushes. |
+| Version / HEAD | `86671be`. ctxmon core: `format` (`fmt_duration`), `log_tokens`, `timing`, `server_api`; M1.4a adds `server_state` (`live_speed`, `ServerState` without warnings). Oracle generators `fmt_duration`, `last_tokens`, `timing`, `http`, and after M1.4a `live_speed`, `server_state`. |
+| Tests | 87, all passing (M1.4a). |
+| Active task | **M1, ctxmon logic** (M1.0 to M1.3 done; M1.4a issued). M0 is closed and reviewed (`docs/milestones/M0-review.md`). |
+| Gate position | M1.4a executed and audited PASS (uncommitted until Adam commits). Next: M1.4b (warnings). |
+| Awaiting | Adam: delete `Claude outputs/`, commit M1.4a and the docs, push, send the new short HEAD. Then the Orchestrator writes M1.4b. |
+| Last prompt issued | M1.4a (issued 2026-11-08, verbatim below; audited PASS). |
+| Next action | On Adam's HEAD: write **M1.4b**: port `_warnings` (levels 80 and 95, hysteresis 10 points, first-update rule, time-to-full alert under `ETA_WARN_SECONDS`); the constructor gains the warn levels; `StateView` gains `alerts` and `level`; the `down` branch also resets `warned`, `eta_warned` and `first` (left out of M1.4a on purpose); split `ServerState::update` (91 lines after M1.4a, flagged by rule 16) into helpers such as the exact-versus-estimate classification; the oracle records alerts and level. Compile and oracle-check the dictated code first (driver plus mutation check, as for M1.4a). Then M1.5 (graph geometry), M1.6 (VRAM readers). Before any UI gate, talk with Adam about his UI specifications. README.md only at the end-of-day handoff. |
 | Agent / runtime | Qwen3.8-27B (local llama.cpp, `qwen-server`, port 8080) driven by OpenCode 1.19.5 over ACP inside CLion's Air plugin. Qwen is the only coding agent. Gemma permanently banned. Fresh agent session per prompt; commit only at task end (gate end). Adam builds and tests. Adam codes only at home on this computer with the chat linked, so the Orchestrator can always read `evidence/`. |
 
 **Open notes (no carried debt, Adam 2026-11-06; each is scheduled in a gate)**: none open in code. Accepted design, not debt: `value_or` needs copyable `T`; `key=` query parameters are deliberately not masked; rule A's authorization branch stops only at quotes, comma, CR and LF (values like `Basic xyz` contain spaces). Standing process facts: GLib 2.80 `g_object_add_weak_pointer` does not set the pointer on add (tests preset it); reports show raw failing build output first; `git diff` shows nothing for untracked files, so prompts ask for new files in full; prompts must keep every C++ line they dictate within 100 columns; Qwen replaced raw output with summaries twice (M0.5d1, M0.5d2), answered from M0.5c1 on by AGENTS.md rule 18 (evidence files the Orchestrator reads itself; Adam trusts Qwen not to fabricate them, the Orchestrator still checks headers and mtimes for staleness); clang-format is 18.1.3 on Adam's machine and not installed in the Orchestrator's VM; do not run dependent Orchestrator tool calls in parallel; **prompts and AGENTS.md never mention what the Orchestrator checks or reads (Adam, 2026-11-06)**; check clang-format option names against version 18 before dictating them. Prompt-authoring practices (format step, no dictated whitespace, header lines for new files, FILE evidence, silence about the Orchestrator's checks, tool-version check) are in AI_ONBOARDING.md section 2 item 8. Topics already collected for the M0 review: raw-output summarising and rule 18; format-style choice and rule 19 (the Orchestrator's wrong clang-format key); prompt bugs found by Qwen (`EXPECT_EQ` on `const char*`, over-long dictated lines); GLib weak-pointer quirk; gate sizes. Product notes: dogfooding markers in `docs/roadmap.md` (first at M4.3); CTXMon is a tab plus standalone `vermilion-ctxmon` (names proposed); GTK 4 has no tray icon.
@@ -22,45 +22,24 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 
 ## Last prompt (verbatim)
 FIRST: read AGENTS.md in the project root before doing anything else. Its rules are binding for this entire task and override anything below if they conflict. If you cannot read it, say so and STOP.
-Last verified: New task; tree clean at f3b2b8e.
+Last verified: New task; HEAD 86671be with exactly two uncommitted files, HANDOFF.md and docs/roadmap.md (documentation edits; they are expected, so do not touch, revert or build on them, and do not list them under E11). Otherwise the tree is clean.
 
-TASK: Gate M1.3, ctxmon server API parsing. One step.
+TASK: Gate M1.4a, ctxmon live speed and server state. One step.
 
 CONTEXT (BINDING)
 - ctxmon logic lives in `src/ctxmon/core` (library `vermilion_ctxmon_core`, namespace `vermilion::ctxmon`, no GTK headers; GLib and json-glib are allowed). Tests live in `tests/ctxmon` (executable `vermilion_ctxmon_tests`). Expected values come from the frozen Python original `reference/ctxmon/ctxmon_gtk.py` (read-only) through `tools/ctxmon_oracle.py`.
-- This gate ports the parsing half of `slot_info` and `server_info` (ctxmon_gtk.py lines 232 to 272) as pure functions on response bodies, in a new module `server_api`: `parse_slots` (GET /slots), `model_from_props` (GET /props) and `model_from_models` (GET /v1/models). The HTTP requests themselves come later (M2.8). The oracle runs the Python functions with their `urlopen` answered from the fixture files.
-- Test count: 77 now, 83 after this gate.
+- This gate ports `live_speed` and the class `ServerState` (ctxmon_gtk.py lines 275 to 290 and 410 to 532) as a new module `server_state`: the histories with pruning, the request history, the live speed, and the exact-versus-estimate token count. The warnings (`_warnings`, the 80% and 95% levels, the time-to-full alert) are NOT part of this gate; they come in M1.4b.
+- The oracle feeds scripted snapshot sequences to the Python `ServerState` and records, after each step, what `update` returned and the three histories. Those scripts are defined in the oracle itself and written into `tests/ctxmon/fixtures/expected/server_state.json` together with the answers, so the C++ test reads its inputs from that file too.
+- Test count: 83 now, 87 after this gate.
 
 STRICT RAILS
-- Create exactly these files: `src/ctxmon/core/server_api.h`, `src/ctxmon/core/server_api.cpp`, `tests/ctxmon/server_api_test.cpp`, the 17 fixture files of step 1 in `tests/ctxmon/fixtures/http/`, and `tests/ctxmon/fixtures/expected/http.json` (written by the oracle, never by hand).
+- Create exactly these files: `src/ctxmon/core/server_state.h`, `src/ctxmon/core/server_state.cpp`, `tests/ctxmon/server_state_test.cpp`, and `tests/ctxmon/fixtures/expected/live_speed.json` and `tests/ctxmon/fixtures/expected/server_state.json` (both written by the oracle, never by hand).
 - Modify exactly these files: `tools/ctxmon_oracle.py`, `src/ctxmon/core/CMakeLists.txt`, `tests/ctxmon/CMakeLists.txt`.
-- Re-running the oracle rewrites the other three expected JSON files with identical content: `git status` must not list them as modified.
-- No other change. No new dependency (json-glib is already found by the top-level `CMakeLists.txt`).
+- Re-running the oracle rewrites the other four expected JSON files with identical content: `git status` must not list them as modified.
+- No other change. No new dependency.
 
 STEP 1
-1. Create the fixture files with exactly these commands, run from the project root (the bytes matter, so do not create them with a file editor):
-```bash
-mkdir -p tests/ctxmon/fixtures/http && cd tests/ctxmon/fixtures/http
-printf '[{"id":0,"n_ctx":131072,"is_processing":true,"next_token":[{"has_next_token":true,"n_remain":-1,"n_decoded":57}]}]\n' > slots_busy.json
-printf '[{"id":0,"n_ctx":32768,"is_processing":true,"next_token":{"n_decoded":12}}]\n' > slots_old.json
-printf '[{"id":0,"n_ctx":131072,"is_processing":false}]\n' > slots_idle.json
-printf '[{"id":0,"n_ctx":8192,"is_processing":false,"next_token":[]}]\n' > slots_empty_tokens.json
-printf '[{"id":0,"n_ctx":4096,"is_processing":false},{"id":1,"n_ctx":2048,"is_processing":true}]\n' > slots_two.json
-printf '[]\n' > slots_none.json
-printf '{"error":{"code":501,"message":"This server does not support slots endpoint."}}\n' > slots_error.json
-printf 'not json\n' > slots_invalid.json
-printf '{"model_alias":"qwen3.8-27b","model_path":"/models/Qwen3.8-27B-Q4_K_M.gguf","n_ctx":131072}\n' > props_alias.json
-printf '{"model_path":"/models/Qwen3.8-27B-Q4_K_M.gguf"}\n' > props_path.json
-printf '{"model_alias":"","model_path":"/models/dir/"}\n' > props_trailing_slash.json
-printf '{"model_alias":null,"model_path":null}\n' > props_null.json
-printf '<html>not found</html>\n' > props_invalid.json
-printf '{"object":"list","data":[{"id":"qwen3.8-27b","object":"model"}]}\n' > models_one.json
-printf '{"object":"list","data":[]}\n' > models_empty.json
-printf '{"object":"list","data":[{"id":""}]}\n' > models_blank_id.json
-printf 'Internal Server Error\n' > models_invalid.json
-cd - > /dev/null
-```
-2. Replace the whole content of `tools/ctxmon_oracle.py` with exactly:
+1. Replace the whole content of `tools/ctxmon_oracle.py` with exactly:
 ```python
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -149,12 +128,205 @@ def http_cases(m):
     return {"slots": slots, "props": props, "models": models}
 
 
+def live_speed_cases(m):
+    inputs = [
+        ([], None),
+        ([[0.0, 5]], None),
+        ([[0.0, 5], [1.0, 5]], None),
+        ([[0.0, 5], [1.0, 25]], None),
+        ([[0.0, 5], [1.0, 3]], None),
+        ([[1.0, 5], [1.0, 25]], None),
+        ([[0.0, 0], [0.5, 10], [1.0, 30], [2.0, 70]], None),
+        ([[0.0, 0], [0.5, 10], [1.0, 30], [2.5, 70]], None),
+        ([[0.0, 0], [0.5, 10], [1.0, 30], [3.0, 70]], None),
+        ([[0.0, 0], [0.5, 10], [4.0, 30], [10.0, 90]], None),
+        ([[0.0, 0], [4.0, 30], [4.5, 30]], None),
+        ([[0.0, 0], [1.0, 10], [2.0, 30]], 1.0),
+        ([[0.0, 0], [1.0, 10], [2.0, 30]], 5.0),
+    ]
+    cases = []
+    for samples, window in inputs:
+        args = [[(t, n) for t, n in samples]] + ([] if window is None else [window])
+        cases.append({"samples": samples, "window": window, "speed": m.live_speed(*args)})
+    return cases
+
+
+def snap(**kw):
+    base = dict(state="up", used=None, used_kind=None, n_ctx=None, busy=False, n_decoded=None,
+                model=None, log_found=True, gen=None, prompt=None, requests=[])
+    base.update(kw)
+    return base
+
+
+def req(gen_tps, gen_tokens=100, prompt_tokens=None, prompt_tps=None, ctx=None, seed=False):
+    return dict(prompt_tokens=prompt_tokens, prompt_tps=prompt_tps, gen_tokens=gen_tokens,
+                gen_tps=gen_tps, ctx=ctx, seed=seed)
+
+
+def run_ticks(start, step, count, make):
+    return [(round(start + i * step, 6), make(i)) for i in range(count)]
+
+
+def state_scenarios():
+    busy = dict(used=2000, used_kind="prompt", n_ctx=8192, busy=True)
+    big = dict(n_ctx=2000000, used=1234567, used_kind="prompt", busy=True)
+    return [
+        {"name": "lifecycle", "default_ctx": 8192, "window": 600, "full": True, "steps": [
+            (0.0, snap(state="slow")),
+            (1.0, snap(state="down")),
+            (2.0, snap()),
+            (3.0, snap(used=1200, used_kind="final", n_ctx=8192, model="qwen", gen=41.5,
+                       prompt=900.25, requests=[req(41.5, 300, 1200, 900.25, 1200)])),
+            (4.0, snap(used=1200, used_kind="final", n_ctx=8192, busy=True, n_decoded=0)),
+            (5.0, snap(**busy, n_decoded=0)),
+            (6.0, snap(**busy, n_decoded=10)),
+            (6.5, snap(**busy, n_decoded=30)),
+            (7.0, snap(**busy, n_decoded=50)),
+            (7.5, snap(state="slow")),
+            (8.0, snap(**busy, n_decoded=90)),
+            (9.0, snap(used=2400, used_kind="final", n_ctx=8192,
+                       requests=[req(40.0, 400, 2000, 800.0, 2400)])),
+            (10.0, snap(state="down")),
+            (11.0, snap(used=2400, used_kind="final", n_ctx=4096)),
+        ]},
+        {"name": "no_request_yet", "default_ctx": 4096, "window": 600, "full": True, "steps": [
+            (0.0, snap(busy=True, n_decoded=0)),
+            (1.0, snap(busy=True, n_decoded=5)),
+            (2.0, snap(busy=True, n_decoded=1500)),
+            (3.0, snap(busy=None)),
+        ]},
+        {"name": "kinds_while_busy", "default_ctx": 8192, "window": 600, "full": True, "steps": [
+            (0.0, snap(used=500, used_kind="past", n_ctx=8192, busy=True, n_decoded=0)),
+            (1.0, snap(used=500, used_kind="past", n_ctx=8192, busy=True, n_decoded=40)),
+            (2.0, snap(used=500, used_kind="final", n_ctx=8192, busy=True, n_decoded=80)),
+            (3.0, snap(used=500, used_kind=None, n_ctx=8192, busy=True, n_decoded=120)),
+            (4.0, snap(used=500, used_kind="final", n_ctx=8192, busy=None, n_decoded=120)),
+        ]},
+        {"name": "full_context", "default_ctx": 4096, "window": 600, "full": True, "steps": [
+            (0.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=0)),
+            (1.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=100)),
+            (2.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=300)),
+            (3.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=1096)),
+            (4.0, snap(used=3000, used_kind="prompt", n_ctx=4096, busy=True, n_decoded=1300)),
+        ]},
+        {"name": "big_numbers", "default_ctx": 100, "window": 600, "full": True, "steps": [
+            (0.0, snap(**big, n_decoded=0)),
+            (1.0, snap(**big, n_decoded=999)),
+            (2.0, snap(**big, n_decoded=1000)),
+            (3.0, snap(n_ctx=2000000, used=1000000, used_kind="final")),
+            (4.0, snap(n_ctx=2000000, used=999999, used_kind="final")),
+        ]},
+        {"name": "default_context", "default_ctx": 0, "window": 600, "full": True, "steps": [
+            (0.0, snap(used=100, used_kind="final")),
+            (1.0, snap(used=100, used_kind="final", n_ctx=0)),
+            (2.0, snap(state="down")),
+        ]},
+        {"name": "new_request_resets_samples", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [
+            (0.0, snap(**busy, n_decoded=0)),
+            (0.5, snap(**busy, n_decoded=100)),
+            (1.0, snap(**busy, n_decoded=200)),
+            (1.5, snap(**busy, n_decoded=5)),
+            (2.0, snap(**busy, n_decoded=60)),
+            (2.5, snap(**busy, n_decoded=None)),
+            (3.0, snap(**busy, n_decoded=70)),
+        ]},
+        {"name": "speed_history_spacing", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [
+            (0.0, snap(used=100, used_kind="final", requests=[req(30.0)])),
+            (0.4, snap(used=100, used_kind="final", requests=[req(31.0)])),
+            (1.0, snap(used=100, used_kind="final", requests=[req(32.0)])),
+            (1.2, snap(used=100, used_kind="final", requests=[req(0.0)])),
+            (1.4, snap(used=100, used_kind="final", requests=[req(33.0, seed=True)])),
+            (3.0, snap(**busy, n_decoded=0)),
+            (3.5, snap(**busy, n_decoded=20)),
+            (4.0, snap(**busy, n_decoded=60)),
+            (4.5, snap(used=2100, used_kind="final", n_ctx=8192)),
+            (5.0, snap(used=2100, used_kind="final", n_ctx=8192)),
+            (6.0, snap(state="down")),
+            (7.0, snap(state="down")),
+        ]},
+        {"name": "pruning", "default_ctx": 8192, "window": 10, "full": True, "steps": run_ticks(
+            0.0, 2.5, 14, lambda i: snap(used=100 + 50 * (i // 2), used_kind="final",
+                                         requests=[req(20.0 + i)] if i % 3 == 0 else []))},
+        {"name": "request_history_cap", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [
+            (0.0, snap(used=10, used_kind="final",
+                       requests=[req(float(i + 1), seed=(i % 4 == 0)) for i in range(55)])),
+            (1.0, snap(used=10, used_kind="final", requests=[req(70.0), req(71.0)])),
+        ]},
+        {"name": "context_history_spacing", "default_ctx": 8192, "window": 600, "full": True,
+         "steps": [(t, snap(used=500, used_kind="final", n_ctx=8192))
+                   for t in (0.0, 1.0, 2.0, 3.0, 4.0, 6.25, 7.0, 8.0, 8.5)]},
+        {"name": "sample_cap", "default_ctx": 100000, "window": 600, "full": False,
+         "steps": run_ticks(0.0, 0.02, 100, lambda i: snap(
+             used=1000, used_kind="prompt", n_ctx=100000, busy=True,
+             n_decoded=10 * i + i * i // 10))},
+    ]
+
+
+def view_of(result):
+    out = {"state": result["state"]}
+    if result["state"] == "slow":
+        return out
+    for key in ("ctx", "shown", "frac", "kind", "source", "estimating", "live", "gen", "prompt",
+                "eta", "busy", "model"):
+        out[key] = result[key]
+    out["log_found"] = bool(result.get("log_found"))
+    return out
+
+
+def histories_of(state):
+    return {"ctx_hist": [list(p) for p in state.ctx_hist],
+            "speed_hist": [list(p) for p in state.speed_hist],
+            "requests": [dict(r) for r in state.requests]}
+
+
+def server_state_cases(m):
+    cases = []
+    for scenario in state_scenarios():
+        state = m.ServerState(scenario["default_ctx"], history_seconds=scenario["window"])
+        steps = []
+        last = len(scenario["steps"]) - 1
+        for i, (now, snapshot) in enumerate(scenario["steps"]):
+            step = {"now": now, "snapshot": snapshot}
+            step["view"] = view_of(state.update(snapshot, now))
+            if scenario["full"] or i == last:
+                step.update(histories_of(state))
+            steps.append(step)
+        cases.append({"name": scenario["name"], "default_ctx": scenario["default_ctx"],
+                      "window": scenario["window"], "steps": steps})
+    return cases
+
+
 GENERATORS = {
     "fmt_duration": fmt_duration_cases,
     "last_tokens": last_tokens_cases,
     "http": http_cases,
+    "live_speed": live_speed_cases,
+    "server_state": server_state_cases,
     "timing": timing_cases,
 }
+
+
+def server_state_text(cases):
+    """One scenario per block and one step per line, so the file stays readable and diffable."""
+
+    def line(value):
+        return json.dumps(value, separators=(",", ":"))
+
+    out = ["["]
+    for ci, case in enumerate(cases):
+        head = line({k: case[k] for k in ("name", "default_ctx", "window")})
+        out.append(head[:-1] + ',"steps":[')
+        for si, step in enumerate(case["steps"]):
+            out.append(line(step) + ("," if si < len(case["steps"]) - 1 else ""))
+        out.append("]}" + ("," if ci < len(cases) - 1 else ""))
+    out.append("]")
+    return "\n".join(out) + "\n"
+
+
+WRITERS = {"server_state": server_state_text}
 
 
 def main():
@@ -162,348 +334,650 @@ def main():
     EXPECTED.mkdir(parents=True, exist_ok=True)
     for name, generate in sorted(GENERATORS.items()):
         path = EXPECTED / (name + ".json")
-        path.write_text(json.dumps(generate(m), indent=2) + "\n", encoding="utf-8")
+        cases = generate(m)
+        write = WRITERS.get(name)
+        text = write(cases) if write else json.dumps(cases, indent=2) + "\n"
+        path.write_text(text, encoding="utf-8")
         print(path.relative_to(ROOT))
 
 
 if __name__ == "__main__":
     main()
 ```
-3. Run: `python3 tools/ctxmon_oracle.py; echo "exit=$?"`
-4. Create `src/ctxmon/core/server_api.h` with exactly:
+2. Run: `python3 tools/ctxmon_oracle.py; echo "exit=$?"`
+3. Create `src/ctxmon/core/server_state.h` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Parses the llama.cpp server's /slots, /props and /v1/models response bodies.
+// Turns server snapshots into what the monitor shows and keeps the histories.
 
 #pragma once
 
+#include <cstddef>
+#include <deque>
 #include <optional>
 #include <string>
-#include <string_view>
+#include <vector>
+
+#include "ctxmon/core/log_tokens.h"
+#include "ctxmon/core/timing.h"
 
 namespace vermilion::ctxmon {
 
-// What the first slot of GET /slots reports. Every field is absent when the body is not JSON,
-// not a non-empty array, or its first element is not an object (the Python original treats
-// those as "the server answered, but without slot data").
-struct SlotInfo {
-    std::optional<long long> n_ctx;
-    std::optional<bool> is_processing;
-    std::optional<long long> n_decoded; // from next_token, which is an object or a list of them
+constexpr double kLiveWindow = 2.0;      // seconds of samples used for the live speed
+constexpr std::size_t kMaxRequests = 50; // request history length per server
+constexpr std::size_t kMaxSamples = 64;  // live-speed samples kept per server
+
+// How many tokens a running request has generated, and when that was read.
+struct Sample {
+    double time = 0.0;
+    long long n_decoded = 0;
 };
 
-SlotInfo parse_slots(std::string_view body);
+// live_speed of the Python original: tokens per second from the samples within window seconds
+// of the newest one. Absent with fewer than two samples in the window or without growth.
+std::optional<double> live_speed(const std::deque<Sample>& samples, double window = kLiveWindow);
 
-// The model name in a GET /props body: model_alias if it is a non-empty string, otherwise the
-// file name of model_path. Absent when neither gives a non-empty name or the body is not a
-// JSON object. A member that is not a string counts as missing.
-std::optional<std::string> model_from_props(std::string_view body);
+// Whether the server answered: Up, Down (nothing listening) or Slow (no timely answer, which a
+// busy server can give, so it is not treated as down).
+enum class LinkState { Up, Down, Slow };
 
-// The id of the first model in a GET /v1/models body (may be empty, as in the Python original),
-// or absent when there is none, it is not a string, or the body is not JSON.
-std::optional<std::string> model_from_models(std::string_view body);
+// A finished request handed over with a snapshot. seed is true for history that was already in
+// the log when the monitor started, so its time is unknown.
+struct SnapshotRequest {
+    FinishedRequest request;
+    bool seed = false;
+};
+
+// Everything one poll found, as the Python original's poll_once returns it.
+struct Snapshot {
+    LinkState state = LinkState::Up;
+    std::optional<long long> used; // newest token count in the log
+    std::optional<TokenKind> used_kind;
+    std::optional<long long> n_ctx;
+    bool busy = false;
+    std::optional<long long> n_decoded;
+    std::optional<std::string> model;
+    bool log_found = false;
+    std::optional<double> gen;    // tokens per second of the latest finished request
+    std::optional<double> prompt; // prompt speed of the latest finished request
+    std::vector<SnapshotRequest> requests;
+};
+
+// How trustworthy the shown token count is.
+enum class CountKind {
+    Down,       // the server is down
+    None,       // no request in the log yet
+    Exact,      // idle, and the log says how many tokens the context holds
+    Processing, // a request is loading its prompt: the count is the last known one
+    Estimate,   // a request is generating: prompt size plus what /slots reports
+};
+
+// The name the Python original uses for a kind ("down", "none", "exact", "processing",
+// "estimate").
+const char* count_kind_name(CountKind kind);
+
+// What update returns. With state Slow nothing else is set: the caller keeps the old numbers.
+struct StateView {
+    LinkState state = LinkState::Up;
+    long long ctx = 0;
+    long long shown = 0;
+    double frac = 0.0; // shown / ctx, at most 1
+    CountKind kind = CountKind::None;
+    std::string source; // says which parts of the count are known
+    bool estimating = false;
+    std::optional<double> live; // live generation speed
+    std::optional<double> gen;
+    std::optional<double> prompt;
+    std::optional<double> eta; // seconds until the context is full at the live speed
+    bool busy = false;
+    std::optional<std::string> model;
+    bool log_found = false;
+};
+
+struct CtxPoint {
+    double time = 0.0;
+    long long tokens = 0;
+};
+
+struct SpeedPoint {
+    double time = 0.0;
+    std::optional<double> tps; // absent: a gap between requests
+};
+
+struct RequestRecord {
+    FinishedRequest request;
+    std::optional<double> time; // absent for seed requests
+};
+
+// ServerState of the Python original, without the warnings (they come in the next gate).
+class ServerState {
+public:
+    explicit ServerState(long long default_ctx, double history_seconds = 600.0)
+        : default_ctx_(default_ctx), window_(history_seconds) {}
+
+    // Digests one snapshot taken at time now (seconds).
+    StateView update(const Snapshot& snapshot, double now);
+
+    const std::deque<CtxPoint>& ctx_history() const { return ctx_hist_; }
+    const std::deque<SpeedPoint>& speed_history() const { return speed_hist_; }
+    const std::deque<RequestRecord>& requests() const { return requests_; }
+
+private:
+    void push_ctx(double now, long long tokens);
+    void push_speed(double now, std::optional<double> tps);
+    void add_requests(const std::vector<SnapshotRequest>& requests, double now);
+
+    long long default_ctx_;
+    double window_;
+    std::deque<CtxPoint> ctx_hist_;
+    std::deque<SpeedPoint> speed_hist_;
+    std::deque<RequestRecord> requests_;
+    std::deque<Sample> samples_;
+    long long last_ctx_ = 0; // 0: none yet
+    bool was_busy_ = false;
+};
 
 } // namespace vermilion::ctxmon
 ```
-5. Create `src/ctxmon/core/server_api.cpp` with exactly:
+4. Create `src/ctxmon/core/server_state.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Server API parsing: slot_info and server_info of the Python original on json-glib.
+// ServerState of the Python original: histories, exact versus estimated token counts.
 
-#include "ctxmon/core/server_api.h"
+#include "ctxmon/core/server_state.h"
 
-#include <json-glib/json-glib.h>
-
-#include <cstddef>
+#include <algorithm>
 #include <optional>
 #include <string>
-#include <string_view>
+#include <vector>
 
 namespace vermilion::ctxmon {
 
 namespace {
 
-// The root node of body parsed as JSON (owned by parser), or nullptr if it does not parse.
-JsonNode* parse_root(JsonParser* parser, std::string_view body) {
-    if (body.empty()) {
-        return nullptr; // also covers a default string_view, whose data() is null
+// n with comma thousands separators, like Python's f"{n:,}".
+std::string with_commas(long long n) {
+    const bool negative = n < 0;
+    const unsigned long long magnitude =
+        negative ? 0ULL - static_cast<unsigned long long>(n) : static_cast<unsigned long long>(n);
+    const std::string digits = std::to_string(magnitude);
+    std::string out;
+    for (std::size_t i = 0; i < digits.size(); ++i) {
+        if (i > 0 && (digits.size() - i) % 3 == 0) {
+            out += ',';
+        }
+        out += digits[i];
     }
-    if (!json_parser_load_from_data(parser, body.data(), static_cast<gssize>(body.size()),
-                                    nullptr)) {
-        return nullptr;
-    }
-    return json_parser_get_root(parser);
+    return negative ? "-" + out : out;
 }
 
-// The object held by node, or nullptr if node is missing or holds something else.
-JsonObject* as_object(JsonNode* node) {
-    return node != nullptr && JSON_NODE_HOLDS_OBJECT(node) ? json_node_get_object(node) : nullptr;
-}
-
-// The first element of an array node, or nullptr if node is not a non-empty array.
-JsonNode* first_element(JsonNode* node) {
-    if (node == nullptr || !JSON_NODE_HOLDS_ARRAY(node)) {
-        return nullptr;
+// Drops points from the front while the second one is older than the window: one point older
+// than the window stays, so lines enter from the left edge.
+template <typename History>
+void prune(History& history, double now, double window) {
+    while (history.size() > 1 && history[1].time < now - window) {
+        history.pop_front();
     }
-    JsonArray* array = json_node_get_array(node);
-    return json_array_get_length(array) > 0 ? json_array_get_element(array, 0) : nullptr;
-}
-
-// A member holding a value of the given GType, or nullptr (missing, null, or another type).
-JsonNode* value_member(JsonObject* object, const char* name, GType type) {
-    JsonNode* node = json_object_get_member(object, name);
-    if (node == nullptr || !JSON_NODE_HOLDS_VALUE(node) || json_node_get_value_type(node) != type) {
-        return nullptr;
-    }
-    return node;
-}
-
-std::optional<long long> int_member(JsonObject* object, const char* name) {
-    JsonNode* node = value_member(object, name, G_TYPE_INT64);
-    if (node == nullptr) {
-        return std::nullopt;
-    }
-    return static_cast<long long>(json_node_get_int(node));
-}
-
-std::optional<bool> bool_member(JsonObject* object, const char* name) {
-    JsonNode* node = value_member(object, name, G_TYPE_BOOLEAN);
-    if (node == nullptr) {
-        return std::nullopt;
-    }
-    return json_node_get_boolean(node) != FALSE;
-}
-
-std::optional<std::string> string_member(JsonObject* object, const char* name) {
-    JsonNode* node = value_member(object, name, G_TYPE_STRING);
-    if (node == nullptr) {
-        return std::nullopt;
-    }
-    return std::string(json_node_get_string(node));
 }
 
 } // namespace
 
-SlotInfo parse_slots(std::string_view body) {
-    SlotInfo info;
-    g_autoptr(JsonParser) parser = json_parser_new();
-    JsonObject* slot = as_object(first_element(parse_root(parser, body)));
-    if (slot == nullptr) {
-        return info;
+std::optional<double> live_speed(const std::deque<Sample>& samples, double window) {
+    if (samples.size() < 2) {
+        return std::nullopt;
     }
-    info.n_ctx = int_member(slot, "n_ctx");
-    info.is_processing = bool_member(slot, "is_processing");
-    JsonNode* next = json_object_get_member(slot, "next_token");
-    if (next != nullptr && JSON_NODE_HOLDS_ARRAY(next)) {
-        next = first_element(next); // newer servers send a list with one entry
+    const double t_end = samples.back().time;
+    const Sample* first = nullptr;
+    for (const Sample& s : samples) {
+        if (t_end - s.time <= window) {
+            first = &s;
+            break;
+        }
     }
-    if (JsonObject* token = as_object(next)) {
-        info.n_decoded = int_member(token, "n_decoded");
+    const Sample& last = samples.back();
+    if (first == nullptr || first == &last) {
+        return std::nullopt; // fewer than two samples in the window
     }
-    return info;
+    if (last.time <= first->time || last.n_decoded <= first->n_decoded) {
+        return std::nullopt;
+    }
+    return static_cast<double>(last.n_decoded - first->n_decoded) / (last.time - first->time);
 }
 
-std::optional<std::string> model_from_props(std::string_view body) {
-    g_autoptr(JsonParser) parser = json_parser_new();
-    JsonObject* props = as_object(parse_root(parser, body));
-    if (props == nullptr) {
-        return std::nullopt;
+const char* count_kind_name(CountKind kind) {
+    switch (kind) {
+    case CountKind::Down:
+        return "down";
+    case CountKind::None:
+        return "none";
+    case CountKind::Exact:
+        return "exact";
+    case CountKind::Processing:
+        return "processing";
+    case CountKind::Estimate:
+        return "estimate";
     }
-    const std::optional<std::string> alias = string_member(props, "model_alias");
-    if (alias && !alias->empty()) {
-        return alias;
-    }
-    const std::optional<std::string> path = string_member(props, "model_path");
-    if (!path) {
-        return std::nullopt;
-    }
-    // Like Python's os.path.basename: everything after the last '/', so "dir/" gives "".
-    const std::size_t slash = path->rfind('/');
-    std::string name = slash == std::string::npos ? *path : path->substr(slash + 1);
-    if (name.empty()) {
-        return std::nullopt;
-    }
-    return name;
+    return "";
 }
 
-std::optional<std::string> model_from_models(std::string_view body) {
-    g_autoptr(JsonParser) parser = json_parser_new();
-    JsonObject* list = as_object(parse_root(parser, body));
-    if (list == nullptr) {
-        return std::nullopt;
+void ServerState::push_ctx(double now, long long tokens) {
+    if (ctx_hist_.empty() || tokens != ctx_hist_.back().tokens ||
+        now - ctx_hist_.back().time >= 2.0) {
+        ctx_hist_.push_back({now, tokens});
     }
-    JsonObject* model = as_object(first_element(json_object_get_member(list, "data")));
-    if (model == nullptr) {
-        return std::nullopt;
+    prune(ctx_hist_, now, window_);
+}
+
+void ServerState::push_speed(double now, std::optional<double> tps) {
+    if (!tps) {
+        if (!speed_hist_.empty() && speed_hist_.back().tps) {
+            speed_hist_.push_back({now, std::nullopt});
+        }
+    } else if (speed_hist_.empty() || !speed_hist_.back().tps ||
+               now - speed_hist_.back().time >= 1.0) {
+        speed_hist_.push_back({now, tps});
     }
-    return string_member(model, "id");
+    prune(speed_hist_, now, window_);
+}
+
+void ServerState::add_requests(const std::vector<SnapshotRequest>& requests, double now) {
+    for (const SnapshotRequest& r : requests) {
+        requests_.push_back({r.request, r.seed ? std::nullopt : std::optional<double>(now)});
+        if (requests_.size() > kMaxRequests) {
+            requests_.pop_front();
+        }
+        if (!r.seed && r.request.gen_tps != 0.0) {
+            push_speed(now, r.request.gen_tps);
+        }
+    }
+}
+
+StateView ServerState::update(const Snapshot& s, double now) {
+    StateView v;
+    v.state = s.state;
+    if (s.state == LinkState::Slow) {
+        return v;
+    }
+    add_requests(s.requests, now);
+
+    if (s.state == LinkState::Down) {
+        v.ctx = last_ctx_ != 0 ? last_ctx_ : default_ctx_;
+        v.kind = CountKind::Down;
+        push_ctx(now, 0);
+        push_speed(now, std::nullopt);
+        samples_.clear();
+        was_busy_ = false;
+        return v;
+    }
+
+    const long long ctx = s.n_ctx && *s.n_ctx != 0 ? *s.n_ctx : default_ctx_;
+    last_ctx_ = ctx;
+
+    // Live speed from the tokens generated so far by the running request.
+    std::optional<double> live;
+    if (s.busy && s.n_decoded) {
+        if (!samples_.empty() && *s.n_decoded < samples_.back().n_decoded) {
+            samples_.clear(); // a new request started
+        }
+        samples_.push_back({now, *s.n_decoded});
+        if (samples_.size() > kMaxSamples) {
+            samples_.pop_front();
+        }
+        live = live_speed(samples_);
+    } else {
+        samples_.clear();
+    }
+    if (live) {
+        push_speed(now, live);
+    } else if (was_busy_ && !s.busy) {
+        push_speed(now, std::nullopt); // break the line between requests
+    }
+    was_busy_ = s.busy;
+
+    // Exact versus estimate.
+    const long long gen_now = s.busy && s.n_decoded && *s.n_decoded != 0 ? *s.n_decoded : 0;
+    if (!s.used) {
+        v.kind = CountKind::None;
+        v.shown = gen_now;
+        v.estimating = gen_now != 0;
+        v.source = v.estimating ? "estimate: " + with_commas(gen_now) +
+                                      " generated, prompt size not in the log yet"
+                                : "no request in the log yet";
+    } else if (!s.busy) {
+        v.kind = CountKind::Exact;
+        v.shown = *s.used;
+        v.source = "exact: from the server log";
+    } else if (s.used_kind == TokenKind::Final && gen_now == 0) {
+        // Busy, but the newest log line is the previous request's end: its prompt is not known.
+        v.kind = CountKind::Processing;
+        v.shown = *s.used;
+        v.estimating = true;
+        v.source = "estimate: new prompt loading (last known " + with_commas(*s.used) + ")";
+    } else if (gen_now == 0) {
+        v.kind = CountKind::Processing;
+        v.shown = *s.used;
+        v.estimating = true;
+        v.source = "estimate: prompt loading, " + with_commas(*s.used) + " so far";
+    } else {
+        v.kind = CountKind::Estimate;
+        v.shown = *s.used + gen_now;
+        v.estimating = true;
+        v.source = "estimate: prompt " + with_commas(*s.used) + " + " + with_commas(gen_now) +
+                   " generated";
+    }
+
+    v.ctx = ctx;
+    v.frac =
+        ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(ctx), 1.0) : 0.0;
+    const long long free_tokens = std::max(ctx - v.shown, 0LL);
+    if (s.busy && live && free_tokens > 0) {
+        v.eta = static_cast<double>(free_tokens) / *live;
+    }
+    push_ctx(now, v.shown);
+
+    v.live = live;
+    v.gen = s.gen;
+    v.prompt = s.prompt;
+    v.busy = s.busy;
+    v.model = s.model;
+    v.log_found = s.log_found;
+    return v;
 }
 
 } // namespace vermilion::ctxmon
 ```
-6. In `src/ctxmon/core/CMakeLists.txt`:
-   - change the first line to `add_library(vermilion_ctxmon_core STATIC format.cpp log_tokens.cpp timing.cpp server_api.cpp)`;
-   - change the last line to `target_link_libraries(vermilion_ctxmon_core PRIVATE vermilion_warnings vermilion_noexc PkgConfig::GLIB2 PkgConfig::JSONGLIB)`.
-7. In `tests/ctxmon/CMakeLists.txt`, change the first line to `add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp server_api_test.cpp)`.
-8. Create `tests/ctxmon/server_api_test.cpp` with exactly:
+5. In `src/ctxmon/core/CMakeLists.txt`, change the first line to `add_library(vermilion_ctxmon_core STATIC format.cpp log_tokens.cpp timing.cpp server_api.cpp server_state.cpp)`.
+6. In `tests/ctxmon/CMakeLists.txt`, change the first line to `add_executable(vermilion_ctxmon_tests format_test.cpp log_tokens_test.cpp timing_test.cpp server_api_test.cpp server_state_test.cpp)`.
+7. Create `tests/ctxmon/server_state_test.cpp` with exactly:
 ```cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Tests for the ctxmon server API parsers against the values of the Python original.
+// Tests for live_speed and ServerState against the values of the Python original.
 
 #include <gtest/gtest.h>
 #include <json-glib/json-glib.h>
 
-#include <fstream>
-#include <iterator>
+#include <deque>
 #include <optional>
 #include <string>
-#include <string_view>
 
-#include "ctxmon/core/server_api.h"
+#include "ctxmon/core/server_state.h"
 
-using vermilion::ctxmon::model_from_models;
-using vermilion::ctxmon::model_from_props;
-using vermilion::ctxmon::parse_slots;
-using vermilion::ctxmon::SlotInfo;
+using vermilion::ctxmon::count_kind_name;
+using vermilion::ctxmon::CountKind;
+using vermilion::ctxmon::LinkState;
+using vermilion::ctxmon::live_speed;
+using vermilion::ctxmon::Sample;
+using vermilion::ctxmon::ServerState;
+using vermilion::ctxmon::Snapshot;
+using vermilion::ctxmon::SnapshotRequest;
+using vermilion::ctxmon::StateView;
+using vermilion::ctxmon::TokenKind;
 
 namespace {
 
-std::string read_bytes(const std::string& path) {
-    std::ifstream in(path, std::ios::binary);
-    return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+JsonNode* member(JsonObject* object, const char* name) {
+    return json_object_get_member(object, name);
 }
 
-// The cases of one kind ("slots", "props" or "models") in http.json; parser owns them.
-JsonArray* expected_cases(JsonParser* parser, const char* kind) {
-    const std::string path = std::string(CTXMON_FIXTURE_DIR) + "/expected/http.json";
+bool is_null(JsonNode* node) {
+    return node == nullptr || JSON_NODE_HOLDS_NULL(node);
+}
+
+std::optional<double> opt_double(JsonNode* node) {
+    return is_null(node) ? std::nullopt : std::optional<double>(json_node_get_double(node));
+}
+
+std::optional<long long> opt_int(JsonNode* node) {
+    return is_null(node) ? std::nullopt : std::optional<long long>(json_node_get_int(node));
+}
+
+std::optional<std::string> opt_string(JsonNode* node) {
+    return is_null(node) ? std::nullopt : std::optional<std::string>(json_node_get_string(node));
+}
+
+bool as_bool(JsonNode* node) {
+    return !is_null(node) && json_node_get_boolean(node) != FALSE;
+}
+
+// The cases in file under expected/ (an array); parser owns them.
+JsonArray* load_cases(JsonParser* parser, const char* file) {
+    const std::string path = std::string(CTXMON_FIXTURE_DIR) + "/expected/" + file;
     if (!json_parser_load_from_file(parser, path.c_str(), nullptr)) {
         return nullptr;
     }
     JsonNode* root = json_parser_get_root(parser);
-    if (root == nullptr || !JSON_NODE_HOLDS_OBJECT(root)) {
-        return nullptr;
-    }
-    return json_object_get_array_member(json_node_get_object(root), kind);
+    return root != nullptr && JSON_NODE_HOLDS_ARRAY(root) ? json_node_get_array(root) : nullptr;
 }
 
-// The response body a case names.
-std::string body_of(JsonObject* c) {
-    const std::string file = json_object_get_string_member(c, "file");
-    return read_bytes(std::string(CTXMON_FIXTURE_DIR) + "/http/" + file);
-}
-
-// Each compares a value that may be absent with a JSON member that may be null.
-void expect_int(JsonObject* c, const char* name, const std::optional<long long>& value) {
-    SCOPED_TRACE(name);
-    if (json_object_get_null_member(c, name)) {
-        EXPECT_FALSE(value.has_value());
+// Each compares a value that may be absent with a JSON node that may be null.
+void expect_double(const std::optional<double>& actual, JsonNode* expected) {
+    if (is_null(expected)) {
+        EXPECT_FALSE(actual.has_value());
     } else {
-        ASSERT_TRUE(value.has_value());
-        EXPECT_EQ(*value, json_object_get_int_member(c, name));
+        ASSERT_TRUE(actual.has_value());
+        EXPECT_DOUBLE_EQ(*actual, json_node_get_double(expected));
     }
 }
 
-void expect_bool(JsonObject* c, const char* name, const std::optional<bool>& value) {
-    SCOPED_TRACE(name);
-    if (json_object_get_null_member(c, name)) {
-        EXPECT_FALSE(value.has_value());
+void expect_int(const std::optional<long long>& actual, JsonNode* expected) {
+    if (is_null(expected)) {
+        EXPECT_FALSE(actual.has_value());
     } else {
-        ASSERT_TRUE(value.has_value());
-        EXPECT_EQ(*value, json_object_get_boolean_member(c, name) != FALSE);
+        ASSERT_TRUE(actual.has_value());
+        EXPECT_EQ(*actual, json_node_get_int(expected));
     }
 }
 
-void expect_string(JsonObject* c, const char* name, const std::optional<std::string>& value) {
-    SCOPED_TRACE(name);
-    if (json_object_get_null_member(c, name)) {
-        EXPECT_FALSE(value.has_value());
+void expect_string(const std::optional<std::string>& actual, JsonNode* expected) {
+    if (is_null(expected)) {
+        EXPECT_FALSE(actual.has_value());
     } else {
-        ASSERT_TRUE(value.has_value());
-        EXPECT_EQ(*value, std::string(json_object_get_string_member(c, name)));
+        ASSERT_TRUE(actual.has_value());
+        EXPECT_EQ(*actual, std::string(json_node_get_string(expected)));
+    }
+}
+
+const char* link_name(LinkState state) {
+    switch (state) {
+    case LinkState::Up:
+        return "up";
+    case LinkState::Down:
+        return "down";
+    case LinkState::Slow:
+        return "slow";
+    }
+    return "";
+}
+
+std::optional<TokenKind> token_kind_of(JsonNode* node) {
+    const std::optional<std::string> name = opt_string(node);
+    if (!name) {
+        return std::nullopt;
+    }
+    return *name == "final" ? TokenKind::Final
+                            : (*name == "prompt" ? TokenKind::Prompt : TokenKind::Past);
+}
+
+SnapshotRequest request_of(JsonObject* o) {
+    SnapshotRequest r;
+    r.request.prompt_tokens = opt_int(member(o, "prompt_tokens"));
+    r.request.prompt_tps = opt_double(member(o, "prompt_tps"));
+    r.request.gen_tokens = json_object_get_int_member(o, "gen_tokens");
+    r.request.gen_tps = json_object_get_double_member(o, "gen_tps");
+    r.request.ctx = opt_int(member(o, "ctx"));
+    r.seed = as_bool(member(o, "seed"));
+    return r;
+}
+
+Snapshot snapshot_of(JsonObject* o) {
+    Snapshot s;
+    const std::string state = json_object_get_string_member(o, "state");
+    s.state =
+        state == "down" ? LinkState::Down : (state == "slow" ? LinkState::Slow : LinkState::Up);
+    s.used = opt_int(member(o, "used"));
+    s.used_kind = token_kind_of(member(o, "used_kind"));
+    s.n_ctx = opt_int(member(o, "n_ctx"));
+    s.busy = as_bool(member(o, "busy"));
+    s.n_decoded = opt_int(member(o, "n_decoded"));
+    s.model = opt_string(member(o, "model"));
+    s.log_found = as_bool(member(o, "log_found"));
+    s.gen = opt_double(member(o, "gen"));
+    s.prompt = opt_double(member(o, "prompt"));
+    JsonArray* requests = json_object_get_array_member(o, "requests");
+    for (guint i = 0; i < json_array_get_length(requests); ++i) {
+        s.requests.push_back(request_of(json_array_get_object_element(requests, i)));
+    }
+    return s;
+}
+
+void expect_view(JsonObject* e, const StateView& v) {
+    EXPECT_EQ(std::string(link_name(v.state)),
+              std::string(json_object_get_string_member(e, "state")));
+    if (v.state == LinkState::Slow) {
+        return; // the original returns only the state; the caller keeps the old numbers
+    }
+    EXPECT_EQ(v.ctx, json_object_get_int_member(e, "ctx"));
+    EXPECT_EQ(v.shown, json_object_get_int_member(e, "shown"));
+    EXPECT_DOUBLE_EQ(v.frac, json_object_get_double_member(e, "frac"));
+    EXPECT_EQ(std::string(count_kind_name(v.kind)),
+              std::string(json_object_get_string_member(e, "kind")));
+    EXPECT_EQ(v.source, std::string(json_object_get_string_member(e, "source")));
+    EXPECT_EQ(v.estimating, json_object_get_boolean_member(e, "estimating") != FALSE);
+    expect_double(v.live, member(e, "live"));
+    expect_double(v.gen, member(e, "gen"));
+    expect_double(v.prompt, member(e, "prompt"));
+    expect_double(v.eta, member(e, "eta"));
+    EXPECT_EQ(v.busy, json_object_get_boolean_member(e, "busy") != FALSE);
+    expect_string(v.model, member(e, "model"));
+    EXPECT_EQ(v.log_found, json_object_get_boolean_member(e, "log_found") != FALSE);
+}
+
+// The histories, when the step records them (long scenarios record only the last step).
+void expect_histories(JsonObject* step, const ServerState& state) {
+    if (!json_object_has_member(step, "ctx_hist")) {
+        return;
+    }
+    JsonArray* ctx = json_object_get_array_member(step, "ctx_hist");
+    ASSERT_EQ(json_array_get_length(ctx), state.ctx_history().size());
+    for (guint i = 0; i < json_array_get_length(ctx); ++i) {
+        JsonArray* point = json_array_get_array_element(ctx, i);
+        EXPECT_DOUBLE_EQ(state.ctx_history()[i].time, json_array_get_double_element(point, 0));
+        EXPECT_EQ(state.ctx_history()[i].tokens, json_array_get_int_element(point, 1));
+    }
+    JsonArray* speed = json_object_get_array_member(step, "speed_hist");
+    ASSERT_EQ(json_array_get_length(speed), state.speed_history().size());
+    for (guint i = 0; i < json_array_get_length(speed); ++i) {
+        JsonArray* point = json_array_get_array_element(speed, i);
+        EXPECT_DOUBLE_EQ(state.speed_history()[i].time, json_array_get_double_element(point, 0));
+        expect_double(state.speed_history()[i].tps, json_array_get_element(point, 1));
+    }
+    JsonArray* requests = json_object_get_array_member(step, "requests");
+    ASSERT_EQ(json_array_get_length(requests), state.requests().size());
+    for (guint i = 0; i < json_array_get_length(requests); ++i) {
+        JsonObject* e = json_array_get_object_element(requests, i);
+        const auto& r = state.requests()[i];
+        expect_int(r.request.prompt_tokens, member(e, "prompt_tokens"));
+        expect_double(r.request.prompt_tps, member(e, "prompt_tps"));
+        EXPECT_EQ(r.request.gen_tokens, json_object_get_int_member(e, "gen_tokens"));
+        EXPECT_DOUBLE_EQ(r.request.gen_tps, json_object_get_double_member(e, "gen_tps"));
+        expect_int(r.request.ctx, member(e, "ctx"));
+        expect_double(r.time, member(e, "t"));
     }
 }
 
 } // namespace
 
-TEST(CtxmonServerApi, SlotsMatchOracle) {
+TEST(CtxmonServerState, LiveSpeedMatchesOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
-    JsonArray* cases = expected_cases(parser, "slots");
+    JsonArray* cases = load_cases(parser, "live_speed.json");
     ASSERT_NE(cases, nullptr);
-    ASSERT_EQ(json_array_get_length(cases), 8u);
+    ASSERT_EQ(json_array_get_length(cases), 13u);
     for (guint i = 0; i < json_array_get_length(cases); ++i) {
+        SCOPED_TRACE(i);
         JsonObject* c = json_array_get_object_element(cases, i);
-        SCOPED_TRACE(json_object_get_string_member(c, "file"));
-        const SlotInfo info = parse_slots(body_of(c));
-        expect_int(c, "n_ctx", info.n_ctx);
-        expect_bool(c, "is_processing", info.is_processing);
-        expect_int(c, "n_decoded", info.n_decoded);
+        std::deque<Sample> samples;
+        JsonArray* list = json_object_get_array_member(c, "samples");
+        for (guint k = 0; k < json_array_get_length(list); ++k) {
+            JsonArray* pair = json_array_get_array_element(list, k);
+            samples.push_back(
+                {json_array_get_double_element(pair, 0), json_array_get_int_element(pair, 1)});
+        }
+        const std::optional<double> window = opt_double(member(c, "window"));
+        expect_double(window ? live_speed(samples, *window) : live_speed(samples),
+                      member(c, "speed"));
     }
 }
 
-TEST(CtxmonServerApi, PropsMatchOracle) {
+TEST(CtxmonServerState, StateMatchesOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
-    JsonArray* cases = expected_cases(parser, "props");
-    ASSERT_NE(cases, nullptr);
-    ASSERT_EQ(json_array_get_length(cases), 5u);
-    for (guint i = 0; i < json_array_get_length(cases); ++i) {
-        JsonObject* c = json_array_get_object_element(cases, i);
-        SCOPED_TRACE(json_object_get_string_member(c, "file"));
-        expect_string(c, "model", model_from_props(body_of(c)));
+    JsonArray* scenarios = load_cases(parser, "server_state.json");
+    ASSERT_NE(scenarios, nullptr);
+    ASSERT_EQ(json_array_get_length(scenarios), 12u);
+    for (guint i = 0; i < json_array_get_length(scenarios); ++i) {
+        JsonObject* scenario = json_array_get_object_element(scenarios, i);
+        SCOPED_TRACE(json_object_get_string_member(scenario, "name"));
+        ServerState state(json_object_get_int_member(scenario, "default_ctx"),
+                          json_object_get_double_member(scenario, "window"));
+        JsonArray* steps = json_object_get_array_member(scenario, "steps");
+        for (guint k = 0; k < json_array_get_length(steps); ++k) {
+            SCOPED_TRACE(k);
+            JsonObject* step = json_array_get_object_element(steps, k);
+            const Snapshot snapshot = snapshot_of(json_object_get_object_member(step, "snapshot"));
+            const StateView view =
+                state.update(snapshot, json_object_get_double_member(step, "now"));
+            expect_view(json_object_get_object_member(step, "view"), view);
+            expect_histories(step, state);
+        }
     }
 }
 
-TEST(CtxmonServerApi, ModelsMatchOracle) {
-    g_autoptr(JsonParser) parser = json_parser_new();
-    JsonArray* cases = expected_cases(parser, "models");
-    ASSERT_NE(cases, nullptr);
-    ASSERT_EQ(json_array_get_length(cases), 4u);
-    for (guint i = 0; i < json_array_get_length(cases); ++i) {
-        JsonObject* c = json_array_get_object_element(cases, i);
-        SCOPED_TRACE(json_object_get_string_member(c, "file"));
-        expect_string(c, "model", model_from_models(body_of(c)));
-    }
+TEST(CtxmonServerState, CountKindNames) {
+    EXPECT_STREQ(count_kind_name(CountKind::Down), "down");
+    EXPECT_STREQ(count_kind_name(CountKind::None), "none");
+    EXPECT_STREQ(count_kind_name(CountKind::Exact), "exact");
+    EXPECT_STREQ(count_kind_name(CountKind::Processing), "processing");
+    EXPECT_STREQ(count_kind_name(CountKind::Estimate), "estimate");
 }
 
-TEST(CtxmonServerApi, SlotThatIsNotAnObjectGivesNothing) {
-    const SlotInfo info = parse_slots("[1]");
-    EXPECT_FALSE(info.n_ctx.has_value());
-    EXPECT_FALSE(info.is_processing.has_value());
-    EXPECT_FALSE(info.n_decoded.has_value());
-}
+TEST(CtxmonServerState, SlowSnapshotChangesNothing) {
+    ServerState state(1000);
+    Snapshot up;
+    up.used = 100;
+    up.used_kind = TokenKind::Final;
+    state.update(up, 1.0);
+    ASSERT_EQ(state.ctx_history().size(), 1u);
 
-TEST(CtxmonServerApi, NonStringNamesCountAsMissing) {
-    const auto props = model_from_props(R"({"model_alias":5,"model_path":"/m/x.gguf"})");
-    ASSERT_TRUE(props.has_value());
-    EXPECT_EQ(*props, std::string("x.gguf"));
-    EXPECT_FALSE(model_from_models(R"({"data":[{"id":7}]})").has_value());
-}
-
-TEST(CtxmonServerApi, EmptyBodyGivesNothing) {
-    EXPECT_FALSE(parse_slots(std::string_view()).n_ctx.has_value());
-    EXPECT_FALSE(model_from_props(std::string_view()).has_value());
-    EXPECT_FALSE(model_from_models(std::string_view()).has_value());
+    Snapshot slow;
+    slow.state = LinkState::Slow;
+    slow.requests.resize(1);
+    slow.requests[0].request.gen_tps = 30.0;
+    const StateView view = state.update(slow, 2.0);
+    EXPECT_EQ(view.state, LinkState::Slow);
+    EXPECT_EQ(state.ctx_history().size(), 1u);
+    EXPECT_TRUE(state.speed_history().empty());
+    EXPECT_TRUE(state.requests().empty());
 }
 ```
-9. Run: `clang-format -i src/ctxmon/core/server_api.h src/ctxmon/core/server_api.cpp tests/ctxmon/server_api_test.cpp; echo "exit=$?"`
-10. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.3`:
-    - `evidence/M1.3/configure.txt` from `cmake -S . -B build`
-    - `evidence/M1.3/build.txt` from `cmake --build build`
-    - `evidence/M1.3/ctest.txt` from `ctest --test-dir build --output-on-failure`
+8. Run: `clang-format -i src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp; echo "exit=$?"`
+9. Configure, build and test. Each command writes a FILE in the exact form of AGENTS.md rule 18, gate `M1.4a`:
+    - `evidence/M1.4a/configure.txt` from `cmake -S . -B build`
+    - `evidence/M1.4a/build.txt` from `cmake --build build`
+    - `evidence/M1.4a/ctest.txt` from `ctest --test-dir build --output-on-failure`
 
 EVIDENCE (AGENTS.md rules 12 and 18; FILE items are written by the command itself, then only their `tail -n 3` is pasted)
 E1. Raw: `git status --short --untracked-files=all`
-E2. FILE `evidence/M1.3/diff.txt` from `git diff`
-E3. FILE `evidence/M1.3/new_files.txt` from `cat -n src/ctxmon/core/server_api.h src/ctxmon/core/server_api.cpp tests/ctxmon/server_api_test.cpp`
-E4. FILE `evidence/M1.3/http_json.txt` from `cat tests/ctxmon/fixtures/expected/http.json`
-E5. Raw: `wc -c tests/ctxmon/fixtures/http/*.json`
-E6. Raw: the output of steps 3 and 9.
-E7. Raw: `wc -l` of every created or modified file except the fixture files.
+E2. FILE `evidence/M1.4a/diff.txt` from `git diff`
+E3. FILE `evidence/M1.4a/new_files.txt` from `cat -n src/ctxmon/core/server_state.h src/ctxmon/core/server_state.cpp tests/ctxmon/server_state_test.cpp`
+E4. Raw: `wc -lc tests/ctxmon/fixtures/expected/*.json`
+E5. Raw: `grep -o '^{"name":"[a-z_]*"' tests/ctxmon/fixtures/expected/server_state.json`
+E6. Raw: the output of steps 2 and 8.
+E7. Raw: `wc -l` of every created or modified file except the two expected JSON files.
 E8. Raw: `grep -rnE "gtk/|gdk|pango|gtksourceview|vte|std::regex" src/ctxmon/core; echo "exit=$?"`
-E9. For each of the six evidence files: its path, then the raw output of `tail -n 3` on it.
-E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.3/ctest.txt`
+E9. For each of the five evidence files: its path, then the raw output of `tail -n 3` on it.
+E10. Raw: `grep -E "tests passed|tests failed" evidence/M1.4a/ctest.txt`
 E11. Unexpected files: any file the commands created that the rails do not name, or "none" (AGENTS.md rule 8).
 
 End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
@@ -566,6 +1040,8 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 - 2026-11-07 — (Orchestrator) Process fact: a write to Adam's computer delivered a stale HANDOFF.md (the file was staged under a path used before), so commit `b97b1ac` carries an old HANDOFF.md; restored in the end-of-day commit. From now on every file sent to the computer gets a new staging name, and its content is checked on the computer (grep) before Adam commits.
 - 2026-11-08 — (Adam) **Terminal**: the ctxmon terminal (VTE, M2.9) is good enough as Vermilion's terminal; M4.5 (terminal tabs in the editor's bottom panel) is built only if that terminal proves burdensome to use. Review trigger: burdensome in daily use.
 - 2026-11-08 — M1.3 (`server_api`: `parse_slots`, `model_from_props`, `model_from_models` on json-glib; 17 http fixtures; oracle generator `http`; 83 tests) executed by Qwen, audited PASS: evidence headers at `f3b2b8e`, mtimes after the edits, all four code files and all 17 fixtures byte-identical to the prompt, `http.json` values as expected, other expected JSON unmodified, no GTK names in ctxmon core. The first attempt stopped correctly because the prompt said "tree clean" while two Orchestrator doc edits were uncommitted; a continuation prompt named them. Lesson: when the Orchestrator edits docs before issuing a prompt, the "Last verified" line lists those files.
+- 2026-11-08 — (Orchestrator, within the gate-size rule) **M1.4 split**: M1.4a `live_speed` and `ServerState` without warnings, M1.4b the warnings. The oracle defines the scripted snapshot sequences itself and writes inputs and answers together into `server_state.json` (one step per line, so the 100-step sample-cap scenario stays reviewable); `live_speed.json` holds the window cases. Process: the Orchestrator ran a C++ driver against the Python original and mutation-tested it before issuing; the "Last verified" line of a prompt lists uncommitted Orchestrator doc edits.
+- 2026-11-08 — M1.4a (`server_state`: `live_speed`, `ServerState` without warnings; oracle generators `live_speed` and `server_state`, 12 scripted scenarios; 87 tests) executed by Qwen, audited PASS: evidence headers at `86671be`, mtimes after the edits, all four code files byte-identical to the prompt, CMake lines as dictated, the two new expected files byte-identical (sha256) to the ones the Orchestrator generated and tested against a C++ driver, four older expected files unmodified. Qwen flagged `ServerState::update` at 91 lines (rule 16 flag, justified as one pass); M1.4b splits it. Process: a file sent with SendUserFile landed in the repo folder as `Claude outputs/prompt_M1.4a.txt`; Qwen left it alone (rule 8) and listed it; how long prompts are delivered (inline in the reply, or as a sent file that Adam deletes from the repo folder afterwards) is Adam's choice.
 
 ## 2b. Coding Agent Profiles  *(edit as evidence accumulates)*
 **Agent A: Qwen3.8-27B (local llama.cpp) — the llama.cpp coding agent for this project (confirmed by Adam 2026-11-04).** Setup as in WeatherAPP: Q4_K_M via llama.cpp (Vulkan, MTP drafting). In that project its profile was: accurate facts and line numbers, discloses omissions, unaltered raw blocks; weaknesses were soft classifications, verbosity, and occasionally "..." inside raw blocks. Re-profile on this codebase; its habits on C/C++ and GTK are unknown.
@@ -584,7 +1060,7 @@ End per AGENTS.md rule 15 with "STOPPING AND WAITING FOR VERIFICATION".
 
 ## 4. Session Log  *(newest first, keep 10)*
 ### 2026-11-08 (evening) — M1.3
-- Resumed at `f3b2b8e` (clean, synced). Adam: the ctxmon terminal is good enough as the terminal; M4.5 only if it proves burdensome. M1.3 issued, first stopped by my "tree clean" error, then run and audited PASS (83 tests). Open: commit gate and docs, push, M1.4 prompt.
+- Resumed at `f3b2b8e` (clean, synced). Adam: the ctxmon terminal is good enough as the terminal; M4.5 only if it proves burdensome. M1.3 issued, first stopped by my "tree clean" error, then run and audited PASS (83 tests). M1.3 committed (`cfd1179`) and pushed (`86671be`). M1.4 split; M1.4a prompt issued. Open: M1.4a run and audit, commits, push, M1.4b.
 
 ### 2026-11-07 (late night) — M1.0 to M1.2, M1.3 written, evening handoff
 - M1.0 (fix 1: oracle writes no bytecode), M1.1 and M1.2 all PASS and pushed (HEAD `b97b1ac`, 77 tests). Decisions: AGENTS.md rule 8 forbids cleaning up unnamed files; UI specifications are discussed before any UI gate; the terminal is first built with ctxmon (M2.9); all Python removed at M2.11, expected values becoming inline C++ tables. The Orchestrator now compiles and oracle-checks dictated code in the cloud workspace before issuing (json-glib is missing there, so M1.3 was checked with stand-ins). README swept at the end of the day; HANDOFF.md restored after a stale write. Open: commit and push the sweep; issue M1.3.

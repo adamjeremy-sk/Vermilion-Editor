@@ -38,7 +38,8 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M1.1 | Token lines: `TOKEN_RE` kinds final/prompt/past, last match wins, session floor and truncation (`last_tokens` on text plus offsets) | Tests match the oracle | Qwen |
 | M1.2 | Timing lines (`GEN_RE` with the lookbehind, `PROMPT_RE`), `last_speeds`, `parse_requests` (pairing prompt, generation and the context line after) | Same | Qwen |
 | M1.3 | `/slots` and `/props` parsing on JSON strings (n_ctx, is_processing, n_decoded in both `next_token` shapes; model alias, else file name; `/v1/models` fallback) | Same, on captured JSON | Qwen |
-| M1.4 | `live_speed`, `ServerState` (histories and pruning, requests, exact versus estimated tokens, warnings at 80%, 95% and time to full) | Same, on scripted snapshot sequences | Qwen (may split: state, then warnings) |
+| M1.4a | `live_speed`, `ServerState` without warnings (histories and pruning, requests, exact versus estimated tokens); the oracle scripts the snapshot sequences | Same; 87 tests | Qwen |
+| M1.4b | `ServerState` warnings: levels 80% and 95% with hysteresis, the first-update rule, time-to-full alert; `down` resets the warning state; `ServerState::update` is split into helpers (it is 91 lines after M1.4a) | Same, alerts and level in the scripted sequences | Qwen |
 | M1.5 | Graph geometry: `graph_segments`, `nice_max`, `graph_span` | Same | Qwen |
 | M1.6 | VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing | Tests on fake sysfs trees and sample output | Qwen |
 
