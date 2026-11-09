@@ -76,7 +76,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M4.2 | Build-system detection presets | Tests on fixture folders | Qwen |
 | M4.3 | Run on `GSubprocess`, Output pane | Builds Vermilion itself. **◆ DOGFOOD 1: Vermilion edits and builds its own source** | Qwen |
 | M4.4 | Problem matchers, Problems list, clickable links | Tests on sample compiler output | Qwen |
-| M4.5 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M2.9 (whether this gate is still needed is open, Adam decides) | Shell in the opened folder | Qwen |
+| M4.5 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M2.9 (Adam, 2026-11-08: the ctxmon terminal serves as the editor's terminal for now; this gate is built only if that terminal proves burdensome to use) | Shell in the opened folder | Qwen |
 | M4.6 | v0.1 review and tag | Adam signs off. **◆ DOGFOOD 2: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam |
 
 ## M5: Agent core (v0.2)
