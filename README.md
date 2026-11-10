@@ -64,6 +64,12 @@ Principles:
 ---
 
 ## The window
+<p align="center">
+  <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
+  <br><em>The classic look as tried in the M2.0b look spike (XFCE, Greybird). A test window, not the editor yet.</em>
+</p>
+
+The planned layout:
 ```
 +------------------------------------------------------+------------------------+
 | tabs: main.cpp | util.h | ...                        | Files | Agent | CTXMon |
@@ -74,12 +80,13 @@ Principles:
 |                                                      |     util.h             |
 |                                                      |   CMakeLists.txt       |
 |------------------------------------------------------|------------------------|
-| Output | Problems | Terminal | Debug      [Build][Run]| Agent: chat, diff;     |
+| Output | Problems | Terminal | Debug                  | Agent: chat, diff;     |
 |   build log, clickable errors                        | CTXMon: server monitor |
 +------------------------------------------------------+------------------------+
 ```
 One window, one opened folder. The right-hand stack has three tabs: the directory sidebar (**Files**), the **Agent** and **CTXMon**, the live model monitor (which also exists as a standalone program). The bottom panel
-has the build output, the problem list, terminals and the debugger views.
+has the build output, the problem list, terminals and the debugger views. There is no toolbar: the window is
+keyboard first, and every command is a menu item that shows its shortcut.
 
 ---
 
@@ -261,6 +268,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M2.11). |
 | `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
+| `res/github/` | Images used by this README (screenshots). |
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M2.11) and its logo (`ctxmon.svg`). Not built. |
 | `docs/roadmap.md` | The milestone and gate plan. |
 | `docs/milestones/` | Milestone reviews (what was done, what was learned, what comes next). |
