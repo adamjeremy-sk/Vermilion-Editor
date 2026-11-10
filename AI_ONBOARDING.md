@@ -50,6 +50,7 @@ Every non-trivial task executes under this protocol. No exceptions.
 7.  **Agent safety.** Permission presets (Restricted is the default; Balanced; Unrestricted behind a confirmation and a red badge; Custom). Hard guards in every preset: the agent cannot change its own preset and cannot read API keys. Keys live in the keyring; JSON holds references only.
 8.  **Tests with every gate.** Core and agent logic are tested without a display; UI stays thin.
 9.  **Identity stability.** Never rename config keys, JSON fields, file formats or command names when only display text changes.
+10. **Commands are `GAction`s; the look is CSS only (Adam, 2026-11-10).** Menu items, toolbar buttons and shortcuts share one action table. The classic look comes from one stylesheet; no custom drawing code, bundled fonts, icons or custom title bar (ARCHITECTURE.md 7.10).
 
 ## 4. Project Summary & Component Map
 **Vermilion Editor**: native Linux text and code editor, written from scratch in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent (OpenAI-compatible, Anthropic and Gemini providers, MCP), build and Output/Problems panes, a DAP debugger, a VTE terminal, a right-hand directory sidebar, and a model monitor ported from Adam's `ctxmon`. IDE: CLion (CMake). Local working tree: `~/Projects/vermilion-editor`. Remote: `origin` = https://github.com/adamjeremy-sk/Vermilion-Editor.

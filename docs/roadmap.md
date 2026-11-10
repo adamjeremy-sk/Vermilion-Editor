@@ -8,7 +8,7 @@
 | v0.2 | Agent core: providers (OpenAI-compatible), tools, permission presets, setup dialog, chat, archive, side-by-side diff, change sets, external-change handling | M5 |
 | v0.3 | Debugger (DAP) | M6 |
 | v0.4 | Cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M7 |
-| v1.0 | Packaging, documentation, notices | M8 |
+| 1.0.0 | Packaging, documentation, notices (M8). Once the whole plan above is implemented and packaged, `1.0.0-beta.N` builds run as a beta for 8 weeks, then `1.0.0-stable` is released; from then on there are `-stable` and `-beta` branches and additional features are considered (`docs/ideas.md`). Development versions before that are `0.x`; the v0.1 to v0.4 labels above are milestone groups (Adam, 2026-11-10). | M8 |
 **Dogfooding markers (◆)**: the gates where Adam starts building Vermilion with Vermilion: DOGFOOD 1 at M4.3 (self-build; Adam's first one, set 2026-11-05), 2 at M4.6 (primary editor), 3 at M5.5 (built-in agent trial; proposed, Adam confirms or moves it).
 ctxmon logic (M1) is built early because it is self-contained: the Python original (`reference/ctxmon/ctxmon_gtk.py`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent. From 2026-11-07 the port in `src/ctxmon/` is the source of truth and the Python original is frozen as the test oracle (Adam). ctxmon is finished during M2 (Adam, 2026-11-07): its I/O, cards and the standalone program; the CTXMon tab follows in M3, when the right-hand stack exists.
 
@@ -48,25 +48,27 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M1.7c | Done (2026-11-10, 117 tests). `vram` `read_file` reads only ordinary files (symlinks followed) of at most 64 bytes, found by reading (sysfs reports 4096 for every file), anything else counts as missing (an oversized vendor file means amd); four `vram` tests on a temporary tree built at run time (64/65 bytes, pipe, link to /dev/zero, oversized vendor, 1 MB nvidia-smi lines); two `log_tokens` and two `timing` tests (1 MB lines, huge numbers, 16 MiB inputs). | 117 tests passing | Qwen |
 
 ## M2: Editor
-**Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M2.9) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that.
+**Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M2.9) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that. **The talk for the M2 window was held 2026-11-10**; its outcome is ARCHITECTURE.md section 7.10 and the HANDOFF.md decision log. The right-hand stack and sidebar (M3) and the ctxmon cards (M2.9) get their own talks.
 | Gate | Work | Done when | Who |
 |---|---|---|---|
-| M2.0 | Spike: GtkSourceView with a 50 MB file; measure open time, scrolling, memory | Numbers recorded in HANDOFF.md | Orchestrator plans, Qwen codes, Adam measures |
-| M2.1 | Main window, notebook, editor tab | Opens and closes tabs | Qwen |
-| M2.2 | Open and save, encodings, line endings | Round trip tests in core for the conversions | Qwen |
-| M2.3 | Search, replace (regex), go to line | Manual check plus core tests for the matcher | Qwen |
+| M2.0 | Two spikes. (a) GtkSourceView with a 50 MB file; measure open time, scrolling, memory. (b) Look spike (Adam, 2026-11-10): one bare window with a menu bar, a toolbar of text buttons, a notebook with an editor, a status bar and the classic stylesheet in a light and a dark palette (ARCHITECTURE.md 7.10); it also checks how GTK 4.14 reports the system dark mode. If the CSS fights GTK, fall back to the lighter touch (grey, flat buttons, tight spacing) | Numbers recorded in HANDOFF.md; Adam judges the look by eye before M2.1 starts | Orchestrator plans, Qwen codes, Adam measures and looks |
+| M2.1 | Main window: menu bar (File, Edit, View, Help at first), toolbar of text buttons, status bar with the Line/Column, INS, Language and Tab Width panels; every command is a `GAction` shared by menu, toolbar and shortcuts; document tabs (fixed width of 18 characters, ellipsis, tooltip with the path, close button, unsaved marker, middle-click close, drag to reorder, arrows and wheel when they overflow); untitled document at start; Save / Don't Save / Cancel dialog; closing the last document leaves a blank window with Save and Find greyed out (ARCHITECTURE.md 7.10) | Opens and closes tabs; Adam checks the look in light and dark | Qwen (split as needed: window and actions, then tabs) |
+| M2.2 | Open and save, encodings, line endings; clickable Encoding and Line Ending status panels | Round trip tests in core for the conversions | Qwen |
+| M2.3 | Search, replace (regex), go to line; the Search menu | Manual check plus core tests for the matcher | Qwen |
 | M2.4 | File monitor and the external-change policy | Edit on disk reloads a clean buffer; dirty buffer shows the banner | Orchestrator plans, Qwen codes |
-| M2.5 | Settings (key file), style schemes, system dark mode | Settings persist | Plan first (rule 10) |
-| M2.6 | Recent folders, last folder and window size | Restored on start | Qwen |
+| M2.5 | Settings window (classic OK, Cancel, Apply) and key file: colour mode Light, Dark or Follow system with the two classic palettes, GtkSourceView schemes (`classic` and a dark one), editor font (default: system monospace), tab width; the Tools menu | Settings persist; Adam checks light and dark | Plan first (rule 10) |
+| M2.6 | Window size restored; start state (a new untitled document by default; or reopen the last document, a single file; or a blank window); tab limit (default 20, least recently used closes first, never a document with unsaved changes, a status bar message, can be changed or turned off). The folder items moved to M3.0 (Adam, 2026-11-10) | Restored on start | Qwen |
+| M2.6b | Feather mode (Adam, 2026-11-10): `vermilion --feather` with its own application ID (`io.github.adamjeremy_sk.Vermilion.Feather`, proposed), files from the command line and from "Open with", a desktop entry for text files, the single-instance rule, quits when the last document closes, shows only File, Edit, Search, View and Help, treats the "blank window" start state as untitled; startup time measured against the plain editor | Opens text files from the file manager; Adam measures startup (if too slow, revisit a separate program) | Orchestrator plans, Qwen codes |
 | M2.7 | ctxmon settings and server list (`--server` specs, warning levels, opacity) in `src/ctxmon/core` | Tests; names fixed | Plan first (rule 10) |
 | M2.8 | ctxmon I/O on the main loop: log tail with `GFile` async reads, `/slots` and `/props` with libsoup async, a poll timer per server; feeds the M1 logic | Tests with a fake transport and a temp log | Orchestrator plans, Qwen codes |
-| M2.9 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set), VRAM bar, the terminal (VTE; this is where Vermilion's terminal is first built, Adam 2026-11-07), `GNotification` warnings; no "Time until full" tile (dropped, Adam 2026-11-08) | Matches the Python behaviour (Adam checks) | Qwen (split as needed) |
+| M2.9 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set), VRAM bar, the terminal (VTE; this is where Vermilion's terminal is first built, Adam 2026-11-07), `GNotification` warnings; no "Time until full" tile (dropped, Adam 2026-11-08); `Alert::level` changes from `std::optional<int>` to `int` (always set; Adam left it to the Orchestrator, 2026-11-10) | Matches the Python behaviour (Adam checks) | Qwen (split as needed) |
 | M2.10 | Standalone `vermilion-ctxmon` executable (own `GtkApplication` window, same cards, no editor) | Runs without the editor; watches a real llama.cpp server | Qwen |
 | M2.11 | Remove all Python (Adam, 2026-11-07): convert the oracle's expected JSON into inline C++ case tables in the ctxmon tests (the fixture `.log` files stay); delete `reference/ctxmon/ctxmon_gtk.py`, `tools/ctxmon_oracle.py` and `tests/ctxmon/fixtures/expected/`; tests no longer link json-glib unless another test needs it; `SourceCheck.Repo` fails on any tracked `.py` file | No `.py` file in `git ls-files`; same test count, all passing | Qwen |
 
 ## M3: Directory sidebar (right-hand side)
 | Gate | Work | Done when | Who |
 |---|---|---|---|
+| M3.0 | Open Folder, Recent Folders, Close Folder and restoring the last folder, with their File menu items (moved from M2.6, Adam 2026-11-10: menus appear only when their feature exists) | Folder restored on start | Qwen |
 | M3.1 | FileOps interface in core with a fake, plus tests | Acceptance tests in `docs/requirements/directory-sidebar.md` pass | Qwen |
 | M3.2 | Tree widget, lazy loading, folders first | Opens a folder, lists files | Qwen |
 | M3.3 | Filter, hidden-files toggle, Sync, Refresh, keys | Manual check against the requirement | Qwen |
@@ -79,7 +81,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 |---|---|---|---|
 | M4.1 | Project file model (build, run) in core | Tests | Plan first |
 | M4.2 | Build-system detection presets | Tests on fixture folders | Qwen |
-| M4.3 | Run on `GSubprocess`, Output pane | Builds Vermilion itself. **◆ DOGFOOD 1: Vermilion edits and builds its own source** | Qwen |
+| M4.3 | Run on `GSubprocess`, Output pane; the Build menu and the Build, Run and Stop buttons in the toolbar (Adam, 2026-11-10) | Builds Vermilion itself. **◆ DOGFOOD 1: Vermilion edits and builds its own source** | Qwen |
 | M4.4 | Problem matchers, Problems list, clickable links | Tests on sample compiler output | Qwen |
 | M4.5 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M2.9 (Adam, 2026-11-08: the ctxmon terminal serves as the editor's terminal for now; this gate is built only if that terminal proves burdensome to use) | Shell in the opened folder | Qwen |
 | M4.6 | v0.1 review and tag | Adam signs off. **◆ DOGFOOD 2: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam |
@@ -105,8 +107,8 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 |---|---|---|---|
 | M6.1 | DAP client state machine in core (transport injected) | Tests on scripted adapter sessions | Plan first |
 | M6.2 | Spike: gdb's built-in DAP on a C++ sample | Breakpoint, step, variables work; else fall back to GDB/MI | Adam measures |
-| M6.3 | Breakpoint gutter marks and current-line marker | Manual check | Qwen |
-| M6.4 | Run control (continue, step over, into, out) | Same | Qwen |
+| M6.3 | Breakpoint gutter marks and current-line marker; breakpoints are kept by file in core, not in the buffer, so a tab closed by the tab limit does not lose them | Manual check | Qwen |
+| M6.4 | Run control (continue, step over, into, out); toolbar placement decided at this gate (second row, or shown only during a session) | Same | Qwen |
 | M6.5 | Stack, variables, watches | Same | Qwen |
 | M6.6 | Terminal integration for the debuggee's stdin and stdout | Same | Qwen |
 
@@ -122,7 +124,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M7.8 | MCP client (stdio) | The agent calls an outside tool | Plan first |
 
 ## M8: Release
-`.deb` or AppImage, README, NOTICE of third-party material, version tag, manual test checklist.
+`.deb` or AppImage, README, NOTICE of third-party material, version tag, manual test checklist. Then `1.0.0-beta.N` builds run for 8 weeks; the SECURITY.md work (pinned 2026-11-08) happens before the beta starts (Adam, 2026-11-10); `1.0.0-stable` follows, with `-stable` and `-beta` branches.
 
 ## Backlog (not scheduled)
-Agent shell confinement (Bubblewrap); git integration; multi-cursor; theme system; SSH; session restore; indexed search; plugin hook. All were considered and dropped from the first scope on 2026-11-05.
+Agent shell confinement (Bubblewrap); git integration; multi-cursor; theme system; SSH; session restore; indexed search; plugin hook. All were considered and dropped from the first scope on 2026-11-05. New ideas go to `docs/ideas.md`; the roadmap does not grow before 1.0.0-stable (Adam, 2026-11-10).
