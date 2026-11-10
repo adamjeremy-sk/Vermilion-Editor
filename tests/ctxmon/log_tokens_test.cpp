@@ -5,11 +5,13 @@
 #include <gtest/gtest.h>
 #include <json-glib/json-glib.h>
 
+#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "ctxmon/core/log_tokens.h"
 
@@ -18,6 +20,7 @@ using vermilion::ctxmon::last_token;
 using vermilion::ctxmon::tail_start;
 using vermilion::ctxmon::token_matches;
 using vermilion::ctxmon::TokenKind;
+using vermilion::ctxmon::TokenMatch;
 
 namespace {
 
@@ -97,4 +100,33 @@ TEST(CtxmonLogTokens, TokenMatchesKeepOrderAndPositions) {
     EXPECT_EQ(matches[1].pos, 14u);
     EXPECT_EQ(matches[1].reading.tokens, 9);
     EXPECT_EQ(kind_name(matches[1].reading.kind), std::string("final"));
+}
+
+// A 1 MB line with no newline and a 1 MB number do no harm: the number is skipped and the
+// readings around them are found.
+TEST(CtxmonLogTokens, OneMegabyteLinesAreHarmless) {
+    const std::string text =
+        std::string(1000000, 'x') +
+        " stop processing: n_tokens = 42 n_past = " + std::string(1000000, '9') + " n_past = 7";
+    const std::vector<TokenMatch> matches = token_matches(text);
+    ASSERT_EQ(matches.size(), 2u);
+    EXPECT_EQ(matches[0].reading.tokens, 42);
+    EXPECT_EQ(matches[0].reading.kind, TokenKind::Final);
+    EXPECT_EQ(matches[1].reading.tokens, 7);
+    EXPECT_EQ(matches[1].reading.kind, TokenKind::Past);
+}
+
+// Callers hand over at most the kTailBytes tail, but a text 32 times larger still scans in one
+// pass, well within the (wide) time limit.
+TEST(CtxmonLogTokens, LargeInputScansQuickly) {
+    const std::string line = "slot update_slots: id  0 | task 7 | n_past = 1234, memory_seq_rm\n";
+    std::string text;
+    while (text.size() < 32 * kTailBytes) {
+        text += line;
+    }
+    const auto start = std::chrono::steady_clock::now();
+    const std::vector<TokenMatch> matches = token_matches(text);
+    const std::chrono::duration<double> took = std::chrono::steady_clock::now() - start;
+    EXPECT_EQ(matches.size(), text.size() / line.size());
+    EXPECT_LT(took.count(), 10.0);
 }

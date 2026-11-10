@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
-#include <iterator>
+#include <ios>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -25,6 +25,7 @@ namespace vermilion::ctxmon {
 namespace {
 
 constexpr long long kMiB = 1048576;
+constexpr std::size_t kMaxFileBytes = 64; // real counters and vendor ids are under 24 bytes
 constexpr double kGiB = 1073741824.0;
 
 bool is_space(char c) {
@@ -66,13 +67,27 @@ std::optional<long long> parse_count(std::string_view text) {
     return value;
 }
 
-// The whole content of the file at path, or nothing if it cannot be opened.
+// The content of the file at path, or nothing if it is not an ordinary file (a symlink is
+// followed, so a link to a device or a pipe is refused), cannot be opened, or holds more than
+// kMaxFileBytes bytes. The size is found by reading, because sysfs reports 4096 bytes for every
+// attribute.
 std::optional<std::string> read_file(const std::filesystem::path& path) {
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(path, error)) {
+        return std::nullopt;
+    }
     std::ifstream in(path, std::ios::binary);
     if (!in) {
         return std::nullopt;
     }
-    return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    std::string text(kMaxFileBytes + 1, '\0');
+    in.read(&text[0], static_cast<std::streamsize>(text.size()));
+    const std::size_t got = static_cast<std::size_t>(in.gcount());
+    if (got > kMaxFileBytes) {
+        return std::nullopt;
+    }
+    text.resize(got);
+    return text;
 }
 
 bool is_card_name(const std::string& name) {

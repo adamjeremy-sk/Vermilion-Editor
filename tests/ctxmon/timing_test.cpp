@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <json-glib/json-glib.h>
 
+#include <chrono>
 #include <fstream>
 #include <iterator>
 #include <optional>
@@ -15,6 +16,7 @@
 
 using vermilion::ctxmon::FinishedRequest;
 using vermilion::ctxmon::last_speeds;
+using vermilion::ctxmon::LastSpeeds;
 using vermilion::ctxmon::parse_requests;
 
 namespace {
@@ -89,4 +91,40 @@ TEST(CtxmonTiming, PromptLineIsNotGeneration) {
     EXPECT_FALSE(speeds.gen_tps.has_value());
     ASSERT_TRUE(speeds.prompt_tps.has_value());
     EXPECT_DOUBLE_EQ(*speeds.prompt_tps, 200.0);
+}
+
+// A 1 MB run of spaces inside a timing line still parses; a 1 MB token count or speed is too
+// large to parse, so that line is skipped.
+TEST(CtxmonTiming, OneMegabyteLinesAndHugeNumbers) {
+    const std::string good =
+        "prompt eval time =" + std::string(1000000, ' ') +
+        "100.00 ms / 50 tokens (2.00 ms per token, 500.00 tokens per second)\n";
+    const std::string huge_count = "eval time = 10.00 ms / " + std::string(1000000, '9') +
+                                   " tokens (1.00 ms per token, 90.00 tokens per second)\n";
+    const std::string huge_rate = "eval time = 10.00 ms / 9 tokens (1.00 ms per token, " +
+                                  std::string(1000000, '9') + " tokens per second)\n";
+    const std::string text = good + huge_count + huge_rate;
+    const LastSpeeds speeds = last_speeds(text);
+    EXPECT_EQ(speeds.prompt_tps, std::optional<double>(500.0));
+    EXPECT_FALSE(speeds.gen_tps.has_value());
+    EXPECT_TRUE(parse_requests(text).empty());
+}
+
+// A text far larger than the 512 KiB tail callers pass still parses in one pass, well within
+// the (wide) time limit.
+TEST(CtxmonTiming, LargeInputParsesQuickly) {
+    const std::string block =
+        "prompt eval time = 100.00 ms / 50 tokens (2.00 ms per token, 500.00 tokens per second)\n"
+        "       eval time = 1000.00 ms / 80 tokens (12.50 ms per token, 80.00 tokens per second)\n"
+        "slot release: id  0 | task 7 | stop processing: n_tokens = 1200, truncated = 0\n";
+    std::string text;
+    while (text.size() < 16 * 1024 * 1024) {
+        text += block;
+    }
+    const auto start = std::chrono::steady_clock::now();
+    const std::vector<FinishedRequest> requests = parse_requests(text);
+    const std::chrono::duration<double> took = std::chrono::steady_clock::now() - start;
+    ASSERT_EQ(requests.size(), text.size() / block.size());
+    EXPECT_EQ(requests.back().ctx, std::optional<long long>(1200));
+    EXPECT_LT(took.count(), 10.0);
 }

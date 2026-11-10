@@ -5,12 +5,16 @@
 #include <glib.h>
 #include <gtest/gtest.h>
 #include <json-glib/json-glib.h>
+#include <sys/stat.h>
 
+#include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <initializer_list>
 #include <iterator>
 #include <optional>
 #include <string>
+#include <system_error>
 
 #include "ctxmon/core/vram.h"
 
@@ -53,6 +57,44 @@ JsonArray* load_cases(JsonParser* parser, const char* kind) {
         return nullptr;
     }
     return json_object_get_array_member(json_node_get_object(root), kind);
+}
+
+// A card0 tree in a new temporary directory, removed again when the object goes away.
+class TempCard {
+public:
+    TempCard() {
+        g_autofree char* dir = g_dir_make_tmp("ctxmon-vram-XXXXXX", nullptr);
+        if (dir != nullptr) {
+            root_ = dir;
+            std::error_code error;
+            std::filesystem::create_directories(device(), error);
+        }
+    }
+    ~TempCard() {
+        if (!root_.empty()) {
+            std::error_code error;
+            std::filesystem::remove_all(root_, error);
+        }
+    }
+    TempCard(const TempCard&) = delete;
+    TempCard& operator=(const TempCard&) = delete;
+
+    const std::string& root() const { return root_; }
+    std::filesystem::path device() const {
+        return std::filesystem::path(root_) / "card0" / "device";
+    }
+    void write(const char* name, const std::string& text) const {
+        std::ofstream out(device() / name, std::ios::binary | std::ios::trunc);
+        out << text;
+    }
+
+private:
+    std::string root_;
+};
+
+// text followed by spaces up to size bytes.
+std::string padded(const std::string& text, std::size_t size) {
+    return text + std::string(size - text.size(), ' ');
 }
 
 // Checks actual against one expected result of vram.json: null (nothing) or an object.
@@ -160,4 +202,59 @@ TEST(CtxmonVram, NvidiaRejectsSignsUnderscoresAndOverflow) {
         SCOPED_TRACE(output);
         EXPECT_FALSE(parse_nvidia_smi(output).has_value());
     }
+}
+
+// Counters of exactly 64 bytes are read; one byte more and the card is skipped.
+TEST(CtxmonVram, SysfsReadsFilesOfAtMost64Bytes) {
+    TempCard card;
+    ASSERT_FALSE(card.root().empty());
+    card.write("mem_info_vram_used", padded("1024", 64));
+    card.write("mem_info_vram_total", padded("4096", 64));
+    const std::optional<VramInfo> info = read_vram_sysfs(card.root());
+    ASSERT_TRUE(info.has_value());
+    EXPECT_EQ(info->used_bytes, 1024);
+    EXPECT_EQ(info->total_bytes, 4096);
+    card.write("mem_info_vram_total", padded("4096", 65));
+    EXPECT_FALSE(read_vram_sysfs(card.root()).has_value());
+}
+
+// A pipe would block the read and a device can be endless: both count as a missing counter.
+TEST(CtxmonVram, SysfsSkipsPipesAndDevices) {
+    TempCard card;
+    ASSERT_FALSE(card.root().empty());
+    card.write("mem_info_vram_total", "4096\n");
+    const std::filesystem::path used = card.device() / "mem_info_vram_used";
+    ASSERT_EQ(mkfifo(used.c_str(), 0600), 0);
+    EXPECT_FALSE(read_vram_sysfs(card.root()).has_value());
+    std::error_code error;
+    std::filesystem::remove(used, error);
+    std::filesystem::create_symlink("/dev/zero", used, error);
+    ASSERT_FALSE(error);
+    EXPECT_FALSE(read_vram_sysfs(card.root()).has_value());
+}
+
+// A vendor file over 64 bytes counts as missing, so the card is taken to be AMD.
+TEST(CtxmonVram, OversizedVendorFileCountsAsMissing) {
+    TempCard card;
+    ASSERT_FALSE(card.root().empty());
+    card.write("mem_info_vram_used", "1024\n");
+    card.write("mem_info_vram_total", "4096\n");
+    card.write("vendor", padded("0x10de", 64));
+    std::optional<VramInfo> info = read_vram_sysfs(card.root());
+    ASSERT_TRUE(info.has_value());
+    EXPECT_EQ(info->vendor, GpuVendor::Nvidia);
+    card.write("vendor", padded("0x10de", 65));
+    info = read_vram_sysfs(card.root());
+    ASSERT_TRUE(info.has_value());
+    EXPECT_EQ(info->vendor, GpuVendor::Amd);
+}
+
+// A 1 MB GPU name is kept; 1 MB of text without a comma, or a 1 MB count, gives nothing.
+TEST(CtxmonVram, NvidiaOneMegabyteLines) {
+    const std::string name(1000000, 'A');
+    const std::optional<VramInfo> info = parse_nvidia_smi(name + ", 5, 100\n");
+    ASSERT_TRUE(info.has_value());
+    EXPECT_EQ(info->name.size(), name.size());
+    EXPECT_FALSE(parse_nvidia_smi(name).has_value());
+    EXPECT_FALSE(parse_nvidia_smi("GPU, 5, " + std::string(1000000, '9') + "\n").has_value());
 }

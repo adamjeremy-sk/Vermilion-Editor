@@ -33,8 +33,10 @@ struct VramInfo {
 // beyond long long is rejected). A card with a missing or unparsable counter is skipped. Returns
 // the card with the most memory, the first in name order on a tie, with the card directory as its
 // name. The vendor comes from device/vendor ("0x1002" amd, "0x10de" nvidia, "0x8086" intel, in
-// any letter case, anything else other) and is amd when that file is missing. Absent when no card
-// qualifies; the caller then tries nvidia-smi (running the program is I/O, left to M2).
+// any letter case, anything else other) and is amd when that file is missing. Every file is read
+// only if it is an ordinary file (symlinks are followed) of at most 64 bytes; anything else (a
+// pipe, a device, a longer file) counts as missing. Absent when no card qualifies; the caller
+// then tries nvidia-smi (running the program is I/O, left to M2).
 std::optional<VramInfo> read_vram_sysfs(const std::string& drm_root = "/sys/class/drm");
 
 // The nvidia-smi half of read_vram: parses the output of
