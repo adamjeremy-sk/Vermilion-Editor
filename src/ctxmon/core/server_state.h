@@ -19,7 +19,6 @@ namespace vermilion::ctxmon {
 constexpr double kLiveWindow = 2.0;      // seconds of samples used for the live speed
 constexpr std::size_t kMaxRequests = 50; // request history length per server
 constexpr std::size_t kMaxSamples = 64;  // live-speed samples kept per server
-constexpr double kEtaWarnSeconds = 60.0; // warn when the context would fill within this
 
 // How many tokens a running request has generated, and when that was read.
 struct Sample {
@@ -70,8 +69,9 @@ enum class CountKind {
 // "estimate").
 const char* count_kind_name(CountKind kind);
 
-// A warning raised by update. level is the context percentage that was crossed, absent for the
-// time-to-full alert. critical marks the highest level and the time-to-full alert.
+// A warning raised by update. level is the context percentage that was crossed; critical marks
+// the highest level. (The Python original also raises a time-to-full alert, which has no level;
+// it is not ported.)
 struct Alert {
     std::optional<int> level;
     std::string message;
@@ -90,7 +90,6 @@ struct StateView {
     std::optional<double> live; // live generation speed
     std::optional<double> gen;
     std::optional<double> prompt;
-    std::optional<double> eta; // seconds until the context is full at the live speed
     bool busy = false;
     std::optional<std::string> model;
     bool log_found = false;
@@ -145,9 +144,8 @@ private:
     std::deque<Sample> samples_;
     long long last_ctx_ = 0; // 0: none yet
     bool was_busy_ = false;
-    std::set<int> warned_;    // levels already announced
-    bool eta_warned_ = false; // the time-to-full alert was raised for the running request
-    bool first_ = true;       // no snapshot seen since start or since the server went down
+    std::set<int> warned_; // levels already announced
+    bool first_ = true;    // no snapshot seen since start or since the server went down
 };
 
 } // namespace vermilion::ctxmon

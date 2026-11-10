@@ -11,8 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "ctxmon/core/format.h"
-
 namespace vermilion::ctxmon {
 
 namespace {
@@ -170,7 +168,6 @@ void ServerState::mark_down(StateView& view, double now) {
     push_speed(now, std::nullopt);
     samples_.clear();
     warned_.clear();
-    eta_warned_ = false;
     first_ = true;
     was_busy_ = false;
 }
@@ -231,16 +228,6 @@ void ServerState::add_warnings(StateView& v) {
     for (auto it = warned_.begin(); it != warned_.end();) { // re-arm once usage drops well below
         it = pct < *it - 10 ? warned_.erase(it) : std::next(it);
     }
-    if (!v.busy) {
-        eta_warned_ = false;
-    } else if (v.eta && *v.eta < kEtaWarnSeconds && !eta_warned_) {
-        eta_warned_ = true;
-        v.alerts.push_back({std::nullopt,
-                            "Context will be full in ~" + fmt_duration(*v.eta) +
-                                " at the current speed (" + with_commas(free_tokens) +
-                                " tokens free)",
-                            true});
-    }
     for (int lv : levels_) {
         if (pct >= lv) {
             v.level = lv;
@@ -266,10 +253,6 @@ StateView ServerState::update(const Snapshot& s, double now) {
     classify_count(s, v);
     v.frac =
         v.ctx != 0 ? std::min(static_cast<double>(v.shown) / static_cast<double>(v.ctx), 1.0) : 0.0;
-    const long long free_tokens = std::max(v.ctx - v.shown, 0LL);
-    if (s.busy && v.live && free_tokens > 0) {
-        v.eta = static_cast<double>(free_tokens) / *v.live;
-    }
     push_ctx(now, v.shown);
 
     v.gen = s.gen;

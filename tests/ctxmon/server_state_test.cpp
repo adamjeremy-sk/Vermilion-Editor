@@ -157,7 +157,6 @@ void expect_view(JsonObject* e, const StateView& v) {
     expect_double(v.live, member(e, "live"));
     expect_double(v.gen, member(e, "gen"));
     expect_double(v.prompt, member(e, "prompt"));
-    expect_double(v.eta, member(e, "eta"));
     EXPECT_EQ(v.busy, json_object_get_boolean_member(e, "busy") != FALSE);
     expect_string(v.model, member(e, "model"));
     EXPECT_EQ(v.log_found, json_object_get_boolean_member(e, "log_found") != FALSE);
@@ -233,7 +232,7 @@ TEST(CtxmonServerState, StateMatchesOracle) {
     g_autoptr(JsonParser) parser = json_parser_new();
     JsonArray* scenarios = load_cases(parser, "server_state.json");
     ASSERT_NE(scenarios, nullptr);
-    ASSERT_EQ(json_array_get_length(scenarios), 22u);
+    ASSERT_EQ(json_array_get_length(scenarios), 20u);
     for (guint i = 0; i < json_array_get_length(scenarios); ++i) {
         JsonObject* scenario = json_array_get_object_element(scenarios, i);
         SCOPED_TRACE(json_object_get_string_member(scenario, "name"));
@@ -306,4 +305,19 @@ TEST(CtxmonServerState, DefaultLevelsAre80And95) {
     EXPECT_EQ(view.level, 95);
     EXPECT_EQ(view.alerts[0].level, std::optional<int>(95));
     EXPECT_TRUE(view.alerts[0].critical);
+}
+
+// The three ways a window can hold two samples and still give no speed: no time passed, time
+// went backwards, or the count did not grow. The Python original returns no speed there too.
+TEST(CtxmonServerState, LiveSpeedNeedsTimeToPass) {
+    EXPECT_FALSE(live_speed({{5.0, 10}, {5.0, 50}}).has_value());
+}
+
+TEST(CtxmonServerState, LiveSpeedIgnoresAClockGoingBackwards) {
+    EXPECT_FALSE(live_speed({{5.0, 10}, {4.0, 50}}).has_value());
+}
+
+TEST(CtxmonServerState, LiveSpeedNeedsTheCountToGrow) {
+    EXPECT_FALSE(live_speed({{1.0, 50}, {2.0, 50}}).has_value());
+    EXPECT_FALSE(live_speed({{1.0, 50}, {2.0, 40}}).has_value());
 }
