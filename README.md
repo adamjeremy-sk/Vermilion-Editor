@@ -15,6 +15,11 @@
 > hardened against hostile input and tested, with 117 tests. Editing and the CTXMon window arrive with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
+<p align="center">
+  <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
+  <br><em>The classic look as tried in the M2.0b look spike (XFCE, Greybird). A test window, not the editor yet.</em>
+</p>
+
 ---
 
 ## Contents
@@ -64,12 +69,6 @@ Principles:
 ---
 
 ## The window
-<p align="center">
-  <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
-  <br><em>The classic look as tried in the M2.0b look spike (XFCE, Greybird). A test window, not the editor yet.</em>
-</p>
-
-The planned layout:
 ```
 +------------------------------------------------------+------------------------+
 | tabs: main.cpp | util.h | ...                        | Files | Agent | CTXMon |
