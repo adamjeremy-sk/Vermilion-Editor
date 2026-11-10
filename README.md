@@ -12,7 +12,8 @@
 > **Status: pre-alpha. Not usable yet.**
 > Vermilion Editor is being written from scratch. Milestones M0 (foundation) and M1 (the CTXMon monitor logic) are done:
 > log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory readers are ported,
-> hardened against hostile input and tested, with 117 tests. Editing and the CTXMon window arrive with M2.
+> hardened against hostile input and tested, with 117 tests. M2 (the editor window and CTXMon) has started: two throwaway
+> spikes measured large-file loading and tried the classic look shown below. Editing and the CTXMon window arrive with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 <p align="center">
@@ -59,11 +60,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input; the window comes with M2 |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 started: large-file and look spikes done (M2.0); the main window is next (M2.1) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. Next: M2 (editor window, CTXMon UI), after a talk about the UI specifications. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes in `src/spikes/` (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted at M2.1. Next: M2.1, the main window. |
 | Releases | None |
 
 ---
@@ -93,7 +94,18 @@ keyboard first, and every command is a menu item that shows its shortcut.
 
 ### Editor (v0.1)
 - Tabs; open and save; encodings (UTF-8 by default, others through GLib) and line endings detected and preserved (LF for new files).
-- Syntax highlighting, line numbers and colour schemes from GtkSourceView; follows the system dark mode.
+- Syntax highlighting, line numbers and colour schemes from GtkSourceView.
+- A fixed classic Windows 2000 look: one stylesheet over the desktop's own GTK theme, system fonts, no icons, square bevelled
+  controls; a light and a dark palette, with colour mode Light, Dark or Follow system (from M2.5).
+- Keyboard first: a menu bar and a gedit-style status bar (language, tab width, encoding, line ending, line and column,
+  INS/OVR), no toolbar. Familiar shortcuts (Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+W, Ctrl+F, F3, Ctrl+H, Ctrl+G), and F5, F7 and
+  F9 to F11 for building and debugging.
+- Fixed-width document tabs with the close button at the right edge, an unsaved marker and drag to reorder; a tab limit
+  (20 by default) closes the least recently used tab, never one with unsaved changes.
+- Large files load in the background with syntax colouring switched on after the load: a 50 MB C++ file opens in about
+  4 seconds instead of 87 (measured in the M2.0a spike).
+- Feather mode: `vermilion --feather` starts the same program as a plain text editor for quick edits (File, Edit, Search,
+  View and Help menus only), with its own application ID.
 - Search and replace with regular expressions, go to line.
 - External changes: a clean buffer reloads automatically when the file changes on disk; a modified buffer shows a banner with
   Reload, Keep mine and Show diff.
