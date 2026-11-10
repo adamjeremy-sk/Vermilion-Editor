@@ -1,0 +1,174 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) */
+/* Throwaway spike: classic structure (bevels, tight spacing, square corners, no transitions). */
+/* Every rule is scoped to window.vm-main, so dialogs and other windows keep the base theme. */
+
+window.vm-main {
+    background-color: @vm_chassis;
+    color: @vm_text;
+}
+
+window.vm-main * {
+    transition: none;
+}
+
+/* Buttons: raised bevel; sunken and shifted one pixel right and down while pressed. */
+window.vm-main button {
+    background-color: @vm_chassis;
+    background-image: none;
+    color: @vm_text;
+    border: none;
+    border-radius: 0;
+    text-shadow: none;
+    -gtk-icon-shadow: none;
+    min-height: 0;
+    min-width: 0;
+    padding: 3px 10px;
+    box-shadow: inset -1px -1px @vm_dark_shadow, inset 1px 1px @vm_highlight,
+        inset -2px -2px @vm_shadow, inset 2px 2px @vm_light;
+}
+
+window.vm-main button:hover {
+    background-color: @vm_chassis;
+}
+
+window.vm-main button:active,
+window.vm-main button:checked {
+    padding: 4px 9px 2px 11px;
+    box-shadow: inset 1px 1px @vm_dark_shadow, inset -1px -1px @vm_highlight,
+        inset 2px 2px @vm_shadow, inset -2px -2px @vm_light;
+}
+
+window.vm-main button:disabled {
+    color: @vm_disabled_text;
+    text-shadow: 1px 1px @vm_highlight;
+}
+
+/* Menu bar: flat; the open or hovered item takes the selection colours. */
+window.vm-main menubar {
+    background-color: @vm_chassis;
+    padding: 1px 2px;
+    box-shadow: inset 0 -1px @vm_shadow;
+}
+
+window.vm-main menubar > item {
+    padding: 2px 7px;
+    border-radius: 0;
+    color: @vm_text;
+    box-shadow: none;
+}
+
+window.vm-main menubar > item:hover,
+window.vm-main menubar > item:selected {
+    background-color: @vm_select_bg;
+    color: @vm_select_text;
+}
+
+/* Notebook: raised tabs, the selected one taller; the page sits in a raised frame. */
+window.vm-main notebook {
+    background-color: @vm_chassis;
+    border: none;
+}
+
+window.vm-main notebook > header {
+    background-color: @vm_chassis;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    padding: 2px 2px 0 2px;
+}
+
+window.vm-main notebook > header > tabs > tab {
+    background-color: @vm_chassis;
+    background-image: none;
+    color: @vm_text;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    padding: 2px 6px;
+    margin: 2px 0 0 0;
+    box-shadow: inset 1px 1px @vm_highlight, inset -1px 0 @vm_dark_shadow,
+        inset -2px 0 @vm_shadow;
+}
+
+window.vm-main notebook > header > tabs > tab:checked {
+    margin-top: 0;
+    padding-top: 4px;
+}
+
+window.vm-main notebook > stack {
+    background-color: @vm_chassis;
+    padding: 2px;
+    box-shadow: inset -1px -1px @vm_dark_shadow, inset 1px 1px @vm_highlight,
+        inset -2px -2px @vm_shadow;
+}
+
+window.vm-main button.vm-tab-close {
+    min-width: 0;
+    min-height: 0;
+    margin: 0 0 0 4px;
+    padding: 0 3px;
+    box-shadow: none;
+}
+
+window.vm-main button.vm-tab-close:hover {
+    box-shadow: inset -1px -1px @vm_shadow, inset 1px 1px @vm_highlight;
+}
+
+window.vm-main button.vm-tab-close:active {
+    padding: 1px 2px 0 4px;
+    box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight;
+}
+
+/* Entries: white field in a two-pixel sunken bevel. */
+window.vm-main entry {
+    background-color: @vm_field_bg;
+    background-image: none;
+    color: @vm_field_text;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    padding: 3px 4px;
+    box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight,
+        inset 2px 2px @vm_dark_shadow, inset -2px -2px @vm_light;
+}
+
+window.vm-main text > selection {
+    background-color: @vm_select_bg;
+    color: @vm_select_text;
+}
+
+/* Paned divider: a plain strip of chassis colour. */
+window.vm-main paned > separator {
+    min-width: 4px;
+    min-height: 4px;
+    background-color: @vm_chassis;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+}
+
+window.vm-main scrolledwindow {
+    border: none;
+}
+
+/* Status bar: thin sunken panels; the clickable ones are flat buttons in the same frame. */
+window.vm-main .vm-statusbar {
+    padding: 2px;
+    box-shadow: inset 0 1px @vm_highlight;
+}
+
+window.vm-main .vm-status-message,
+window.vm-main .vm-status-panel {
+    padding: 1px 6px;
+    min-height: 0;
+    box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight;
+}
+
+window.vm-main button.vm-status-panel:hover {
+    background-color: @vm_light;
+}
+
+window.vm-main button.vm-status-panel:active {
+    padding: 2px 5px 0 7px;
+}

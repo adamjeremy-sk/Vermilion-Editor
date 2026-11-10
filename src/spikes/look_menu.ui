@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) -->
+<!-- Throwaway spike: menu bar for the look spike; most items point at a no-op action. -->
+<interface>
+  <menu id="menubar">
+    <submenu>
+      <attribute name="label">_File</attribute>
+      <section>
+        <item><attribute name="label">_New File</attribute><attribute name="action">app.noop</attribute></item>
+        <item><attribute name="label">_Open File</attribute><attribute name="action">app.noop</attribute></item>
+        <item><attribute name="label">_Save</attribute><attribute name="action">app.noop</attribute></item>
+      </section>
+      <section>
+        <item><attribute name="label">_Message Dialog</attribute><attribute name="action">app.message-dialog</attribute></item>
+      </section>
+      <section>
+        <item><attribute name="label">_Quit</attribute><attribute name="action">app.quit</attribute></item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label">_Edit</attribute>
+      <section>
+        <item><attribute name="label">_Undo</attribute><attribute name="action">app.noop</attribute></item>
+        <item><attribute name="label">_Redo (disabled sample)</attribute><attribute name="action">app.missing</attribute></item>
+      </section>
+      <section>
+        <item><attribute name="label">Cu_t</attribute><attribute name="action">app.noop</attribute></item>
+        <item><attribute name="label">_Copy</attribute><attribute name="action">app.noop</attribute></item>
+        <item><attribute name="label">_Paste</attribute><attribute name="action">app.noop</attribute></item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label">_View</attribute>
+      <submenu>
+        <attribute name="label">_Colour Mode</attribute>
+        <item><attribute name="label">_Light</attribute><attribute name="action">app.color-mode</attribute><attribute name="target">light</attribute></item>
+        <item><attribute name="label">_Dark</attribute><attribute name="action">app.color-mode</attribute><attribute name="target">dark</attribute></item>
+        <item><attribute name="label">_Follow System</attribute><attribute name="action">app.color-mode</attribute><attribute name="target">follow</attribute></item>
+      </submenu>
+      <submenu>
+        <attribute name="label">_Base Theme</attribute>
+        <item><attribute name="label">_Desktop Theme</attribute><attribute name="action">app.base-theme</attribute><attribute name="target">desktop</attribute></item>
+        <item><attribute name="label">GTK _Default</attribute><attribute name="action">app.base-theme</attribute><attribute name="target">default</attribute></item>
+      </submenu>
+      <section>
+        <item><attribute name="label">_Reload Stylesheet</attribute><attribute name="action">app.reload-css</attribute></item>
+      </section>
+    </submenu>
+    <submenu>
+      <attribute name="label">_Help</attribute>
+      <item><attribute name="label">_About</attribute><attribute name="action">app.noop</attribute></item>
+    </submenu>
+  </menu>
+</interface>
