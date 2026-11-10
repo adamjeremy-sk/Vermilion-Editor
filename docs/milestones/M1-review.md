@@ -42,3 +42,10 @@ Result: gate **M1.7** (below). Regexes are recompiled on every call; that is eff
 
 ## 5. Next milestone, M2
 Editor window, tabs, files, search, settings (M2.0 to M2.6), then ctxmon settings, I/O, cards, the standalone `vermilion-ctxmon` and removal of all Python (M2.7 to M2.11). Risks: the first UI work (specifications first), GtkSourceView on large files (M2.0 spike), async I/O design (M2.8), matching the Python behaviour in the cards (Adam checks).
+
+## 6. Outcome of M1.7 (appended 2026-11-10)
+- M1.7 ran as three gates (split by the Orchestrator under the gate-size rule): M1.7a time-to-full estimate removed and `live_speed` hand tests (103 tests); M1.7b `server_api` size cap, depth check and negative counts (109); M1.7c `vram` bounded reads and hostile-input and large-input tests for the log, timing and `nvidia-smi` parsers (117). All PASS; M1.7b and M1.7c each needed one same-session fix (a mistyped dictated test line; an unused include left by a too-broad grep in the prompt).
+- The oracle's `view_of` also drops alerts without a numeric level, because the time-to-full alert appeared in three scenarios that stay.
+- json-glib 1.8.0 confirmed: it segfaults on a body nested 100,000 levels deep (checked by the Orchestrator against the real 1.8.0 library); integers beyond 64 bits come back as unrelated integers, so the tests only require that a count is never negative.
+- The 64-byte limit is found by reading, not from the file size: sysfs reports 4096 bytes for every attribute. An oversized vendor file counts as missing, so the card is AMD (Adam).
+- New rule (Adam): AGENTS.md rule 22, a "Prompt doubts" section in every report; to be reviewed at the M2 milestone review.

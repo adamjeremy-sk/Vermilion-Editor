@@ -10,9 +10,9 @@
 </p>
 
 > **Status: pre-alpha. Not usable yet.**
-> Vermilion Editor is being written from scratch. Milestone M0 (foundation) is done, and M1 (the CTXMon monitor logic)
-> has all of its code: log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory
-> readers are ported and tested, with 100 tests; one hardening gate (M1.7) follows. Editing and the CTXMon window arrive with M2.
+> Vermilion Editor is being written from scratch. Milestones M0 (foundation) and M1 (the CTXMon monitor logic) are done:
+> log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory readers are ported,
+> hardened against hostile input and tested, with 117 tests. Editing and the CTXMon window arrive with M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 ---
@@ -54,11 +54,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 code complete (review held; a hardening gate, M1.7, comes next): CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory); the window comes with M2 |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input; the window comes with M2 |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 code complete: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original; 100 tests. Next: M1.7 (parser hardening), then M2 (editor window, CTXMon UI). |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. Next: M2 (editor window, CTXMon UI), after a talk about the UI specifications. |
 | Releases | None |
 
 ---

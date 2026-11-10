@@ -31,6 +31,7 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 | M0.5c2 | Format check `tools/check_format.sh` as ctest `Format.Check`: `clang-format --dry-run --Werror` on every `.cpp` and `.h` in `src` and `tests` (clang-format 18.1.3 on Adam's machine); skipped, not failed, when clang-format is missing | 67 tests pass | Qwen |
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
+**Done 2026-11-10**: every gate below committed and pushed; 117 tests. Milestone review: `docs/milestones/M1-review.md` (held 2026-11-08, before the M1.7 hardening gates; outcome appended).
 Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no GTK; GLib, `GRegex` and json-glib allowed), tests in `tests/ctxmon/`. Functions take text, JSON strings or a directory root; no HTTP, threads or polling (those come in M2.7). Expected values come from the frozen Python original through the oracle script.
 | Gate | Work | Done when | Who |
 |---|---|---|---|
@@ -44,7 +45,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M1.6 | VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing | Tests on fake sysfs trees and sample output | Qwen |
 | M1.7a | Done (2026-11-10, 103 tests). Split from M1.7 by the Orchestrator (gate size). Time-to-full estimate removed (`eta`, its alert, `kEtaWarnSeconds`, `eta_warned_`; oracle drops `eta`, the two time-to-full scenarios and the time-to-full alert, `server_state.json` regenerated, 20 scenarios); three `live_speed` hand tests (equal timestamps, clock going backwards, count not growing). | 103 tests passing | Qwen |
 | M1.7b | Done (2026-11-10, 109 tests). Split again by the Orchestrator (gate size). `server_api`: bodies over 1 MiB (`kMaxBodyBytes`) and nesting deeper than 32 levels (`kMaxJsonDepth`, own scan `json_depth_within` before json-glib; json-glib 1.8.0 was confirmed to crash on 100,000 levels) count as not JSON; a negative `n_ctx` or `n_decoded` counts as missing; six hand tests (negative and huge counts, 1 MiB cap, 1 MB name, depth scan, deep nesting). | 109 tests passing | Qwen |
-| M1.7c | Hardening, last M1 gate: `vram` reads only ordinary files, at most 64 bytes, anything else is an unreadable card; hostile-input hand tests for the log, timing and `nvidia-smi` parsers (1 MB lines, huge numbers); the log parsers keep the 512 KiB tail and get a large-input test. | Same suite plus the new tests, all passing | Qwen |
+| M1.7c | Done (2026-11-10, 117 tests). `vram` `read_file` reads only ordinary files (symlinks followed) of at most 64 bytes, found by reading (sysfs reports 4096 for every file), anything else counts as missing (an oversized vendor file means amd); four `vram` tests on a temporary tree built at run time (64/65 bytes, pipe, link to /dev/zero, oversized vendor, 1 MB nvidia-smi lines); two `log_tokens` and two `timing` tests (1 MB lines, huge numbers, 16 MiB inputs). | 117 tests passing | Qwen |
 
 ## M2: Editor
 **Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M2.9) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that.
