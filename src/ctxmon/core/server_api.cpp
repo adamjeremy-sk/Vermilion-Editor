@@ -15,10 +15,14 @@ namespace vermilion::ctxmon {
 
 namespace {
 
-// The root node of body parsed as JSON (owned by parser), or nullptr if it does not parse.
+// The root node of body parsed as JSON (owned by parser), or nullptr if it does not parse or
+// is too large or too deeply nested to be parsed safely.
 JsonNode* parse_root(JsonParser* parser, std::string_view body) {
     if (body.empty()) {
         return nullptr; // also covers a default string_view, whose data() is null
+    }
+    if (body.size() > kMaxBodyBytes || !json_depth_within(body, kMaxJsonDepth)) {
+        return nullptr;
     }
     if (!json_parser_load_from_data(parser, body.data(), static_cast<gssize>(body.size()),
                                     nullptr)) {
@@ -58,6 +62,15 @@ std::optional<long long> int_member(JsonObject* object, const char* name) {
     return static_cast<long long>(json_node_get_int(node));
 }
 
+// int_member, but a negative number counts as missing: no count the server reports is below 0.
+std::optional<long long> count_member(JsonObject* object, const char* name) {
+    const std::optional<long long> value = int_member(object, name);
+    if (value && *value < 0) {
+        return std::nullopt;
+    }
+    return value;
+}
+
 std::optional<bool> bool_member(JsonObject* object, const char* name) {
     JsonNode* node = value_member(object, name, G_TYPE_BOOLEAN);
     if (node == nullptr) {
@@ -76,6 +89,32 @@ std::optional<std::string> string_member(JsonObject* object, const char* name) {
 
 } // namespace
 
+bool json_depth_within(std::string_view text, int max_depth) {
+    int depth = 0;
+    bool in_string = false;
+    bool escaped = false;
+    for (const char c : text) {
+        if (in_string) {
+            if (escaped) {
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                in_string = false;
+            }
+        } else if (c == '"') {
+            in_string = true;
+        } else if (c == '[' || c == '{') {
+            if (++depth > max_depth) {
+                return false;
+            }
+        } else if ((c == ']' || c == '}') && depth > 0) {
+            --depth;
+        }
+    }
+    return true;
+}
+
 SlotInfo parse_slots(std::string_view body) {
     SlotInfo info;
     g_autoptr(JsonParser) parser = json_parser_new();
@@ -83,14 +122,14 @@ SlotInfo parse_slots(std::string_view body) {
     if (slot == nullptr) {
         return info;
     }
-    info.n_ctx = int_member(slot, "n_ctx");
+    info.n_ctx = count_member(slot, "n_ctx");
     info.is_processing = bool_member(slot, "is_processing");
     JsonNode* next = json_object_get_member(slot, "next_token");
     if (next != nullptr && JSON_NODE_HOLDS_ARRAY(next)) {
         next = first_element(next); // newer servers send a list with one entry
     }
     if (JsonObject* token = as_object(next)) {
-        info.n_decoded = int_member(token, "n_decoded");
+        info.n_decoded = count_member(token, "n_decoded");
     }
     return info;
 }
