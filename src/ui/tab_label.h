@@ -28,9 +28,9 @@ public:
 
     GtkWidget* widget() const { return box_.get(); }
 
-    // Shows "*title" while the document has unsaved changes; the tooltip is the title until
-    // documents have paths (M2.2).
-    void set(const std::string& title, bool modified);
+    // Shows "*title" while the document has unsaved changes; tooltip is shown on hover (the
+    // file's path, or the title of an untitled document).
+    void set(const std::string& title, const std::string& tooltip, bool modified);
 
     // True when widget is the close button or inside it.
     bool contains_close_button(GtkWidget* widget) const;

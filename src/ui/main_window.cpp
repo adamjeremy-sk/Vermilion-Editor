@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Builds the main window, its action table and shortcuts, and the questions before closing.
+// Builds the main window, wires its parts together and keeps the actions' enabled state current.
 
 #include "ui/main_window.h"
 
-#include <cstddef>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "core/version.h"
-#include "ui/close_dialog.h"
+#include "ui/editor_page.h"
 #include "ui/gtkx/object_ptr.h"
+#include "ui/window_actions.h"
 
 namespace vermilion::ui {
 
@@ -19,83 +20,13 @@ namespace {
 constexpr const char* kMenuResource = "/io/github/adamjeremy_sk/Vermilion/menus.ui";
 
 // Commands that need an open document; greyed out in the blank window.
-constexpr const char* kDocumentActions[] = {
-    "close-tab", "undo", "redo", "cut", "copy", "paste", "select-all", "next-tab", "previous-tab"};
+constexpr const char* kDocumentActions[] = {"close-tab",    "undo",     "redo",       "cut",
+                                            "copy",         "paste",    "select-all", "next-tab",
+                                            "previous-tab", "word-wrap"};
 
-MainWindow* self(gpointer data) {
-    return static_cast<MainWindow*>(data);
-}
-
-void on_new_file(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->new_file();
-}
-void on_close_tab(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->close_active();
-}
-void on_quit(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->quit();
-}
-void on_undo(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->edit("text.undo");
-}
-void on_redo(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->edit("text.redo");
-}
-void on_cut(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->edit("clipboard.cut");
-}
-void on_copy(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->edit("clipboard.copy");
-}
-void on_paste(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->edit("clipboard.paste");
-}
-void on_select_all(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->edit("selection.select-all");
-}
-void on_next_tab(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->next_tab();
-}
-void on_previous_tab(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->previous_tab();
-}
-void on_about(GSimpleAction*, GVariant*, gpointer data) {
-    self(data)->about();
-}
-
-const GActionEntry kActions[] = {
-    {"new-file", on_new_file, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"close-tab", on_close_tab, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"quit", on_quit, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"undo", on_undo, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"redo", on_redo, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"cut", on_cut, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"copy", on_copy, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"paste", on_paste, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"select-all", on_select_all, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"next-tab", on_next_tab, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"previous-tab", on_previous_tab, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"about", on_about, nullptr, nullptr, nullptr, {0, 0, 0}},
-};
-
-struct Shortcut {
-    const char* action;
-    const char* accels[3];
-};
-
-const Shortcut kShortcuts[] = {
-    {"win.new-file", {"<Control>n", nullptr, nullptr}},
-    {"win.close-tab", {"<Control>w", nullptr, nullptr}},
-    {"win.quit", {"<Control>q", nullptr, nullptr}},
-    {"win.undo", {"<Control>z", nullptr, nullptr}},
-    {"win.redo", {"<Control>y", "<Control><Shift>z", nullptr}},
-    {"win.cut", {"<Control>x", nullptr, nullptr}},
-    {"win.copy", {"<Control>c", nullptr, nullptr}},
-    {"win.paste", {"<Control>v", nullptr, nullptr}},
-    {"win.select-all", {"<Control>a", nullptr, nullptr}},
-    {"win.next-tab", {"<Control>Page_Down", nullptr, nullptr}},
-    {"win.previous-tab", {"<Control>Page_Up", nullptr, nullptr}},
-};
+// Commands that write the document or change its format: also greyed out while it loads or
+// saves, and for a read-only document. Reopen as needs a file and an idle document.
+constexpr const char* kWriteActions[] = {"save", "save-as", "save-encoding", "line-ending"};
 
 } // namespace
 
@@ -106,21 +37,54 @@ void MainWindow::install_menus_and_shortcuts(GtkApplication* app) {
     if (menubar != nullptr) {
         gtk_application_set_menubar(app, G_MENU_MODEL(menubar));
     }
-    for (const Shortcut& shortcut : kShortcuts) {
-        gtk_application_set_accels_for_action(app, shortcut.action, shortcut.accels);
-    }
+    set_shortcuts(app);
 }
 
 // The window from _new is owned by GTK (its toplevel list and the application), so it is
 // borrowed here, not adopted.
 MainWindow::MainWindow(GtkApplication* app)
     : window_(GTK_WINDOW(gtk_application_window_new(app))),
-      tabs_(list_, DocumentTabs::Callbacks{[this] { refresh(); },
-                                           [this](DocumentId id) { request_close(id); }}) {
+      tabs_(list_, DocumentTabs::Callbacks{
+                       [this] { refresh(); }, [this](DocumentId id) { saves_.request_close(id); },
+                       [this](const std::string& message) { status_.show_message(message); },
+                       [this](const std::string& message, const std::string& detail) {
+                           show_error(message, detail);
+                       },
+                       [this](DocumentId id, DocumentSaver::Outcome outcome,
+                              const std::string& error) { saves_.on_saved(id, outcome, error); }}),
+      opener_(window_, FileOpener::Callbacks{
+                           [this](const std::string& message) { status_.show_message(message); },
+                           [this](const std::string& message, const std::string& detail) {
+                               show_error(message, detail);
+                           },
+                           [this](const std::string& path) {
+                               const DocumentRecord* open = list_.find_by_path(path);
+                               if (open == nullptr) {
+                                   return false;
+                               }
+                               tabs_.select(open->id);
+                               return true;
+                           },
+                           [this](const std::string& path, const std::string& title,
+                                  const ScanResult& scan) { tabs_.add_file(path, title, scan); }}),
+      saves_(window_, list_, tabs_,
+             SaveController::Callbacks{
+                 [this] { refresh(); },
+                 [this](const std::string& message) { status_.show_message(message); },
+                 [this](const std::string& message, const std::string& detail) {
+                     show_error(message, detail);
+                 }}),
+      formats_(window_, list_, tabs_,
+               FormatCommands::Callbacks{
+                   [this] { refresh(); },
+                   [this](const std::string& message) { status_.show_message(message); },
+                   [this](DocumentId id, std::function<void(bool)> done) {
+                       saves_.save(id, std::move(done));
+                   }}) {
     gtk_widget_add_css_class(GTK_WIDGET(window_), "vm-main");
     gtk_window_set_title(window_, "Vermilion Editor");
     gtk_window_set_default_size(window_, 1100, 700);
-    g_action_map_add_action_entries(G_ACTION_MAP(window_), kActions, G_N_ELEMENTS(kActions), this);
+    add_window_actions(G_ACTION_MAP(window_), this);
     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window_), TRUE);
     // Floating box from _new; the window sinks it. The window box adds its own reference to
     // the notebook and the status bar, which tabs_ and status_ also keep.
@@ -143,10 +107,28 @@ void MainWindow::new_file() {
     tabs_.add_untitled();
 }
 
+void MainWindow::open_file() {
+    opener_.choose();
+}
+
+void MainWindow::save() {
+    std::optional<DocumentId> active = list_.active();
+    if (active) {
+        saves_.save(*active);
+    }
+}
+
+void MainWindow::save_as() {
+    std::optional<DocumentId> active = list_.active();
+    if (active) {
+        saves_.save_as(*active);
+    }
+}
+
 void MainWindow::close_active() {
     std::optional<DocumentId> active = list_.active();
     if (active) {
-        request_close(*active);
+        saves_.request_close(*active);
     }
 }
 
@@ -159,9 +141,9 @@ void MainWindow::quit() {
 // An open menu holds the keyboard focus, so the command goes to the active editor, not to the
 // focused widget.
 void MainWindow::edit(const char* widget_action) {
-    GtkWidget* view = tabs_.active_view(); // borrowed
-    if (view != nullptr) {
-        gtk_widget_activate_action(view, widget_action, nullptr);
+    EditorPage* editor = tabs_.active_editor(); // borrowed
+    if (editor != nullptr) {
+        gtk_widget_activate_action(editor->view(), widget_action, nullptr);
     }
 }
 
@@ -171,6 +153,34 @@ void MainWindow::next_tab() {
 
 void MainWindow::previous_tab() {
     tabs_.select_previous();
+}
+
+void MainWindow::set_word_wrap(bool wrap) {
+    EditorPage* editor = tabs_.active_editor(); // borrowed
+    if (editor != nullptr) {
+        editor->set_wrap(wrap);
+    }
+}
+
+void MainWindow::reopen_as(const std::string& encoding_id) {
+    std::optional<DocumentId> active = list_.active();
+    if (active) {
+        formats_.reopen_as(*active, encoding_id);
+    }
+}
+
+void MainWindow::save_with_encoding(const std::string& encoding_id) {
+    std::optional<DocumentId> active = list_.active();
+    if (active) {
+        formats_.save_with_encoding(*active, encoding_id);
+    }
+}
+
+void MainWindow::set_line_ending(const std::string& line_ending_id) {
+    std::optional<DocumentId> active = list_.active();
+    if (active) {
+        formats_.set_line_ending(*active, line_ending_id);
+    }
 }
 
 void MainWindow::about() {
@@ -184,30 +194,13 @@ void MainWindow::about() {
         "website", "https://github.com/adamjeremy-sk/Vermilion-Editor", nullptr);
 }
 
-void MainWindow::request_close(DocumentId id) {
-    const DocumentRecord* record = list_.find(id);
-    if (record == nullptr) {
-        return;
-    }
-    if (!record->modified) {
-        tabs_.close(id);
-        return;
-    }
-    // Saving arrives with M2.2, which adds a Save button to this question.
-    ask_discard(window_, "Close \u201c" + record->title + "\u201d without saving?",
-                "Its changes will be lost.", "Close Without Saving",
-                [this, id] { tabs_.close(id); });
-}
-
+// Unsaved documents are asked about one by one (SaveController); when all are answered, the
+// window closes for real.
 bool MainWindow::on_close_request() {
-    std::size_t count = list_.modified_count();
-    if (quit_confirmed_ || count == 0) {
+    if (quit_confirmed_ || list_.modified_count() == 0) {
         return false;
     }
-    std::string message = count == 1
-                              ? std::string("Quit without saving 1 document?")
-                              : "Quit without saving " + std::to_string(count) + " documents?";
-    ask_discard(window_, message, "Their changes will be lost.", "Quit Without Saving", [this] {
+    saves_.ask_before_quit([this] {
         quit_confirmed_ = true;
         gtk_window_close(window_);
     });
@@ -218,6 +211,20 @@ void MainWindow::refresh() {
     bool has_document = !list_.empty();
     for (const char* action : kDocumentActions) {
         set_enabled(action, has_document);
+    }
+    EditorPage* editor = tabs_.active_editor(); // borrowed
+    std::optional<DocumentId> active = list_.active();
+    const DocumentRecord* record = active ? list_.find(*active) : nullptr;
+    bool idle = editor != nullptr && record != nullptr && !editor->busy();
+    for (const char* action : kWriteActions) {
+        set_enabled(action, idle && !record->read_only);
+    }
+    set_enabled("reopen-encoding", idle && !record->path.empty());
+    // Word wrap belongs to each document, so the menu's check mark follows the active one.
+    GAction* wrap = g_action_map_lookup_action(G_ACTION_MAP(window_), "word-wrap"); // borrowed
+    if (wrap != nullptr) {
+        g_simple_action_set_state(G_SIMPLE_ACTION(wrap),
+                                  g_variant_new_boolean(editor != nullptr && editor->wraps()));
     }
     std::optional<CursorStatus> status = tabs_.active_status();
     if (status) {
@@ -232,6 +239,15 @@ void MainWindow::set_enabled(const char* name, bool enabled) {
     if (action != nullptr) {
         g_simple_action_set_enabled(G_SIMPLE_ACTION(action), enabled ? TRUE : FALSE);
     }
+}
+
+// Full reference from _new (not floating); show() keeps its own while the dialog is open.
+void MainWindow::show_error(const std::string& message, const std::string& detail) {
+    auto dialog =
+        gtkx::ObjectPtr<GtkAlertDialog>::adopt(gtk_alert_dialog_new("%s", message.c_str()));
+    gtk_alert_dialog_set_detail(dialog.get(), detail.c_str());
+    gtk_alert_dialog_set_modal(dialog.get(), TRUE);
+    gtk_alert_dialog_show(dialog.get(), window_);
 }
 
 } // namespace vermilion::ui

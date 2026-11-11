@@ -62,7 +62,7 @@ target_link_libraries(vermilion_resources
     PUBLIC PkgConfig::GTK4
     PRIVATE vermilion_warnings vermilion_noexc)
 
-add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp)
+add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp)
 target_include_directories(vermilion PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(vermilion PRIVATE
     PkgConfig::GTK4

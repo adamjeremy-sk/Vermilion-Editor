@@ -53,12 +53,22 @@ TEST(UiResources, StructureHasClassicDetails) {
     EXPECT_NE(css.find("window.vm-main scrolledwindow.vm-editor-well"), std::string::npos);
     EXPECT_NE(css.find("window.vm-main button.vm-tab-close"), std::string::npos);
     EXPECT_NE(css.find("window.aboutdialog label > selection"), std::string::npos);
+    EXPECT_NE(css.find("menubutton.vm-status-panel"), std::string::npos);
 }
 
 TEST(UiResources, MenuBarUsesWindowActions) {
     std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
     EXPECT_NE(ui.find("<menu id=\"menubar\">"), std::string::npos);
     EXPECT_NE(ui.find("win.new-file"), std::string::npos);
+    EXPECT_NE(ui.find("win.open"), std::string::npos);
+    EXPECT_NE(ui.find("win.word-wrap"), std::string::npos);
+    EXPECT_NE(ui.find("win.save</attribute>"), std::string::npos);
+    EXPECT_NE(ui.find("win.save-as</attribute>"), std::string::npos);
+    EXPECT_NE(ui.find("<menu id=\"encoding-menu\">"), std::string::npos);
+    EXPECT_NE(ui.find("<menu id=\"line-ending-menu\">"), std::string::npos);
+    EXPECT_NE(ui.find("win.reopen-encoding"), std::string::npos);
+    EXPECT_NE(ui.find("win.save-encoding"), std::string::npos);
+    EXPECT_NE(ui.find("win.line-ending"), std::string::npos);
     EXPECT_EQ(ui.find("app."), std::string::npos);
 }
 

@@ -60,10 +60,10 @@ TabLabel::TabLabel(Callbacks callbacks)
         });
 }
 
-void TabLabel::set(const std::string& title, bool modified) {
+void TabLabel::set(const std::string& title, const std::string& tooltip, bool modified) {
     std::string text = modified ? "*" + title : title;
     gtk_label_set_text(GTK_LABEL(title_), text.c_str());
-    gtk_widget_set_tooltip_text(box_.get(), title.c_str());
+    gtk_widget_set_tooltip_text(box_.get(), tooltip.c_str());
 }
 
 bool TabLabel::contains_close_button(GtkWidget* widget) const {

@@ -1,33 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Creates and removes the editor pages, mirrors tab order and flags into DocumentList.
+// Adds, loads and removes the editor pages, mirrors tab order and flags into DocumentList.
 
 #include "ui/document_tabs.h"
-
-#include <gtksourceview/gtksource.h>
 
 #include <algorithm>
 #include <utility>
 
-#include "ui/tab_label.h"
+#include "core/open_messages.h"
+#include "core/save_messages.h"
+#include "ui/gtkx/string.h"
 
 namespace vermilion::ui {
 
-namespace {
-
-constexpr unsigned kTabWidth = 4; // per document; the settings value arrives with M2.5
-
-} // namespace
-
 struct DocumentTabs::Page {
-    DocumentId id = 0;
-    GtkWidget* scrolled = nullptr;     // borrowed; the notebook owns the page
-    GtkSourceView* view = nullptr;     // borrowed; owned by scrolled
-    GtkSourceBuffer* buffer = nullptr; // borrowed; the view holds its reference
-    std::unique_ptr<TabLabel> label;
-    gtkx::SignalConnection modified_changed;
-    gtkx::SignalConnection cursor_moved;
-    gtkx::SignalConnection overwrite_toggled;
+    Page(DocumentId document, EditorPage::Callbacks callbacks)
+        : id(document), editor(std::move(callbacks)) {}
+
+    DocumentId id;
+    EditorPage editor;
 };
 
 // Floating box and notebook from _new; adopt_floating sinks them, so this object keeps them alive
@@ -65,34 +56,34 @@ DocumentTabs::~DocumentTabs() {
 }
 
 void DocumentTabs::add_untitled() {
-    auto page = std::make_unique<Page>();
-    page->id = list_.add_untitled();
-    // Full reference from _new (not floating); the view takes its own, ours drops at scope end.
-    auto buffer = gtkx::ObjectPtr<GtkSourceBuffer>::adopt(gtk_source_buffer_new(nullptr));
-    GtkSourceStyleScheme* scheme = gtk_source_style_scheme_manager_get_scheme(
-        gtk_source_style_scheme_manager_get_default(), "classic"); // borrowed
-    if (scheme != nullptr) {
-        gtk_source_buffer_set_style_scheme(buffer.get(), scheme);
+    create_page(list_.add_untitled());
+    callbacks_.changed();
+}
+
+void DocumentTabs::add_file(const std::string& path, const std::string& title,
+                            const ScanResult& scan) {
+    const DocumentRecord* open = list_.find_by_path(path);
+    if (open != nullptr) {
+        select(open->id);
+        return;
     }
-    // Both widgets are floating: the scrolled window sinks the view, the notebook the window.
-    GtkWidget* view = gtk_source_view_new_with_buffer(buffer.get());
-    gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view), TRUE);
-    gtk_source_view_set_tab_width(GTK_SOURCE_VIEW(view), kTabWidth);
-    gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
-    GtkWidget* scrolled = gtk_scrolled_window_new();
-    gtk_widget_add_css_class(scrolled, "vm-editor-well");
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled), view);
-    page->scrolled = scrolled;
-    page->view = GTK_SOURCE_VIEW(view);
-    page->buffer = buffer.get();
-    Page& added = *page;
-    attach_signals(added);
-    refresh_label(added);
-    // In the list before it is appended: appending the first page announces it as current.
-    pages_.push_back(std::move(page));
-    int index = gtk_notebook_append_page(notebook(), scrolled, added.label->widget());
-    gtk_notebook_set_tab_reorderable(notebook(), scrolled, TRUE);
-    gtk_notebook_set_current_page(notebook(), index);
+    DocumentId id = list_.add_file(path, title, scan.format, scan.mixed_line_endings);
+    if (scan.binary) {
+        list_.set_read_only(id, true);
+    }
+    create_page(id).editor.load(path, scan.format.encoding);
+    callbacks_.changed();
+}
+
+void DocumentTabs::reopen(DocumentId id, TextEncoding encoding) {
+    Page* page = find_page(id);
+    const DocumentRecord* record = list_.find(id);
+    if (page == nullptr || record == nullptr || record->path.empty() || page->editor.busy()) {
+        return;
+    }
+    // Read-only again only if this encoding also leaves bytes that cannot be shown (on_loaded).
+    list_.set_read_only(id, false);
+    page->editor.load(record->path, encoding);
     callbacks_.changed();
 }
 
@@ -102,13 +93,13 @@ void DocumentTabs::close(DocumentId id) {
     if (it == pages_.end()) {
         return;
     }
-    int index = gtk_notebook_page_num(notebook(), (*it)->scrolled);
+    int index = gtk_notebook_page_num(notebook(), (*it)->editor.widget());
     std::optional<DocumentId> restore;
     if (close_press_ && close_press_->closing == id) {
         restore = close_press_->active_before;
     }
     close_press_.reset();
-    // The page's connections and label go first, then the notebook page itself.
+    // The page's load, connections and label go first, then the notebook page itself.
     pages_.erase(it);
     list_.close(id);
     if (restore) {
@@ -133,27 +124,43 @@ void DocumentTabs::select_previous() {
     select_relative(-1, true);
 }
 
+void DocumentTabs::select(DocumentId id) {
+    if (list_.set_active(id)) {
+        select_active();
+        callbacks_.changed();
+    }
+}
+
 std::optional<CursorStatus> DocumentTabs::active_status() const {
     std::optional<DocumentId> active = list_.active();
     Page* page = active ? find_page(*active) : nullptr;
-    if (page == nullptr) {
+    const DocumentRecord* record = active ? list_.find(*active) : nullptr;
+    if (page == nullptr || record == nullptr) {
         return std::nullopt;
     }
-    GtkTextBuffer* text = GTK_TEXT_BUFFER(page->buffer);
-    GtkTextIter iter;
-    gtk_text_buffer_get_iter_at_mark(text, &iter, gtk_text_buffer_get_insert(text));
-    CursorStatus status;
-    status.line = gtk_text_iter_get_line(&iter) + 1;
-    status.column = static_cast<int>(gtk_source_view_get_visual_column(page->view, &iter)) + 1;
-    status.overwrite = gtk_text_view_get_overwrite(GTK_TEXT_VIEW(page->view)) != FALSE;
-    status.tab_width = gtk_source_view_get_tab_width(page->view);
+    CursorStatus status = page->editor.status();
+    status.encoding = encoding_label(record->format);
+    status.line_ending =
+        record->mixed_line_endings ? "Mixed" : line_ending_label(record->format.line_ending);
     return status;
 }
 
-GtkWidget* DocumentTabs::active_view() const {
+void DocumentTabs::refresh_tab(DocumentId id) {
+    Page* page = find_page(id);
+    if (page != nullptr) {
+        refresh_label(*page);
+    }
+}
+
+EditorPage* DocumentTabs::editor(DocumentId id) const {
+    Page* page = find_page(id);
+    return page != nullptr ? &page->editor : nullptr;
+}
+
+EditorPage* DocumentTabs::active_editor() const {
     std::optional<DocumentId> active = list_.active();
     Page* page = active ? find_page(*active) : nullptr;
-    return page != nullptr ? GTK_WIDGET(page->view) : nullptr;
+    return page != nullptr ? &page->editor : nullptr;
 }
 
 GtkNotebook* DocumentTabs::notebook() const {
@@ -171,30 +178,92 @@ DocumentTabs::Page* DocumentTabs::find_page(DocumentId id) const {
 
 DocumentTabs::Page* DocumentTabs::find_page_by_widget(GtkWidget* widget) const {
     for (const std::unique_ptr<Page>& page : pages_) {
-        if (page->scrolled == widget) {
+        if (page->editor.widget() == widget) {
             return page.get();
         }
     }
     return nullptr;
 }
 
-void DocumentTabs::attach_signals(Page& page) {
-    DocumentId id = page.id;
-    Page* target = &page; // stays valid: the connections are members of the page
-    page.label = std::make_unique<TabLabel>(TabLabel::Callbacks{
-        [this, id] { request_close(id); }, [this](int step) { select_relative(step, false); }});
-    page.modified_changed = gtkx::connect<void(GtkTextBuffer*)>(
-        page.buffer, "modified-changed", [this, target](GtkTextBuffer* buffer) {
-            list_.set_modified(target->id, gtk_text_buffer_get_modified(buffer) != FALSE);
-            refresh_label(*target);
-            callbacks_.changed();
-        });
-    page.cursor_moved = gtkx::connect<void(GObject*, GParamSpec*)>(
-        page.buffer, "notify::cursor-position",
-        [this, id](GObject*, GParamSpec*) { notify_if_active(id); });
-    page.overwrite_toggled = gtkx::connect<void(GObject*, GParamSpec*)>(
-        page.view, "notify::overwrite",
-        [this, id](GObject*, GParamSpec*) { notify_if_active(id); });
+// Builds the editor for a record DocumentList has just added (and made active), appends its tab
+// and selects it.
+DocumentTabs::Page& DocumentTabs::create_page(DocumentId id) {
+    auto page = std::make_unique<Page>(
+        id,
+        EditorPage::Callbacks{
+            [this, id] { request_close(id); }, [this](int step) { select_relative(step, false); },
+            [this, id](bool modified) { on_modified(id, modified); },
+            [this, id] { notify_if_active(id); },
+            [this, id](int percent) { on_load_progress(id, percent); },
+            [this, id](DocumentLoader::Outcome outcome, const std::string& error) {
+                on_loaded(id, outcome, error);
+            },
+            [this, id](int percent) { on_save_progress(id, percent); },
+            [this, id](DocumentSaver::Outcome outcome, const std::string& error) {
+                callbacks_.saved(id, outcome, error);
+            }});
+    Page& added = *page;
+    refresh_label(added);
+    // In the list before it is appended: appending the first page announces it as current.
+    pages_.push_back(std::move(page));
+    GtkWidget* widget = added.editor.widget();
+    int index = gtk_notebook_append_page(notebook(), widget, added.editor.tab());
+    gtk_notebook_set_tab_reorderable(notebook(), widget, TRUE);
+    gtk_notebook_set_current_page(notebook(), index);
+    return added;
+}
+
+void DocumentTabs::on_modified(DocumentId id, bool modified) {
+    Page* page = find_page(id);
+    if (page == nullptr) {
+        return;
+    }
+    list_.set_modified(id, modified);
+    refresh_label(*page);
+    callbacks_.changed();
+}
+
+void DocumentTabs::on_load_progress(DocumentId id, int percent) {
+    const DocumentRecord* record = list_.find(id);
+    if (record != nullptr) {
+        callbacks_.message(loading_message(record->title, percent));
+    }
+}
+
+// A failed load closes its tab; a load with bytes that cannot be shown leaves it read-only.
+void DocumentTabs::on_loaded(DocumentId id, DocumentLoader::Outcome outcome,
+                             const std::string& error) {
+    Page* page = find_page(id);
+    const DocumentRecord* record = list_.find(id);
+    if (page == nullptr || record == nullptr) {
+        return;
+    }
+    if (outcome == DocumentLoader::Outcome::Failed) {
+        std::string title = record->title;
+        close(id);
+        callbacks_.message("Could not open " + quoted(title) + ".");
+        callbacks_.load_failed("Could not open " + quoted(title), error);
+        return;
+    }
+    if (outcome == DocumentLoader::Outcome::LoadedWithInvalidBytes) {
+        list_.set_read_only(id, true);
+    }
+    // The byte-order mark is whatever the loaded text starts with (also after Reopen as).
+    TextFormat format = record->format;
+    format.bom = page->editor.starts_with_bom();
+    list_.set_format(id, format, record->mixed_line_endings);
+    page->editor.finish_load(record->path, record->read_only);
+    list_.set_modified(id, false);
+    refresh_label(*page);
+    callbacks_.message(loaded_message(*record));
+    callbacks_.changed();
+}
+
+void DocumentTabs::on_save_progress(DocumentId id, int percent) {
+    const DocumentRecord* record = list_.find(id);
+    if (record != nullptr) {
+        callbacks_.message(saving_message(record->title, percent));
+    }
 }
 
 void DocumentTabs::on_press(double x, double y) {
@@ -202,7 +271,7 @@ void DocumentTabs::on_press(double x, double y) {
     std::optional<DocumentId> active = list_.active();
     GtkWidget* target = gtk_widget_pick(box_.get(), x, y, GTK_PICK_DEFAULT); // borrowed
     for (const std::unique_ptr<Page>& page : pages_) {
-        if (page->label->contains_close_button(target)) {
+        if (page->editor.contains_close_button(target)) {
             if (active && *active != page->id) {
                 close_press_ = ClosePress{page->id, *active};
             }
@@ -211,11 +280,16 @@ void DocumentTabs::on_press(double x, double y) {
     }
 }
 
+// The tooltip is the file's path for display (on disk it may not be UTF-8), or the title.
 void DocumentTabs::refresh_label(Page& page) {
     const DocumentRecord* record = list_.find(page.id);
-    if (record != nullptr) {
-        page.label->set(record->title, record->modified);
+    if (record == nullptr) {
+        return;
     }
+    std::string tooltip = record->path.empty()
+                              ? record->title
+                              : gtkx::take_string(g_filename_display_name(record->path.c_str()));
+    page.editor.set_label(record->title, tooltip, record->modified);
 }
 
 void DocumentTabs::notify_if_active(DocumentId id) {
@@ -235,7 +309,7 @@ void DocumentTabs::on_page_changed() {
         return;
     }
     list_.set_active(page->id);
-    gtk_widget_grab_focus(GTK_WIDGET(page->view));
+    gtk_widget_grab_focus(page->editor.view());
     callbacks_.changed();
 }
 
@@ -245,11 +319,11 @@ void DocumentTabs::select_active() {
     if (page == nullptr) {
         return;
     }
-    int index = gtk_notebook_page_num(notebook(), page->scrolled);
+    int index = gtk_notebook_page_num(notebook(), page->editor.widget());
     if (index >= 0) {
         gtk_notebook_set_current_page(notebook(), index);
     }
-    gtk_widget_grab_focus(GTK_WIDGET(page->view));
+    gtk_widget_grab_focus(page->editor.view());
 }
 
 void DocumentTabs::select_relative(int step, bool wrap) {

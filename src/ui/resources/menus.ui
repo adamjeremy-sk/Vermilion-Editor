@@ -8,6 +8,11 @@
       <attribute name="label">_File</attribute>
       <section>
         <item><attribute name="label">_New File</attribute><attribute name="action">win.new-file</attribute></item>
+        <item><attribute name="label">_Open&#x2026;</attribute><attribute name="action">win.open</attribute></item>
+      </section>
+      <section>
+        <item><attribute name="label">_Save</attribute><attribute name="action">win.save</attribute></item>
+        <item><attribute name="label">Save _As&#x2026;</attribute><attribute name="action">win.save-as</attribute></item>
       </section>
       <section>
         <item><attribute name="label">_Close Tab</attribute><attribute name="action">win.close-tab</attribute></item>
@@ -34,6 +39,9 @@
     <submenu>
       <attribute name="label">_View</attribute>
       <section>
+        <item><attribute name="label">_Word Wrap</attribute><attribute name="action">win.word-wrap</attribute></item>
+      </section>
+      <section>
         <item><attribute name="label">_Next Tab</attribute><attribute name="action">win.next-tab</attribute></item>
         <item><attribute name="label">_Previous Tab</attribute><attribute name="action">win.previous-tab</attribute></item>
       </section>
@@ -44,5 +52,33 @@
         <item><attribute name="label">_About</attribute><attribute name="action">win.about</attribute></item>
       </section>
     </submenu>
+  </menu>
+  <!-- Status bar menus (M2.2): Encoding and Line Ending panels. -->
+  <menu id="encoding-menu">
+    <section>
+      <attribute name="label">Reopen as</attribute>
+      <item><attribute name="label">UTF-8</attribute><attribute name="action">win.reopen-encoding</attribute><attribute name="target">utf-8</attribute></item>
+      <item><attribute name="label">UTF-16 LE</attribute><attribute name="action">win.reopen-encoding</attribute><attribute name="target">utf-16le</attribute></item>
+      <item><attribute name="label">UTF-16 BE</attribute><attribute name="action">win.reopen-encoding</attribute><attribute name="target">utf-16be</attribute></item>
+      <item><attribute name="label">Windows-1252</attribute><attribute name="action">win.reopen-encoding</attribute><attribute name="target">windows-1252</attribute></item>
+      <item><attribute name="label">Latin-1</attribute><attribute name="action">win.reopen-encoding</attribute><attribute name="target">latin-1</attribute></item>
+    </section>
+    <section>
+      <attribute name="label">Save as</attribute>
+      <item><attribute name="label">UTF-8</attribute><attribute name="action">win.save-encoding</attribute><attribute name="target">utf-8</attribute></item>
+      <item><attribute name="label">UTF-8 with BOM</attribute><attribute name="action">win.save-encoding</attribute><attribute name="target">utf-8-bom</attribute></item>
+      <item><attribute name="label">UTF-16 LE</attribute><attribute name="action">win.save-encoding</attribute><attribute name="target">utf-16le</attribute></item>
+      <item><attribute name="label">UTF-16 BE</attribute><attribute name="action">win.save-encoding</attribute><attribute name="target">utf-16be</attribute></item>
+      <item><attribute name="label">Windows-1252</attribute><attribute name="action">win.save-encoding</attribute><attribute name="target">windows-1252</attribute></item>
+      <item><attribute name="label">Latin-1</attribute><attribute name="action">win.save-encoding</attribute><attribute name="target">latin-1</attribute></item>
+    </section>
+  </menu>
+  <menu id="line-ending-menu">
+    <section>
+      <attribute name="label">Convert to</attribute>
+      <item><attribute name="label">LF</attribute><attribute name="action">win.line-ending</attribute><attribute name="target">lf</attribute></item>
+      <item><attribute name="label">CRLF</attribute><attribute name="action">win.line-ending</attribute><attribute name="target">crlf</attribute></item>
+      <item><attribute name="label">CR</attribute><attribute name="action">win.line-ending</attribute><attribute name="target">cr</attribute></item>
+    </section>
   </menu>
 </interface>

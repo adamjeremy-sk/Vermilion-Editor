@@ -208,11 +208,26 @@ window.vm-main .vm-status-panel {
     box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight;
 }
 
-window.vm-main button.vm-status-panel:hover {
+/* A clickable panel is a menu button; its inner button is flat, so the panel keeps its frame. */
+window.vm-main menubutton.vm-status-panel {
+    padding: 0;
+}
+
+window.vm-main menubutton.vm-status-panel > button {
+    padding: 1px 6px;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+window.vm-main menubutton.vm-status-panel > button:hover {
     background-color: @vm_light;
 }
 
-window.vm-main button.vm-status-panel:active {
+window.vm-main menubutton.vm-status-panel > button:active,
+window.vm-main menubutton.vm-status-panel > button:checked {
     padding: 2px 5px 0 7px;
 }
 

@@ -9,9 +9,13 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "core/document_list.h"
+#include "core/text_scan.h"
+#include "ui/document_loader.h"
+#include "ui/editor_page.h"
 #include "ui/gtkx/object_ptr.h"
 #include "ui/gtkx/signal.h"
 #include "ui/status_bar.h"
@@ -26,6 +30,13 @@ public:
         // The user asked to close a tab (close button or middle click); runs from an idle
         // callback, never inside the click itself.
         std::function<void(DocumentId)> close_requested;
+        // A line for the status bar's message panel (load progress and results).
+        std::function<void(const std::string&)> message;
+        // A file could not be loaded; its tab is already closed. Message and detail for a dialog.
+        std::function<void(const std::string&, const std::string&)> load_failed;
+        // A save of document id ended (the error text when Failed). Runs inside the save's own
+        // callback: the receiver must not close the tab from there.
+        std::function<void(DocumentId, DocumentSaver::Outcome, const std::string&)> saved;
     };
 
     // list must outlive this object.
@@ -40,17 +51,35 @@ public:
     // Adds an untitled document in a new tab and makes it active.
     void add_untitled();
 
+    // Opens the file at path (absolute) in a new tab, titled title, and loads it with the scanned
+    // format; the tab cannot be edited until the load ends. A binary file opens read-only. If the
+    // path is already open, its tab is selected instead.
+    void add_file(const std::string& path, const std::string& title, const ScanResult& scan);
+
+    // Reloads the document from its file with exactly this encoding (Encoding > Reopen as). The
+    // text is replaced; a failed load closes the tab like a failed open.
+    void reopen(DocumentId id, TextEncoding encoding);
+
     // Closes the tab without asking; an unknown id is ignored.
     void close(DocumentId id);
+
+    // Shows the record's current title, path and modified flag on its tab (after Save As).
+    void refresh_tab(DocumentId id);
 
     // Keyboard order: wraps around at either end.
     void select_next();
     void select_previous();
 
+    // Selects the tab of id, if it exists.
+    void select(DocumentId id);
+
     std::optional<CursorStatus> active_status() const;
 
-    // The active document's editor, or nullptr in the blank window (borrowed).
-    GtkWidget* active_view() const;
+    // The active document's editor page, or nullptr in the blank window (borrowed).
+    EditorPage* active_editor() const;
+
+    // The editor page of id, or nullptr (borrowed).
+    EditorPage* editor(DocumentId id) const;
 
 private:
     struct Page;
@@ -65,7 +94,11 @@ private:
     GtkNotebook* notebook() const;
     Page* find_page(DocumentId id) const;
     Page* find_page_by_widget(GtkWidget* widget) const;
-    void attach_signals(Page& page);
+    Page& create_page(DocumentId id);
+    void on_modified(DocumentId id, bool modified);
+    void on_load_progress(DocumentId id, int percent);
+    void on_loaded(DocumentId id, DocumentLoader::Outcome outcome, const std::string& error);
+    void on_save_progress(DocumentId id, int percent);
     void on_press(double x, double y);
     void refresh_label(Page& page);
     void notify_if_active(DocumentId id);

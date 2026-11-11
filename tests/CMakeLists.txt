@@ -1,4 +1,4 @@
-add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp)
+add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp)
 target_link_libraries(vermilion_tests PRIVATE
     GTest::gtest_main
     vermilion_core
@@ -7,7 +7,7 @@ target_link_libraries(vermilion_tests PRIVATE
     PkgConfig::GLIB2)
 gtest_discover_tests(vermilion_tests)
 
-add_executable(vermilion_gtkx_tests gtkx_object_ptr_test.cpp gtkx_string_test.cpp gtkx_signal_test.cpp)
+add_executable(vermilion_gtkx_tests gtkx_object_ptr_test.cpp gtkx_string_test.cpp gtkx_signal_test.cpp gtkx_async_guard_test.cpp)
 target_link_libraries(vermilion_gtkx_tests PRIVATE
     GTest::gtest_main
     vermilion_gtkx
