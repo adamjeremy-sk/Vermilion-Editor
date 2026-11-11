@@ -1,6 +1,6 @@
 # Roadmap: Vermilion Editor
 **Status**: rewritten 2026-11-05 for the greenfield plan; this file is the live roadmap (the old claude.ai Roadmap Doc is obsolete). Architecture is in ARCHITECTURE.md; the process is in AI_ONBOARDING.md and AGENTS.md. Gate rules: each gate is one step with evidence and an audit verdict; a gate that adds code also adds its tests; Adam builds, tests and commits; push at each gate end. Every milestone ends with a milestone review with Adam before the next one starts (AI_ONBOARDING.md section 2, item 7); its conclusions go to `docs/milestones/M<n>-review.md`.
-**Done column (Adam, 2026-11-10)**: ☐ not done; ☑ done, with the date (YYYY/MM/DD). A number in parentheses points to the notes under that milestone's table. Each milestone also has a Status line.
+**Done column (Adam, 2026-11-10)**: ☐ not done; ☑ done, with the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes under that milestone's table; the marks restart in each milestone. Each milestone also has a Status line.
 
 ## Versions
 | Version | Contents | Milestones |
@@ -14,7 +14,7 @@
 ctxmon logic (M1) is built early because it is self-contained: the Python original (`ctxmon_gtk.py` in `reference/ctxmon/`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent. From 2026-11-07 the port in `src/ctxmon/` is the source of truth and the Python original is frozen as the test oracle (Adam). ctxmon is finished during M2 (Adam, 2026-11-07): its I/O, cards and the standalone program; the CTXMon tab follows in M3, when the right-hand stack exists.
 
 ## M0: Reset and foundation
-**Status**: ☑ 2026/11/07 (1)
+**Status**: ☑ 2026/11/07 \*
 
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
@@ -32,10 +32,11 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 | M0.5c2 | Format check `tools/check_format.sh` as ctest `Format.Check`: `clang-format --dry-run --Werror` on every `.cpp` and `.h` in `src` and `tests` (clang-format 18.1.3 on Adam's machine); skipped, not failed, when clang-format is missing | 67 tests pass | Qwen | ☑ 2026/11/07 |
 
 **Notes**
-1. Every gate below committed and pushed; 67 tests. Milestone review: `docs/milestones/M0-review.md`.
+
+\* Every gate below committed and pushed; 67 tests. Milestone review: `docs/milestones/M0-review.md`.
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
-**Status**: ☑ 2026/11/10 (1)
+**Status**: ☑ 2026/11/10 \*
 Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no GTK; GLib, `GRegex` and json-glib allowed), tests in `tests/ctxmon/`. Functions take text, JSON strings or a directory root; no HTTP, threads or polling (those come in M2.7). Expected values come from the frozen Python original through the oracle script.
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
@@ -47,22 +48,26 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M1.4b | `ServerState` warnings: levels 80% and 95% with hysteresis, the first-update rule, time-to-full alert; `down` resets the warning state; `ServerState::update` is split into helpers (it is 91 lines after M1.4a) | Same, alerts and level in the scripted sequences | Qwen | ☑ 2026/11/08 |
 | M1.5 | Graph geometry: `graph_segments`, `nice_max`, `graph_span` | Same | Qwen | ☑ 2026/11/08 |
 | M1.6 | VRAM readers: AMD sysfs under an injected root, `nvidia-smi` output parsing | Tests on fake sysfs trees and sample output | Qwen | ☑ 2026/11/08 |
-| M1.7a | Split from M1.7 by the Orchestrator (gate size). Time-to-full estimate removed (`eta`, its alert, `kEtaWarnSeconds`, `eta_warned_`; oracle drops `eta`, the two time-to-full scenarios and the time-to-full alert, `server_state.json` regenerated, 20 scenarios); three `live_speed` hand tests (equal timestamps, clock going backwards, count not growing). | 103 tests passing | Qwen | ☑ 2026/11/10 (2) |
-| M1.7b | Split again by the Orchestrator (gate size). `server_api`: bodies over 1 MiB (`kMaxBodyBytes`) and nesting deeper than 32 levels (`kMaxJsonDepth`, own scan `json_depth_within` before json-glib; json-glib 1.8.0 was confirmed to crash on 100,000 levels) count as not JSON; a negative `n_ctx` or `n_decoded` counts as missing; six hand tests (negative and huge counts, 1 MiB cap, 1 MB name, depth scan, deep nesting). | 109 tests passing | Qwen | ☑ 2026/11/10 (3) |
-| M1.7c | `vram` `read_file` reads only ordinary files (symlinks followed) of at most 64 bytes, found by reading (sysfs reports 4096 for every file), anything else counts as missing (an oversized vendor file means amd); four `vram` tests on a temporary tree built at run time (64/65 bytes, pipe, link to /dev/zero, oversized vendor, 1 MB nvidia-smi lines); two `log_tokens` and two `timing` tests (1 MB lines, huge numbers, 16 MiB inputs). | 117 tests passing | Qwen | ☑ 2026/11/10 (4) |
+| M1.7a | Split from M1.7 by the Orchestrator (gate size). Time-to-full estimate removed (`eta`, its alert, `kEtaWarnSeconds`, `eta_warned_`; oracle drops `eta`, the two time-to-full scenarios and the time-to-full alert, `server_state.json` regenerated, 20 scenarios); three `live_speed` hand tests (equal timestamps, clock going backwards, count not growing). | 103 tests passing | Qwen | ☑ 2026/11/10 † |
+| M1.7b | Split again by the Orchestrator (gate size). `server_api`: bodies over 1 MiB (`kMaxBodyBytes`) and nesting deeper than 32 levels (`kMaxJsonDepth`, own scan `json_depth_within` before json-glib; json-glib 1.8.0 was confirmed to crash on 100,000 levels) count as not JSON; a negative `n_ctx` or `n_decoded` counts as missing; six hand tests (negative and huge counts, 1 MiB cap, 1 MB name, depth scan, deep nesting). | 109 tests passing | Qwen | ☑ 2026/11/10 ‡ |
+| M1.7c | `vram` `read_file` reads only ordinary files (symlinks followed) of at most 64 bytes, found by reading (sysfs reports 4096 for every file), anything else counts as missing (an oversized vendor file means amd); four `vram` tests on a temporary tree built at run time (64/65 bytes, pipe, link to /dev/zero, oversized vendor, 1 MB nvidia-smi lines); two `log_tokens` and two `timing` tests (1 MB lines, huge numbers, 16 MiB inputs). | 117 tests passing | Qwen | ☑ 2026/11/10 ¶ |
 
 **Notes**
-1. Every gate below committed and pushed; 117 tests. Milestone review: `docs/milestones/M1-review.md` (held 2026-11-08, before the M1.7 hardening gates; outcome appended).
-2. 103 tests.
-3. 109 tests.
-4. 117 tests.
+
+\* Every gate below committed and pushed; 117 tests. Milestone review: `docs/milestones/M1-review.md` (held 2026-11-08, before the M1.7 hardening gates; outcome appended).
+
+† 103 tests.
+
+‡ 109 tests.
+
+¶ 117 tests.
 
 ## M2: Editor
 **Status**: ☐
 **Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M2.9) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that. **The talk for the M2 window was held 2026-11-10**; its outcome is ARCHITECTURE.md section 7.10 and the HANDOFF.md decision log. The right-hand stack and sidebar (M3) and the ctxmon cards (M2.9) get their own talks.
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
-| M2.0 | Two spikes. (a) GtkSourceView with a 50 MB file; measure open time, scrolling, memory. (b) Look spike (Adam, 2026-11-10): one bare window with a menu bar, a notebook with an editor, a status bar and the classic stylesheet in a light and a dark palette (ARCHITECTURE.md 7.10); it also checks how GTK 4.14 reports the system dark mode. If the CSS fights GTK, fall back to the lighter touch (grey, flat buttons, tight spacing) | Numbers recorded in HANDOFF.md; Adam judges the look by eye before M2.1 starts | Orchestrator plans, Qwen codes, Adam measures and looks | ☑ 2026/11/10 (1) |
+| M2.0 | Two spikes. (a) GtkSourceView with a 50 MB file; measure open time, scrolling, memory. (b) Look spike (Adam, 2026-11-10): one bare window with a menu bar, a notebook with an editor, a status bar and the classic stylesheet in a light and a dark palette (ARCHITECTURE.md 7.10); it also checks how GTK 4.14 reports the system dark mode. If the CSS fights GTK, fall back to the lighter touch (grey, flat buttons, tight spacing) | Numbers recorded in HANDOFF.md; Adam judges the look by eye before M2.1 starts | Orchestrator plans, Qwen codes, Adam measures and looks | ☑ 2026/11/10 \* |
 | M2.1 | Main window: menu bar (File, Edit, View, Help at first), no toolbar (Adam, 2026-11-10), status bar with the Line/Column, INS, Language and Tab Width panels; every command is a `GAction` shared by menu and shortcuts; document tabs (fixed width of 18 characters, ellipsis, tooltip with the path, close button at the tab's right edge (a bold `×` in a raised bevelled square of about 16 px), unsaved marker, middle-click close, drag to reorder, arrows and wheel when they overflow); untitled document at start (lowest free number); closing an edited tab asks Close Without Saving / Cancel (Save joins at M2.2), quitting with edited documents asks the same way; closing the active tab selects its right neighbour; closing the last document leaves a blank window with every document command greyed out (ARCHITECTURE.md 7.10) | Opens and closes tabs; Adam checks the look, including the fused selected tab and the sunken editor well (ARCHITECTURE.md 7.10; light palette only; dark and Follow system arrive with M2.5, Adam 2026-11-10) | Qwen (split as needed: window and actions, then tabs) | ☐ |
 | M2.2 | Open and save, encodings, line endings; clickable Encoding and Line Ending status panels; large files per the M2.0a numbers: load without a language and set it after the load, guards for very long lines and for word wrap on large files (options discussed with Adam before the prompt), save time of a 50 MB file measured, load progress redrawn only when the percentage changes, conversion tests with a multi-byte character and a CR LF pair split across two read blocks, saving flushes explicitly and returns the error; the close and quit dialogs gain their Save button | Round trip tests in core for the conversions | Qwen | ☐ |
 | M2.3 | Search, replace (regex), go to line; the Search menu | Manual check plus core tests for the matcher | Qwen | ☐ |
@@ -77,7 +82,8 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M2.11 | Remove all Python (Adam, 2026-11-07): convert the oracle's expected JSON into inline C++ case tables in the ctxmon tests (the fixture `.log` files stay); delete `ctxmon_gtk.py` in `reference/ctxmon/`, `tools/ctxmon_oracle.py` and `expected/` in `tests/ctxmon/fixtures/`; tests no longer link json-glib unless another test needs it; `SourceCheck.Repo` fails on any tracked `.py` file | No `.py` file in `git ls-files`; same test count, all passing | Qwen | ☐ |
 
 **Notes**
-1. 117 tests; results in ARCHITECTURE.md 7.1 and 7.10.
+
+\* 117 tests; results in ARCHITECTURE.md 7.1 and 7.10.
 
 ## M3: Directory sidebar (right-hand side)
 **Status**: ☐
