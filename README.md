@@ -17,7 +17,7 @@
 > saved yet (next, M2.2). The CTXMon window arrives later in M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
-**Progress**: `██████░░░░░░░░░░░░░░` 32% (25 of 78 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
+**Progress**: `██████░░░░░░░░░░░░░░` 33% (26 of 78 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
 
 <p align="center">
   <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
@@ -63,11 +63,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions); next the application icons (M2.1c), then opening and saving files (M2.2), Help → Index (M2.2b) and crash recovery (M2.2c) |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); next opening and saving files (M2.2), Help → Index (M2.2b) and crash recovery (M2.2c) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. Next: M2.1c, the application icons, then M2.2, open and save. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. M2.1c done: the application icon, rendered from the SVG masters at every build and compiled in, shown in About and by the desktop; 132 tests. Next: M2.2, open and save. |
 | Releases | None |
 
 ---

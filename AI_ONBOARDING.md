@@ -84,6 +84,7 @@ Component map: `src/core` (UI-free logic), `src/agent` (providers, loop, tools, 
 *   **Trap (secrets)**: API keys must never reach logs, JSON files, error messages or the request log.
 *   **Trap (encodings)**: Never guess an encoding silently; state it. Detect line endings and preserve them.
 *   **Trap (paths)**: Linux paths are case-sensitive and may not be valid UTF-8; use the path APIs.
+*   **Trap (icons in resources)**: GTK 4 looks for an application's own icons under `<resource base path>/icons/<n>x<n>/apps/` (no theme folder such as `hicolor/` in between); GtkApplication adds that path itself (M2.1c; the first plan had `hicolor/` in it).
 
 ## 6. Hand-off Protocol (Orchestrator continuity)
 Orchestrator chats end (context limits, new day, model switch). HANDOFF.md is the single source of truth for "where are we". It lives in the claude.ai Project (so every new chat in the Project sees it) and in the repo for history.
