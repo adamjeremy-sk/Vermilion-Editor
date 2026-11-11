@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) */
 /* Classic structure: bevels as stacked inset shadows, tight spacing, square corners, no motion. */
-/* Every rule is scoped to window.vm-main, so dialogs and other windows keep the desktop theme. */
+/* Rules are scoped to window.vm-main, so dialogs and other windows keep the desktop theme; the one
+   exception is the selection in Help → About, at the end. */
 
 window.vm-main {
     background-color: @vm_chassis;
@@ -213,4 +214,11 @@ window.vm-main button.vm-status-panel:hover {
 
 window.vm-main button.vm-status-panel:active {
     padding: 2px 5px 0 7px;
+}
+
+/* Help → About: GTK gives the keyboard focus to the program name, a selectable label, when the
+   dialog opens, which selects all of it. Selected text there is drawn without a highlight. */
+window.aboutdialog label > selection {
+    background-color: transparent;
+    color: inherit;
 }

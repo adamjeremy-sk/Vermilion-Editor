@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="res/vedt/Vermilion%20Editor%20Icon.svg" width="160" alt="Vermilion Editor icon">
+  <img src="res/vedt/vermilion-icon.svg" width="160" alt="Vermilion Editor icon">
 </p>
 
 <h1 align="center">Vermilion Editor</h1>

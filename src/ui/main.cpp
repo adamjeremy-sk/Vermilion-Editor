@@ -25,6 +25,8 @@ void on_activate(GtkApplication* app, AppState& state) {
         return;
     }
     vermilion::ui::install_classic_style();
+    // The icon is named after the application ID; GTK picks the size (badge in the title bar).
+    gtk_window_set_default_icon_name(g_application_get_application_id(G_APPLICATION(app)));
     vermilion::ui::MainWindow::install_menus_and_shortcuts(app);
     state.window = std::make_unique<vermilion::ui::MainWindow>(app);
     // The C++ side of the window goes when GTK destroys the window.

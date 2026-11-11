@@ -174,11 +174,14 @@ void MainWindow::previous_tab() {
 }
 
 void MainWindow::about() {
-    gtk_show_about_dialog(window_, "program-name", "Vermilion Editor", "version",
-                          vermilion::version(), "comments", "A native Linux text and code editor.",
-                          "copyright", "Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)",
-                          "license-type", GTK_LICENSE_GPL_3_0, "website",
-                          "https://github.com/adamjeremy-sk/Vermilion-Editor", nullptr);
+    // The icon is named after the application ID (borrowed strings).
+    GtkApplication* app = gtk_window_get_application(window_);
+    const char* icon = g_application_get_application_id(G_APPLICATION(app));
+    gtk_show_about_dialog(
+        window_, "program-name", "Vermilion Editor", "logo-icon-name", icon, "version",
+        vermilion::version(), "comments", "A native Linux text and code editor.", "copyright",
+        "Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)", "license-type", GTK_LICENSE_GPL_3_0,
+        "website", "https://github.com/adamjeremy-sk/Vermilion-Editor", nullptr);
 }
 
 void MainWindow::request_close(DocumentId id) {
