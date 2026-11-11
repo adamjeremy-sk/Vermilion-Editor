@@ -5,6 +5,10 @@
 <h1 align="center">Vermilion Editor</h1>
 
 <p align="center">
+  <a href="https://github.com/adamjeremy-sk/Vermilion-Editor/actions/workflows/ci.yml"><img src="https://github.com/adamjeremy-sk/Vermilion-Editor/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+</p>
+
+<p align="center">
   A native Linux code editor with a built-in AI agent, build and debug support, and a live model monitor.<br>
   C++17 &middot; GTK 4 &middot; GtkSourceView 5 &middot; GPL-3.0-or-later
 </p>
@@ -17,7 +21,7 @@
 > saved yet (next, M2.2). The CTXMon window arrives later in M2. 132 tests, all passing.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
-**Progress**: `██████░░░░░░░░░░░░░░` 33% (26 of 78 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
+**Progress**: `██████░░░░░░░░░░░░░░` 34% (27 of 79 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
 
 <p align="center">
   <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
@@ -67,7 +71,7 @@ Principles:
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. M2.1c done: the application icon, rendered from the SVG masters at every build and compiled in, shown in About and by the desktop; 132 tests. Next: M2.2, open and save. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. M2.1c done: the application icon, rendered from the SVG masters at every build and compiled in, shown in About and by the desktop; 132 tests. M2.1d done: continuous integration on GitHub Actions (every push and pull request to `main` is configured, built and tested on a clean Ubuntu 24.04); 132 tests. Next: M2.2, open and save. |
 | Releases | None |
 
 ---
@@ -274,6 +278,9 @@ The test run includes two repository checks: `SourceCheck.Repo` (`tools/check_so
 and size of every source file) and `Format.Check` (`tools/check_format.sh`: `clang-format --dry-run --Werror` on every `.cpp`
 and `.h` file; reported as skipped, not failed, when clang-format is not installed).
 
+GitHub Actions runs the same steps on a clean Ubuntu 24.04 for every push and pull request to `main`
+(`.github/workflows/ci.yml`, the CI badge at the top).
+
 The project is developed in CLion; opening the folder picks up `CMakeLists.txt`. `build/`, `cmake-build-*/`, `.idea/` and
 `evidence/` (command output saved for audits) are ignored by git. There is nothing to install and no release yet.
 
@@ -296,6 +303,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `src/ui/` | The GTK application, and `gtkx/`, a small helper layer (GObject reference pointer, signal connection by lambda, string conversion). |
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M2.11). |
+| `.github/workflows/` | `ci.yml`: the continuous-integration run on GitHub Actions (configure, build, full test run on Ubuntu 24.04). |
 | `res/vedt/` | Vermilion's own artwork as SVG masters: application icon, small icon, logo (the build renders the icons to PNG). |
 | `res/github/` | Images used by this README (screenshots). |
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M2.11) and its logo (`ctxmon.svg`). Not built. |
