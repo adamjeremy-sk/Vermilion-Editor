@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) -->
+<!-- Resources compiled into the vermilion executable: the classic stylesheet and the menu bar. -->
+<gresources>
+  <gresource prefix="/io/github/adamjeremy_sk/Vermilion">
+    <file>classic_light.css</file>
+    <file>classic_structure.css</file>
+    <file>menus.ui</file>
+  </gresource>
+</gresources>

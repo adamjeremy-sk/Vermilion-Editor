@@ -1,4 +1,4 @@
-add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp)
+add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp)
 target_link_libraries(vermilion_tests PRIVATE
     GTest::gtest_main
     vermilion_core
@@ -13,6 +13,13 @@ target_link_libraries(vermilion_gtkx_tests PRIVATE
     vermilion_gtkx
     vermilion_warnings)
 gtest_discover_tests(vermilion_gtkx_tests)
+
+add_executable(vermilion_ui_tests ui_resources_test.cpp)
+target_link_libraries(vermilion_ui_tests PRIVATE
+    GTest::gtest_main
+    vermilion_resources
+    vermilion_warnings)
+gtest_discover_tests(vermilion_ui_tests)
 add_test(NAME SourceCheck.Repo COMMAND ${CMAKE_SOURCE_DIR}/tools/check_sources.sh)
 add_test(NAME Format.Check COMMAND ${CMAKE_SOURCE_DIR}/tools/check_format.sh)
 set_tests_properties(Format.Check PROPERTIES SKIP_RETURN_CODE 77)

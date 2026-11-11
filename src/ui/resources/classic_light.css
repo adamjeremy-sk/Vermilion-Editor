@@ -1,8 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) */
-/* Throwaway spike: light palette of the classic stylesheet (chassis #CECECE). */
+/* Light palette of the classic stylesheet (chassis #CECECE); the dark palette arrives at M2.5. */
 
 @define-color vm_chassis #cecece;
+@define-color vm_tab_inactive #c4c4c4;
 @define-color vm_text #000000;
 @define-color vm_disabled_text #808080;
 @define-color vm_highlight #ffffff;

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) */
-/* Throwaway spike: classic structure (bevels, tight spacing, square corners, no transitions). */
-/* Every rule is scoped to window.vm-main, so dialogs and other windows keep the base theme. */
+/* Classic structure: bevels as stacked inset shadows, tight spacing, square corners, no motion. */
+/* Every rule is scoped to window.vm-main, so dialogs and other windows keep the desktop theme. */
 
 window.vm-main {
     background-color: @vm_chassis;
@@ -64,7 +64,33 @@ window.vm-main menubar > item:selected {
     color: @vm_select_text;
 }
 
-/* Notebook: raised tabs, the selected one taller; the page sits in a raised frame. */
+/* Pop-up menus keep the desktop theme except text colours, the highlight and the shortcut gap. */
+window.vm-main popover.menu modelbutton,
+window.vm-main popover.menu modelbutton accelerator {
+    color: @vm_text;
+}
+
+window.vm-main popover.menu modelbutton:hover {
+    background-color: @vm_select_bg;
+}
+
+window.vm-main popover.menu modelbutton:hover,
+window.vm-main popover.menu modelbutton:hover accelerator {
+    color: @vm_select_text;
+}
+
+window.vm-main popover.menu modelbutton:disabled,
+window.vm-main popover.menu modelbutton:disabled accelerator {
+    color: @vm_disabled_text;
+}
+
+window.vm-main popover.menu modelbutton accelerator {
+    margin-left: 12px;
+}
+
+/* Notebook, Windows 2000 tab control: the header's bottom line is the page frame's top edge.
+   Unselected tabs sit lower and darker on that line; the selected tab is taller and covers it,
+   so it is fused into its page. */
 window.vm-main notebook {
     background-color: @vm_chassis;
     border: none;
@@ -74,53 +100,73 @@ window.vm-main notebook > header {
     background-color: @vm_chassis;
     background-image: none;
     border: none;
-    box-shadow: none;
     padding: 2px 2px 0 2px;
+    box-shadow: inset 0 -1px @vm_highlight;
+}
+
+window.vm-main notebook > header > tabs {
+    margin: 0;
+    padding: 0;
 }
 
 window.vm-main notebook > header > tabs > tab {
-    background-color: @vm_chassis;
+    background-color: @vm_tab_inactive;
     background-image: none;
     color: @vm_text;
     border: none;
     border-radius: 0;
     min-height: 0;
-    padding: 2px 6px;
+    min-width: 0;
+    padding: 1px 3px 1px 6px;
     margin: 2px 0 0 0;
-    box-shadow: inset 1px 1px @vm_highlight, inset -1px 0 @vm_dark_shadow,
-        inset -2px 0 @vm_shadow;
+    box-shadow: inset 0 -1px @vm_highlight, inset 1px 1px @vm_highlight,
+        inset -1px 0 @vm_dark_shadow, inset -2px 0 @vm_shadow;
 }
 
 window.vm-main notebook > header > tabs > tab:checked {
+    background-color: @vm_chassis;
     margin-top: 0;
-    padding-top: 4px;
+    padding-top: 3px;
+    box-shadow: inset 1px 1px @vm_highlight, inset -1px 0 @vm_dark_shadow,
+        inset -2px 0 @vm_shadow;
 }
 
 window.vm-main notebook > stack {
     background-color: @vm_chassis;
     padding: 2px;
-    box-shadow: inset -1px -1px @vm_dark_shadow, inset 1px 1px @vm_highlight,
+    box-shadow: inset 1px 0 @vm_highlight, inset -1px -1px @vm_dark_shadow,
         inset -2px -2px @vm_shadow;
 }
 
+/* Tab close button: a bold multiplication sign in a small raised bevelled square. */
 window.vm-main button.vm-tab-close {
-    min-width: 0;
-    min-height: 0;
+    min-width: 16px;
+    min-height: 16px;
     margin: 0 0 0 4px;
-    padding: 0 3px;
-    box-shadow: none;
-}
-
-window.vm-main button.vm-tab-close:hover {
-    box-shadow: inset -1px -1px @vm_shadow, inset 1px 1px @vm_highlight;
+    padding: 0;
+    font-weight: bold;
+    box-shadow: inset -1px -1px @vm_dark_shadow, inset 1px 1px @vm_highlight,
+        inset -2px -2px @vm_shadow, inset 2px 2px @vm_light;
 }
 
 window.vm-main button.vm-tab-close:active {
-    padding: 1px 2px 0 4px;
-    box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight;
+    padding: 1px 0 0 1px;
+    box-shadow: inset 1px 1px @vm_dark_shadow, inset -1px -1px @vm_highlight,
+        inset 2px 2px @vm_shadow, inset -2px -2px @vm_light;
 }
 
-/* Entries: white field in a two-pixel sunken bevel. */
+/* Editor well: the text area sits in a two-pixel sunken bevel, like an entry. */
+window.vm-main scrolledwindow {
+    border: none;
+}
+
+window.vm-main scrolledwindow.vm-editor-well {
+    padding: 2px;
+    box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight,
+        inset 2px 2px @vm_dark_shadow, inset -2px -2px @vm_light;
+}
+
+/* Entries (find bar and dialogs in the window, from M2.3): white field in a sunken bevel. */
 window.vm-main entry {
     background-color: @vm_field_bg;
     background-image: none;
@@ -138,7 +184,7 @@ window.vm-main text > selection {
     color: @vm_select_text;
 }
 
-/* Paned divider: a plain strip of chassis colour. */
+/* Paned divider (side panels, from M3): a plain strip of chassis colour. */
 window.vm-main paned > separator {
     min-width: 4px;
     min-height: 4px;
@@ -148,11 +194,7 @@ window.vm-main paned > separator {
     box-shadow: none;
 }
 
-window.vm-main scrolledwindow {
-    border: none;
-}
-
-/* Status bar: thin sunken panels; the clickable ones are flat buttons in the same frame. */
+/* Status bar: thin sunken panels; clickable panels (from M2.2) are flat buttons in that frame. */
 window.vm-main .vm-statusbar {
     padding: 2px;
     box-shadow: inset 0 1px @vm_highlight;
