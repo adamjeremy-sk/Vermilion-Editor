@@ -12,8 +12,9 @@
 > **Status: pre-alpha. Not usable yet.**
 > Vermilion Editor is being written from scratch. Milestones M0 (foundation) and M1 (the CTXMon monitor logic) are done:
 > log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory readers are ported,
-> hardened against hostile input and tested, with 117 tests. M2 (the editor window and CTXMon) has started: two throwaway
-> spikes measured large-file loading and tried the classic look shown below. Editing and the CTXMon window arrive with M2.
+> hardened against hostile input and tested, with 117 tests. M2 (the editor window and CTXMon) is under way: the main window
+> exists (menus, fixed-width tabs, status bar, the classic look below) and text can be edited, but files cannot be opened or
+> saved yet (next, M2.2). The CTXMon window arrives later in M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 <p align="center">
@@ -60,11 +61,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 started: large-file and look spikes done (M2.0); the main window is next (M2.1) |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions); opening and saving files next (M2.2) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes in `src/spikes/` (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted at M2.1. Next: M2.1, the main window. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. Next: M2.2, open and save. |
 | Releases | None |
 
 ---
@@ -281,6 +282,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
 | `res/github/` | Images used by this README (screenshots). |
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M2.11) and its logo (`ctxmon.svg`). Not built. |
+| `docs/manual/` | The user manual, one short topic per file ([index](docs/manual/index.md)). |
 | `docs/roadmap.md` | The milestone and gate plan. |
 | `docs/milestones/` | Milestone reviews (what was done, what was learned, what comes next). |
 | `docs/requirements/` | Behaviour specifications, for example the directory sidebar. |
