@@ -104,6 +104,17 @@ Update it (and write it back to the Project) at each of these moments, without b
 - the conversation is getting long (risk of context loss).
 **End of the development day (Adam, 2026-11-07):** when Adam says "Handoff to tomorrow's session", the Orchestrator brings README.md up to date with everything changed that day (the README is not touched after each gate), then updates HANDOFF.md, mirrors the changed docs to the Project and gives Adam one docs commit and the push. Documentation sweeps (end of task, end of milestone) are always done by the Orchestrator, never by a Qwen gate. **Progress bar (Adam, 2026-11-11):** every gate commit's docs sweep ticks the roadmap's Done column and updates the progress line under the roadmap's header and its copy under the README's status banner (rule in the roadmap header). **Manual (Adam, 2026-11-11):** every gate that adds a user-visible feature, shortcut, menu item or command-line flag updates the user manual (`docs/manual/`, one short topic per file, listed in `docs/manual/index.md`) in its docs sweep, before the gate commit; the manual describes only what exists.
 
+**README checklist (Adam, 2026-11-11).** Every README sweep (end of day, end of milestone) goes through each item below, because a figure fixed in one place stays stale in another (the banner said 117 tests after M2.1c while the Status table said 132):
+1. Status banner (top quote): milestones done, what works now, the next gate, and the current test count (one current count, at the end).
+2. Progress line under the banner: identical to the roadmap header's.
+3. Status table: the v0.1 (or current version) row names the done gates and the next ones; the Code row gains one sentence per finished gate with that gate's test count, and ends with "Next: …".
+4. The window: the screenshot and its caption still match what the window looks like.
+5. Planned features: anything now built is described as built (or removed from "Planned"); nothing planned reads as done.
+6. Building: new packages, build tools and `ctest` checks.
+7. Configuration and data: new files and paths.
+8. Repository layout: new directories and tools.
+9. Final check: `grep -nE "[0-9]+ tests" README.md` and `grep -n "Next" README.md`; every current-state count equals the latest test run, every "next" names the same gate as HANDOFF.md (counts inside a past gate's sentence in the Code row are history and stay).
+
 Rules: overwrite §1 Current State entirely; append one dated line per decision to §2; edit §3 Backlog; prepend a §4 Session Log entry and keep only the 10 newest. Record the last issued prompt verbatim in §1 when a task is mid-gate — a new instance cannot recover it otherwise.
 
 **Writing to Adam's computer (2026-11-07):** a file built in the cloud workspace and sent with `device_commit_files` gets a staging name never used before in the session (a reused name once delivered a stale HANDOFF.md, committed in `b97b1ac`). After every such write, grep the file on the computer for content that only the new version has, before telling Adam to commit. Small edits are better made on the computer directly with `device_bash`.

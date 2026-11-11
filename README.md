@@ -12,9 +12,9 @@
 > **Status: pre-alpha. Not usable yet.**
 > Vermilion Editor is being written from scratch. Milestones M0 (foundation) and M1 (the CTXMon monitor logic) are done:
 > log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory readers are ported,
-> hardened against hostile input and tested, with 117 tests. M2 (the editor window and CTXMon) is under way: the main window
+> hardened against hostile input and tested. M2 (the editor window and CTXMon) is under way: the main window
 > exists (menus, fixed-width tabs, status bar, the classic look below) and text can be edited, but files cannot be opened or
-> saved yet (next, M2.2). The CTXMon window arrives later in M2.
+> saved yet (next, M2.2). The CTXMon window arrives later in M2. 132 tests, all passing.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 **Progress**: `██████░░░░░░░░░░░░░░` 33% (26 of 78 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
