@@ -17,6 +17,8 @@
 > saved yet (next, M2.2). The CTXMon window arrives later in M2.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
+**Progress**: `██████░░░░░░░░░░░░░░` 32% (25 of 78 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
+
 <p align="center">
   <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
   <br><em>The classic look as tried in the M2.0b look spike (XFCE, Greybird). A test window, not the editor yet.</em>
@@ -240,7 +242,7 @@ Reference system: Ubuntu 24.04. Install the development packages:
 
 ```bash
 sudo apt install build-essential cmake pkg-config libgtk-4-dev libgtksourceview-5-dev libjson-glib-dev \
-  libsoup-3.0-dev libsecret-1-dev libvte-2.91-gtk4-dev libgtest-dev clang-format clang-tidy
+  libsoup-3.0-dev libsecret-1-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format clang-tidy
 ```
 
 Then:
