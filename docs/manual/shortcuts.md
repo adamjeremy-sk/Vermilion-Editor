@@ -4,6 +4,9 @@
 | Keys | Command |
 |---|---|
 | Ctrl+N | New File |
+| Ctrl+O | Open… |
+| Ctrl+S | Save |
+| Ctrl+Shift+S | Save As… |
 | Ctrl+W | Close Tab |
 | Ctrl+Q | Quit |
 | Ctrl+Z | Undo |

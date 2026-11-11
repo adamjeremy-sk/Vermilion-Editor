@@ -17,11 +17,11 @@
 > Vermilion Editor is being written from scratch. Milestones M0 (foundation) and M1 (the CTXMon monitor logic) are done:
 > log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory readers are ported,
 > hardened against hostile input and tested. M2 (the editor window and CTXMon) is under way: the main window
-> exists (menus, fixed-width tabs, status bar, the classic look below) and text can be edited, but files cannot be opened or
-> saved yet (next, M2.2). The CTXMon window arrives later in M2. 132 tests, all passing.
+> exists (menus, fixed-width tabs, status bar, the classic look below), and files can be opened and saved (encodings, line
+> endings, close and quit questions: M2.2). Search, settings and the CTXMon window come next in M2. 205 tests, all passing.
 > Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
-**Progress**: `██████░░░░░░░░░░░░░░` 34% (27 of 79 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
+**Progress**: `███████░░░░░░░░░░░░░` 35% (28 of 79 gates done; M8 counts as one gate) ([roadmap](docs/roadmap.md))
 
 <p align="center">
   <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
@@ -67,11 +67,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); next opening and saving files (M2.2), Help → Index (M2.2b) and crash recovery (M2.2c) |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); next Help → Index (M2.2b) and crash recovery (M2.2c) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. M2.1c done: the application icon, rendered from the SVG masters at every build and compiled in, shown in About and by the desktop; 132 tests. M2.1d done: continuous integration on GitHub Actions (every push and pull request to `main` is configured, built and tested on a clean Ubuntu 24.04); 132 tests. Next: M2.2, open and save. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. M2.1c done: the application icon, rendered from the SVG masters at every build and compiled in, shown in About and by the desktop; 132 tests. M2.1d done: continuous integration on GitHub Actions (every push and pull request to `main` is configured, built and tested on a clean Ubuntu 24.04); 132 tests. M2.2 done: opening and saving files. A core scanner reads each file once before it loads and decides the encoding (UTF-8, UTF-16 with its mark, Windows-1252 or Latin-1), the byte-order mark, the line endings, and whether it is binary or has a line over 350,000 characters (which asks first); saving keeps the encoding, mark and line endings, and Save, Save As, the Encoding and Line Ending menus and the close and quit questions work; a 38.9 MB file saves in 6.5 s; 205 tests (the first gate where the coding agent wrote implementations from written specifications). Next: M2.2b, Help → Index. |
 | Releases | None |
 
 ---
@@ -101,13 +101,13 @@ keyboard first, and every command is a menu item that shows its shortcut.
 
 ### Editor (v0.1)
 - Tabs; open and save; line endings detected and preserved (LF for new files) and changed from the Line Ending button in the
-  status bar.
+  status bar. **Built (M2.2).**
 - Encodings: UTF-8 by default; a file that is not UTF-8 opens as UTF-16 (when it starts with its mark), Windows-1252 or
   Latin-1, in that order, and the status bar always says so. The Encoding button keeps two actions apart: "Reopen as…"
-  reads the file again in another encoding, "Save as…" converts it at the next save.
+  reads the file again in another encoding, "Save as…" converts it at the next save. **Built (M2.2).**
 - Safe saving: the text is written to a new file beside the original, flushed to disk and only then swapped in, so a power
   cut or a full disk never leaves a half-written file. Closing an edited tab asks Save, Close Without Saving or Cancel;
-  quitting asks about each edited document in turn.
+  quitting asks about each edited document in turn. **Built (M2.2).**
 - Crash recovery: edited documents, untitled ones included, are copied to recovery files shortly after you stop typing; if
   Vermilion did not close properly, the next start offers the saved file or the recovered text, with the time of each.
 - Syntax highlighting, line numbers and colour schemes from GtkSourceView.
@@ -120,9 +120,9 @@ keyboard first, and every command is a menu item that shows its shortcut.
 - Fixed-width document tabs with the close button at the right edge, an unsaved marker and drag to reorder; Vermilion never
   closes a tab on its own.
 - Large files load in the background with syntax colouring switched on after the load: a 50 MB C++ file opens in about
-  4 seconds instead of 87 (measured in the M2.0a spike). A file with an extremely long line (which can freeze any GTK
-  text view) or with zero bytes (a binary file) asks "Open anyway / Cancel" first. Word wrap is always off when a file
-  opens and is switched on per document.
+  4 seconds instead of 87 (measured in the M2.0a spike). A file with an extremely long line (over 350,000 characters; it
+  can freeze any GTK text view) or with NUL bytes (a binary file) asks "Open anyway / Cancel" first. Word wrap is always
+  off when a file opens and is switched on per document. **Built (M2.2).**
 - Feather mode: `vermilion --feather` starts the same program as a plain text editor for quick edits (File, Edit, Search,
   View and Help menus only), with its own application ID.
 - Search and replace with regular expressions, go to line.

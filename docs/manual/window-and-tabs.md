@@ -18,15 +18,14 @@ the menu bar. Help → About shows the program's icon, version and licence.
 - Vermilion never closes a tab on its own.
 
 ## Closing with changes
-Saving files arrives in a later version. Until then:
-- Closing a tab with changes asks whether to close it without saving. Close Without Saving discards the changes; Cancel
-  (also Escape or Enter) keeps the tab.
-- Quitting (File → Quit, Ctrl+Q, or the window's close button) with changed documents asks once, for all of them.
+Closing a tab or quitting with changed documents asks Save, Close Without Saving or Cancel; see
+[Opening and saving files](open-and-save.md).
 
 When the last tab closes, the window stays open and empty, and the commands that need a document are greyed out until you
 open a new one.
 
 ## The status bar
-On the left, messages. On the right, for the active document: the language (Plain Text for now), the tab width (4), the
-line and column of the cursor (a tab counts as the columns it covers), and INS or OVR (the Insert key switches between
-inserting and overwriting).
+On the left, messages. On the right, for the active document: the language, the tab width (4), the encoding and the line
+ending (click either one for its menu; see [Encodings and line endings](encodings-and-line-endings.md)), the line and
+column of the cursor (a tab counts as the columns it covers), and INS or OVR (the Insert key switches between inserting and
+overwriting).

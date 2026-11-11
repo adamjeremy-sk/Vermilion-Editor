@@ -4,5 +4,7 @@ inside the program, under Help → Index.
 
 ## Topics
 - [The window and tabs](window-and-tabs.md)
+- [Opening and saving files](open-and-save.md)
+- [Encodings and line endings](encodings-and-line-endings.md)
 - [Edit commands](edit-commands.md)
 - [Keyboard and mouse shortcuts](shortcuts.md)
