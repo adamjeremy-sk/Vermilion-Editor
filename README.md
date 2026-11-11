@@ -63,11 +63,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions); opening and saving files next (M2.2) |
+| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions); next the application icons (M2.1c), then opening and saving files (M2.2), Help → Index (M2.2b) and crash recovery (M2.2c) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. Next: M2.2, open and save. |
+| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. Next: M2.1c, the application icons, then M2.2, open and save. |
 | Releases | None |
 
 ---
@@ -96,9 +96,19 @@ keyboard first, and every command is a menu item that shows its shortcut.
 ## Planned features
 
 ### Editor (v0.1)
-- Tabs; open and save; encodings (UTF-8 by default, others through GLib) and line endings detected and preserved (LF for new files).
+- Tabs; open and save; line endings detected and preserved (LF for new files) and changed from the Line Ending button in the
+  status bar.
+- Encodings: UTF-8 by default; a file that is not UTF-8 opens as UTF-16 (when it starts with its mark), Windows-1252 or
+  Latin-1, in that order, and the status bar always says so. The Encoding button keeps two actions apart: "Reopen as…"
+  reads the file again in another encoding, "Save as…" converts it at the next save.
+- Safe saving: the text is written to a new file beside the original, flushed to disk and only then swapped in, so a power
+  cut or a full disk never leaves a half-written file. Closing an edited tab asks Save, Close Without Saving or Cancel;
+  quitting asks about each edited document in turn.
+- Crash recovery: edited documents, untitled ones included, are copied to recovery files shortly after you stop typing; if
+  Vermilion did not close properly, the next start offers the saved file or the recovered text, with the time of each.
 - Syntax highlighting, line numbers and colour schemes from GtkSourceView.
-- A fixed classic Windows 2000 look: one stylesheet over the desktop's own GTK theme, system fonts, no icons, square bevelled
+- A fixed classic Windows 2000 look: one stylesheet over the desktop's own GTK theme, system fonts, no icons apart from the
+  application's own (a small badge in the title bar, the full icon in Alt+Tab and About), square bevelled
   controls; a light and a dark palette, with colour mode Light, Dark or Follow system (from M2.5).
 - Keyboard first: a menu bar and a gedit-style status bar (language, tab width, encoding, line ending, line and column,
   INS/OVR), no toolbar. Familiar shortcuts (Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+W, Ctrl+F, F3, Ctrl+H, Ctrl+G), and F5, F7 and
@@ -106,7 +116,9 @@ keyboard first, and every command is a menu item that shows its shortcut.
 - Fixed-width document tabs with the close button at the right edge, an unsaved marker and drag to reorder; Vermilion never
   closes a tab on its own.
 - Large files load in the background with syntax colouring switched on after the load: a 50 MB C++ file opens in about
-  4 seconds instead of 87 (measured in the M2.0a spike).
+  4 seconds instead of 87 (measured in the M2.0a spike). A file with an extremely long line (which can freeze any GTK
+  text view) or with zero bytes (a binary file) asks "Open anyway / Cancel" first. Word wrap is always off when a file
+  opens and is switched on per document.
 - Feather mode: `vermilion --feather` starts the same program as a plain text editor for quick edits (File, Edit, Search,
   View and Help menus only), with its own application ID.
 - Search and replace with regular expressions, go to line.
@@ -265,6 +277,9 @@ and `.h` file; reported as skipped, not failed, when clang-format is not install
 The project is developed in CLion; opening the folder picks up `CMakeLists.txt`. `build/`, `cmake-build-*/`, `.idea/` and
 `evidence/` (command output saved for audits) are ignored by git. There is nothing to install and no release yet.
 
+`librsvg2-bin` provides `rsvg-convert`, which the build uses to render the application icons from the SVGs in `res/vedt/`
+(from M2.1c); the program itself does not need it. CMake stops at configure with the package name if it is missing.
+
 Vermilion logs through GLib under the log domain `vermilion`, with secrets masked before anything is written. As in any GLib
 program, debug and info messages are hidden by default; run with `G_MESSAGES_DEBUG=vermilion` (or `all`) to see them.
 
@@ -281,7 +296,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `src/ui/` | The GTK application, and `gtkx/`, a small helper layer (GObject reference pointer, signal connection by lambda, string conversion). |
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M2.11). |
-| `res/vedt/` | Vermilion's own artwork: application icon, small icon, logo. |
+| `res/vedt/` | Vermilion's own artwork as SVG masters: application icon, small icon, logo (the build renders the icons to PNG). |
 | `res/github/` | Images used by this README (screenshots). |
 | `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M2.11) and its logo (`ctxmon.svg`). Not built. |
 | `docs/manual/` | The user manual, one short topic per file ([index](docs/manual/index.md)). |
