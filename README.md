@@ -100,8 +100,8 @@ keyboard first, and every command is a menu item that shows its shortcut.
 - Keyboard first: a menu bar and a gedit-style status bar (language, tab width, encoding, line ending, line and column,
   INS/OVR), no toolbar. Familiar shortcuts (Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+W, Ctrl+F, F3, Ctrl+H, Ctrl+G), and F5, F7 and
   F9 to F11 for building and debugging.
-- Fixed-width document tabs with the close button at the right edge, an unsaved marker and drag to reorder; a tab limit
-  (20 by default) closes the least recently used tab, never one with unsaved changes.
+- Fixed-width document tabs with the close button at the right edge, an unsaved marker and drag to reorder; Vermilion never
+  closes a tab on its own.
 - Large files load in the background with syntax colouring switched on after the load: a 50 MB C++ file opens in about
   4 seconds instead of 87 (measured in the M2.0a spike).
 - Feather mode: `vermilion --feather` starts the same program as a plain text editor for quick edits (File, Edit, Search,

@@ -7,3 +7,4 @@ Features that were decided against earlier are listed under "Dropped" in ARCHITE
 |---|---|---|
 | Vi / Vim key bindings (optional, switched on in settings) | 2026-11-10 | GtkSourceView 5 appears to provide a Vim input method (`GtkSourceVimIMContext`); to be confirmed against version 5.12 before any promise. |
 | Emacs key bindings (optional) | 2026-11-10 | No ready-made support in GtkSourceView or GTK 4; it would be our own key handling, so a larger job than Vim keys. |
+| Tab limit (optional): when more than N tabs are open (for example 20), the least recently used one closes, never one with unsaved changes, with a status bar message | 2026-11-10 | Planned for M2.6, dropped by Adam before M2.1: Vermilion does not close tabs on the user. It would need a recent-use counter in `DocumentList`. |
