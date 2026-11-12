@@ -79,6 +79,9 @@ void on_line_ending(GSimpleAction*, GVariant* parameter, gpointer data) {
 void on_about(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->about();
 }
+void on_help_index(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->show_help();
+}
 
 const GActionEntry kActions[] = {
     {"new-file", on_new_file, nullptr, nullptr, nullptr, {0, 0, 0}},
@@ -99,6 +102,7 @@ const GActionEntry kActions[] = {
     {"reopen-encoding", on_reopen_encoding, "s", nullptr, nullptr, {0, 0, 0}},
     {"save-encoding", on_save_encoding, "s", nullptr, nullptr, {0, 0, 0}},
     {"line-ending", on_line_ending, "s", nullptr, nullptr, {0, 0, 0}},
+    {"help-index", on_help_index, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"about", on_about, nullptr, nullptr, nullptr, {0, 0, 0}},
 };
 
@@ -122,6 +126,7 @@ const Shortcut kShortcuts[] = {
     {"win.select-all", {"<Control>a", nullptr, nullptr}},
     {"win.next-tab", {"<Control>Page_Down", nullptr, nullptr}},
     {"win.previous-tab", {"<Control>Page_Up", nullptr, nullptr}},
+    {"win.help-index", {"F1", nullptr, nullptr}},
 };
 
 } // namespace

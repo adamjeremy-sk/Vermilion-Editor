@@ -4,6 +4,7 @@
 
 #include "ui/main_window.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -192,6 +193,20 @@ void MainWindow::about() {
         vermilion::version(), "comments", "A native Linux text and code editor.", "copyright",
         "Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)", "license-type", GTK_LICENSE_GPL_3_0,
         "website", "https://github.com/adamjeremy-sk/Vermilion-Editor", nullptr);
+}
+
+// One help window at a time: a second Help > Index brings the open one forward. The window is
+// destroyed by GTK (its close button, or with this window); the C++ side goes with it.
+void MainWindow::show_help() {
+    if (help_) {
+        help_->present();
+        return;
+    }
+    GtkApplication* app = gtk_window_get_application(window_); // borrowed
+    help_ = std::make_unique<HelpWindow>(app, window_);
+    help_destroy_ = gtkx::connect<void(GtkWidget*)>(GTK_WIDGET(help_->window()), "destroy",
+                                                    [this](GtkWidget*) { help_.reset(); });
+    help_->present();
 }
 
 // Unsaved documents are asked about one by one (SaveController); when all are answered, the

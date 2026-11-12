@@ -6,6 +6,7 @@
 
 #include <gtk/gtk.h>
 
+#include <memory>
 #include <string>
 
 #include "core/document_list.h"
@@ -13,6 +14,7 @@
 #include "ui/file_opener.h"
 #include "ui/format_commands.h"
 #include "ui/gtkx/signal.h"
+#include "ui/help_window.h"
 #include "ui/save_controller.h"
 #include "ui/status_bar.h"
 
@@ -51,6 +53,7 @@ public:
     void save_with_encoding(const std::string& encoding_id);
     void set_line_ending(const std::string& line_ending_id);
     void about();
+    void show_help(); // Help > Index: opens the help window, or brings it forward
 
 private:
     bool on_close_request(); // true stops the window from closing
@@ -67,6 +70,8 @@ private:
     FormatCommands formats_; // after tabs_
     bool quit_confirmed_ = false;
     gtkx::SignalConnection close_request_;
+    std::unique_ptr<HelpWindow> help_; // created on first use, reset when its window is destroyed
+    gtkx::SignalConnection help_destroy_;
 };
 
 } // namespace vermilion::ui

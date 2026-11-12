@@ -10,6 +10,7 @@
 #include "ui/gtkx/signal.h"
 #include "ui/main_window.h"
 #include "ui/style.h"
+#include "vermilion_manual.h"
 #include "vermilion_resources.h"
 
 namespace {
@@ -39,6 +40,7 @@ void on_activate(GtkApplication* app, AppState& state) {
 
 int main(int argc, char** argv) {
     vermilion_register_resource();
+    vermilion_manual_register_resource();
     AppState state;
     vermilion::gtkx::ObjectPtr<GtkApplication> app =
         vermilion::gtkx::ObjectPtr<GtkApplication>::adopt(

@@ -56,13 +56,44 @@ add_custom_command(
             ${VERMILION_RESOURCE_DIR}/menus.ui
             ${VERMILION_ICON_PNGS}
     VERBATIM)
-add_library(vermilion_resources STATIC ${VERMILION_RESOURCE_CPP} ${VERMILION_RESOURCE_H})
+# The user manual (Adam, 2026-11-11): every docs/manual/*.md is compiled into the program as a
+# second resource, under /io/github/adamjeremy_sk/Vermilion/manual/, so a new topic needs no code
+# change. The file list is written at configure time; CONFIGURE_DEPENDS makes the build run CMake
+# again when a topic is added or removed. The tests read the same folder (VERMILION_MANUAL_DIR).
+file(GLOB VERMILION_MANUAL_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/docs/manual/*.md)
+list(SORT VERMILION_MANUAL_FILES)
+set(VERMILION_MANUAL_ENTRIES "")
+foreach(topic IN LISTS VERMILION_MANUAL_FILES)
+    get_filename_component(topic_name ${topic} NAME)
+    string(APPEND VERMILION_MANUAL_ENTRIES "    <file>${topic_name}</file>\n")
+endforeach()
+set(VERMILION_MANUAL_XML ${CMAKE_CURRENT_BINARY_DIR}/manual.gresource.xml)
+file(CONFIGURE OUTPUT ${VERMILION_MANUAL_XML} CONTENT [=[<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/adamjeremy_sk/Vermilion/manual">
+@VERMILION_MANUAL_ENTRIES@  </gresource>
+</gresources>
+]=] @ONLY)
+set(VERMILION_MANUAL_CPP ${CMAKE_CURRENT_BINARY_DIR}/vermilion_manual.cpp)
+set(VERMILION_MANUAL_H ${CMAKE_CURRENT_BINARY_DIR}/vermilion_manual.h)
+add_custom_command(
+    OUTPUT ${VERMILION_MANUAL_CPP} ${VERMILION_MANUAL_H}
+    COMMAND ${GLIB_COMPILE_RESOURCES} --sourcedir=${CMAKE_SOURCE_DIR}/docs/manual
+            --c-name=vermilion_manual --manual-register --generate-source
+            --target=${VERMILION_MANUAL_CPP} ${VERMILION_MANUAL_XML}
+    COMMAND ${GLIB_COMPILE_RESOURCES} --sourcedir=${CMAKE_SOURCE_DIR}/docs/manual
+            --c-name=vermilion_manual --manual-register --generate-header
+            --target=${VERMILION_MANUAL_H} ${VERMILION_MANUAL_XML}
+    DEPENDS ${VERMILION_MANUAL_XML} ${VERMILION_MANUAL_FILES}
+    VERBATIM)
+add_library(vermilion_resources STATIC ${VERMILION_RESOURCE_CPP} ${VERMILION_RESOURCE_H}
+                                      ${VERMILION_MANUAL_CPP} ${VERMILION_MANUAL_H})
 target_include_directories(vermilion_resources PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(vermilion_resources
     PUBLIC PkgConfig::GTK4
     PRIVATE vermilion_warnings vermilion_noexc)
 
-add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp)
+add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp)
 target_include_directories(vermilion PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(vermilion PRIVATE
     PkgConfig::GTK4

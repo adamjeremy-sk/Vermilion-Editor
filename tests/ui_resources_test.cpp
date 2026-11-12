@@ -56,12 +56,21 @@ TEST(UiResources, StructureHasClassicDetails) {
     EXPECT_NE(css.find("menubutton.vm-status-panel"), std::string::npos);
 }
 
+TEST(UiResources, HelpWindowHasItsRules) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-help scrolledwindow.vm-help-well"), std::string::npos);
+    EXPECT_NE(css.find("window.vm-help label.vm-help-h1"), std::string::npos);
+    EXPECT_NE(css.find("window.vm-help grid.vm-help-table"), std::string::npos);
+    EXPECT_NE(css.find("window.vm-help .vm-help-page label link"), std::string::npos);
+}
+
 TEST(UiResources, MenuBarUsesWindowActions) {
     std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
     EXPECT_NE(ui.find("<menu id=\"menubar\">"), std::string::npos);
     EXPECT_NE(ui.find("win.new-file"), std::string::npos);
     EXPECT_NE(ui.find("win.open"), std::string::npos);
     EXPECT_NE(ui.find("win.word-wrap"), std::string::npos);
+    EXPECT_NE(ui.find("win.help-index"), std::string::npos);
     EXPECT_NE(ui.find("win.save</attribute>"), std::string::npos);
     EXPECT_NE(ui.find("win.save-as</attribute>"), std::string::npos);
     EXPECT_NE(ui.find("<menu id=\"encoding-menu\">"), std::string::npos);

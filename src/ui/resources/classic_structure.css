@@ -237,3 +237,67 @@ window.aboutdialog label > selection {
     background-color: transparent;
     color: inherit;
 }
+
+/* Help > Index (M2.2b): the window also has the class vm-main, so its buttons and chassis come from
+   the rules above. The page sits in a white sunken well; headings are bold and larger, tables have
+   one-pixel cell borders (grid top and left edges, cell right and bottom edges), links are navy. */
+window.vm-help .vm-help-bar {
+    padding: 4px;
+}
+
+window.vm-help scrolledwindow.vm-help-well {
+    background-color: @vm_field_bg;
+    padding: 2px;
+    box-shadow: inset 1px 1px @vm_shadow, inset -1px -1px @vm_highlight,
+        inset 2px 2px @vm_dark_shadow, inset -2px -2px @vm_light;
+}
+
+window.vm-help .vm-help-page {
+    background-color: @vm_field_bg;
+    padding: 8px 14px;
+}
+
+window.vm-help .vm-help-page label {
+    color: @vm_field_text;
+}
+
+window.vm-help label.vm-help-h1 {
+    font-size: 150%;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+window.vm-help label.vm-help-h2 {
+    font-size: 125%;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+window.vm-help label.vm-help-h3 {
+    font-weight: bold;
+    margin-top: 6px;
+}
+
+window.vm-help box.vm-help-item {
+    margin-left: 10px;
+}
+
+window.vm-help grid.vm-help-table {
+    border-top: 1px solid @vm_shadow;
+    border-left: 1px solid @vm_shadow;
+}
+
+window.vm-help grid.vm-help-table > label {
+    border-right: 1px solid @vm_shadow;
+    border-bottom: 1px solid @vm_shadow;
+    padding: 2px 6px;
+}
+
+window.vm-help grid.vm-help-table > label.vm-help-th {
+    background-color: @vm_chassis;
+    font-weight: bold;
+}
+
+window.vm-help .vm-help-page label link {
+    color: @vm_select_bg;
+}
