@@ -3,7 +3,7 @@
 ## The window
 From top to bottom: the menu bar (File, Edit, View, Help), the document tabs with the editor, and the status bar. There is
 no toolbar: every command is in a menu, and the menu shows its shortcut. Hold Alt to see the underlined access letters in
-the menu bar. Help → About shows the program's icon, version and licence.
+the menu bar. Help → Index (F1) opens this manual; Help → About shows the program's icon, version and licence.
 
 ## Documents and tabs
 - Vermilion starts with one new document, "Untitled 1". File → New File (Ctrl+N) opens another. A new untitled document

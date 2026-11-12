@@ -20,6 +20,8 @@
 | Insert | Switch between inserting (INS) and overwriting (OVR) |
 | Alt | Show the access letters in the menu bar |
 | Escape | In a question: Cancel |
+| F1 | Help → Index: open the manual, or bring it forward |
+| Alt+Left | In the manual window: Back to the previous page |
 
 The editor's own keys (arrows, Home, End, Page Up, Page Down, Ctrl+Home, Ctrl+End, and Shift with any of them to select)
 work as in other GTK text editors.

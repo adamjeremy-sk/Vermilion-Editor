@@ -1,20 +1,22 @@
 # Roadmap: Vermilion Editor
 **Status**: rewritten 2026-11-05 for the greenfield plan; this file is the live roadmap (the old claude.ai Roadmap Doc is obsolete). Architecture is in ARCHITECTURE.md; the process is in AI_ONBOARDING.md and AGENTS.md. Gate rules: each gate is one step with evidence and an audit verdict; a gate that adds code also adds its tests; Adam builds, tests and commits; push at each gate end. Every milestone ends with a milestone review with Adam before the next one starts (AI_ONBOARDING.md section 2, item 7); its conclusions go to `docs/milestones/M<n>-review.md`.
 **Done column (Adam, 2026-11-10)**: ☐ not done; ☑ done, with the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes under that milestone's table; the marks restart in each milestone. Each milestone also has a Status line.
-**Progress bar (Adam, 2026-11-11)**: gates ticked ☑ out of all gate rows, with M8 counted as one gate; 20 cells, each 5%, rounded down. Updated with the Done column at every gate commit; the same line is in README.md.
+**Progress bar (Adam, 2026-11-11, weighted)**: every milestone has a fixed share of the 100%, set once below and split equally among that milestone's own gates, so a gate added to or split inside a milestone changes only that milestone's own fraction, never the total. Progress = the sum, over the milestones, of weight × gates ticked ☑ ÷ gates in the milestone; M9 counts as one gate. 20 cells, each 5%, rounded down. The weights are the Orchestrator's estimate of the effort, accepted by Adam; they change only when Adam decides. Updated with the Done column at every gate commit; the same line is in README.md.
 
-**Progress**: `███████░░░░░░░░░░░░░` 35% (28 of 79 gates done; M8 counts as one gate)
+**Weights**: M0 5 · M1 6 · M2 13 · M3 6 · M4 9 · M5 7 · M6 25 · M7 10 · M8 12 · M9 7 (sum 100).
+
+**Progress**: `███░░░░░░░░░░░░░░░░░` 17% (weighted: M0 and M1 done; M2 6 of 12)
 
 ## Versions
 | Version | Contents | Milestones |
 |---|---|---|
-| v0.1 | Editor, CTXMon (standalone `vermilion-ctxmon` and the CTXMon tab), right-hand directory sidebar, build and Output pane, Problems, terminal | M0 to M4 |
-| v0.2 | Agent core: providers (OpenAI-compatible), tools, permission presets, setup dialog, chat, archive, side-by-side diff, change sets, external-change handling | M5 |
-| v0.3 | Debugger (DAP) | M6 |
-| v0.4 | Cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M7 |
-| 1.0.0 | Packaging, documentation, notices (M8). Once the whole plan above is implemented and packaged, `1.0.0-beta.N` builds run as a beta for 8 weeks, then `1.0.0-stable` is released; from then on there are `-stable` and `-beta` branches and additional features are considered (`docs/ideas.md`). Development versions before that are `0.x`; the v0.1 to v0.4 labels above are milestone groups (Adam, 2026-11-10). | M8 |
-**Dogfooding markers (◆)**: the gates where Adam starts building Vermilion with Vermilion: DOGFOOD 1 at M4.3 (self-build; Adam's first one, set 2026-11-05), 2 at M4.6 (primary editor), 3 at M5.5 (built-in agent trial; proposed, Adam confirms or moves it).
-ctxmon logic (M1) is built early because it is self-contained: the Python original (`ctxmon_gtk.py` in `reference/ctxmon/`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent. From 2026-11-07 the port in `src/ctxmon/` is the source of truth and the Python original is frozen as the test oracle (Adam). ctxmon is finished during M2 (Adam, 2026-11-07): its I/O, cards and the standalone program; the CTXMon tab follows in M3, when the right-hand stack exists.
+| v0.1 | Editor, CTXMon (standalone `vermilion-ctxmon` and the CTXMon tab), right-hand directory sidebar, build and Output pane, Problems, terminal | M0 to M5 |
+| v0.2 | Agent core: providers (OpenAI-compatible), tools, permission presets, setup dialog, chat, archive, side-by-side diff, change sets, external-change handling | M6 |
+| v0.3 | Debugger (DAP) | M7 |
+| v0.4 | Cost display, Anthropic and Gemini adapters, project file, gate framework, MCP | M8 |
+| 1.0.0 | Packaging, documentation, notices (M9). Once the whole plan above is implemented and packaged, `1.0.0-beta.N` builds run as a beta for 8 weeks, then `1.0.0-stable` is released; from then on there are `-stable` and `-beta` branches and additional features are considered (`docs/ideas.md`). Development versions before that are `0.x`; the v0.1 to v0.4 labels above are milestone groups (Adam, 2026-11-10). | M9 |
+**Dogfooding markers (◆)**: the gates where Adam starts building Vermilion with Vermilion: DOGFOOD 1 at M4.3 (self-build; Adam's first one, set 2026-11-05), 2 at M4.5 (primary editor), 3 at M6.5 (built-in agent trial; proposed, Adam confirms or moves it).
+ctxmon logic (M1) is built early because it is self-contained: the Python original (`ctxmon_gtk.py` in `reference/ctxmon/`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, which makes it the best first job to prove the workflow with the local agent. From 2026-11-07 the port in `src/ctxmon/` is the source of truth and the Python original is frozen as the test oracle (Adam). ctxmon's UI is its own milestone, M5 (Adam, 2026-11-11), placed before the agent core: its settings, I/O, cards and terminal, the standalone program and the CTXMon tab (which needs the right-hand stack from M3).
 
 ## M0: Reset and foundation
 **Status**: ☑ 2026/11/07 \*
@@ -40,7 +42,7 @@ ctxmon logic (M1) is built early because it is self-contained: the Python origin
 
 ## M1: Model monitor logic (core, tests from the Python oracle)
 **Status**: ☑ 2026/11/10 \*
-Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no GTK; GLib, `GRegex` and json-glib allowed), tests in `tests/ctxmon/`. Functions take text, JSON strings or a directory root; no HTTP, threads or polling (those come in M2.7). Expected values come from the frozen Python original through the oracle script.
+Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no GTK; GLib, `GRegex` and json-glib allowed), tests in `tests/ctxmon/`. Functions take text, JSON strings or a directory root; no HTTP, threads or polling (those come in M5.2). Expected values come from the frozen Python original through the oracle script.
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
 | M1.0 | Scaffold `src/ctxmon/core` (library `vermilion_ctxmon_core`) and `tests/ctxmon` (executable `vermilion_ctxmon_tests`); `tools/ctxmon_oracle.py` runs the Python original and writes expected values as JSON to `expected/` in `tests/ctxmon/fixtures/`; first port `fmt_duration` as the smoke test. Each later gate adds its own fixtures (log excerpts in old and new llama.cpp wording, truncation, partial lines; captured `/slots` and `/props` JSON) and one oracle generator | Builds; oracle output committed; 69 tests pass | Qwen | ☑ 2026/11/07 |
@@ -67,7 +69,7 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 
 ## M2: Editor
 **Status**: ☐
-**Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M2.9) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that. **The talk for the M2 window was held 2026-11-10**; its outcome is ARCHITECTURE.md section 7.10 and the HANDOFF.md decision log. The right-hand stack and sidebar (M3) and the ctxmon cards (M2.9) get their own talks.
+**Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M5.3) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that. **The talk for the M2 window was held 2026-11-10**; its outcome is ARCHITECTURE.md section 7.10 and the HANDOFF.md decision log. The right-hand stack and sidebar (M3) and the ctxmon cards (M5.3) get their own talks.
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
 | M2.0 | Two spikes. (a) GtkSourceView with a 50 MB file; measure open time, scrolling, memory. (b) Look spike (Adam, 2026-11-10): one bare window with a menu bar, a notebook with an editor, a status bar and the classic stylesheet in a light and a dark palette (ARCHITECTURE.md 7.10); it also checks how GTK 4.14 reports the system dark mode. If the CSS fights GTK, fall back to the lighter touch (grey, flat buttons, tight spacing) | Numbers recorded in HANDOFF.md; Adam judges the look by eye before M2.1 starts | Orchestrator plans, Qwen codes, Adam measures and looks | ☑ 2026/11/10 \* |
@@ -75,18 +77,13 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M2.1c | Application icons (Adam, 2026-11-11): rename `res/vedt/Vermilion Editor Icon.svg` to `vermilion-icon.svg` (README reference updated, rule 8 proof); every build renders both SVGs to PNG with `rsvg-convert` (`librsvg2-bin`; configure stops with the package name if it is missing) into the build folder: `vedticon.svg` at 16 and 24 px, `vermilion-icon.svg` at 32, 48, 64, 128 and 256 px, compiled into the resources under `icons/<n>x<n>/apps/`, which GtkApplication adds to the icon theme, under the application ID (GTK picks the small one for the title bar, the large one for the panel, Alt+Tab and About); the resource test checks every size; fully dictated | Icon above the name in About; small icon in the title bar | Qwen | ☑ 2026/11/11 ‡ |
 | M2.1d | Continuous integration (Adam, 2026-11-11; build infrastructure, ahead of M2.2): GitHub Actions workflow `.github/workflows/ci.yml` on every push and pull request to `main`: a clean Ubuntu 24.04 runner installs the README's packages (without `clang-tidy`), configures, builds and runs the full `ctest`, including `SourceCheck.Repo` and `Format.Check`; UI tests that need a display will add `xvfb` | The first run on GitHub is green | Qwen | ☑ 2026/11/11 ¶ |
 | M2.2 | Open and save, encodings, line endings (Adam's decisions of 2026-11-11). **Open**: before a file loads, the core `TextScanner` reads it once in 64 KiB blocks ("Checking … P%") and decides the encoding (strict whole-file UTF-8 check; a UTF-8 or UTF-16 byte-order mark; Windows-1252, or Latin-1 when one of its five undefined bytes occurs), the line endings (a file with several kinds shows "Mixed" and saves with the ending most lines use), the longest line and whether the file is binary (a NUL byte). GtkSourceView then loads with exactly that encoding and no language; the language is set after the load (M2.0a). A binary file, or a line longer than 350,000 characters (measured by Adam: 500,000 still felt fine; a setting at M2.5), asks "Open Anyway / Cancel"; a binary file opened anyway, and one whose bytes had to be escaped, are read-only. Word wrap is off when a file opens, switched on per document, never asked and never a saved default. The dialogs start in the home folder. **Save**: File → Save (Ctrl+S) and Save As… (Ctrl+Shift+S) go through `GtkSourceFileSaver` (a new copy beside the original, flushed and swapped in, so any failure leaves the original; no backup files); the implicit trailing newline is off so a file round-trips byte for byte; the byte-order mark stays in the text as U+FEFF; a file changed on disk asks "Save Anyway / Cancel"; Save As refuses a path open in another tab; the document is locked while it loads or saves; errors keep it unsaved and give the reason. **Questions**: closing an edited tab asks Save / Close Without Saving / Cancel (untitled: Save As first, cancelling it cancels the close); quitting asks about each edited document in turn, selecting its tab, and Cancel stops the quit. **Status bar menus**: the Encoding panel opens "Reopen as" (UTF-8, UTF-16 LE and BE, Windows-1252, Latin-1; with unsaved edits it asks Save and Reopen / Discard Changes and Reopen / Cancel) and "Save as" (UTF-8, UTF-8 with BOM, UTF-16 LE and BE, Windows-1252, Latin-1); the Line Ending panel converts to LF, CRLF or CR at the next save. **Measured** (Adam): a 38.9 MB file saves in 6.5 s with the window usable. First gate of the Qwen-writes-implementations trial: Qwen wrote the core `.cpp` files, `document_saver.cpp` and the status bar; the Orchestrator dictated headers, tests and the rest of the UI (Adam, 2026-11-11) | Core tests for the scanner, formats, document list and messages; Adam's 18-point run of open and save | Qwen | ☑ 2026/11/11 § |
-| M2.2b | Help → Index (Adam, 2026-11-11): every `docs/manual/*.md` collected by CMake into the resources (a new topic needs no code change) and shown in a separate read-only window (F1; a second Help → Index brings it forward) that opens on `index.md`: labels and grids, links between topics replace the page, Back and Index buttons (Alt+Left) over a tested page history; a small renderer for a Markdown subset (headings, paragraphs with joined source lines, lists, bold, inline code, tables, links to topics; anything else shows as plain text) tested without a display; a test that every manual file is in the program, linked from the index and inside the subset; replaces a separate Help → Keyboard Shortcuts item | Every topic opens and reads correctly; renderer, history and manual tests | Qwen writes the renderer, the page history and the window from specs; headers, tests and wiring dictated | ☐ |
-| M2.2c | Crash recovery (Adam, 2026-11-11: a basic editor function, not a new feature): a short while after typing stops, every edited document, untitled ones included, is copied to a recovery file; saving or Close Without Saving deletes it; at start-up a recovery file left behind asks "Open Saved File / Recover" with the times of both. No Compare button until the diff view exists (M5.9). Details (where the files live, timing, very large documents, privacy of the copies) discussed with Adam before the prompt | A killed editor offers the unsaved text at the next start; core tests | Qwen | ☐ |
+| M2.2b | Help → Index (Adam, 2026-11-11): every `docs/manual/*.md` collected by CMake into the resources (a new topic needs no code change) and shown in a separate read-only window (F1; a second Help → Index brings it forward) that opens on `index.md`: labels and grids, links between topics replace the page, Back and Index buttons (Alt+Left) over a tested page history; a small renderer for a Markdown subset (headings, paragraphs with joined source lines, lists, bold, inline code, tables, links to topics; anything else shows as plain text) tested without a display; a test that every manual file is in the program, linked from the index and inside the subset; replaces a separate Help → Keyboard Shortcuts item | Every topic opens and reads correctly; renderer, history and manual tests | Qwen writes the renderer, the page history and the window from specs; headers, tests and wiring dictated | ☑ 2026/11/11 ‖ |
+| M2.2c | Crash recovery (Adam, 2026-11-11: a basic editor function, not a new feature): a short while after typing stops, every edited document, untitled ones included, is copied to a recovery file; saving or Close Without Saving deletes it; at start-up a recovery file left behind asks "Open Saved File / Recover" with the times of both. No Compare button until the diff view exists (M6.9). Details (where the files live, timing, very large documents, privacy of the copies) discussed with Adam before the prompt | A killed editor offers the unsaved text at the next start; core tests | Qwen | ☐ |
 | M2.3 | Search, replace (regex), go to line; the Search menu | Manual check plus core tests for the matcher | Qwen | ☐ |
 | M2.4 | File monitor and the external-change policy | Edit on disk reloads a clean buffer; dirty buffer shows the banner | Orchestrator plans, Qwen codes | ☐ |
 | M2.5 | Settings window (classic OK, Cancel, Apply) and key file: colour mode Light, Dark or Follow system with the two classic palettes, GtkSourceView schemes (`classic` and a dark one), editor font (default: system monospace), tab width; the Tools menu | Settings persist; Adam checks light and dark | Plan first (rule 10) | ☐ |
 | M2.6 | Window size restored; start state (a new untitled document by default; or reopen the last document, a single file; or a blank window); no tab limit (dropped by Adam 2026-11-10, parked in `docs/ideas.md`). The folder items moved to M3.0 (Adam, 2026-11-10) | Restored on start | Qwen | ☐ |
 | M2.6b | Feather mode (Adam, 2026-11-10): `vermilion --feather` with its own application ID (proposed in ARCHITECTURE.md 7.10), files from the command line and from "Open with", a desktop entry for text files, the single-instance rule, quits when the last document closes, shows only File, Edit, Search, View and Help, treats the "blank window" start state as untitled; startup time measured against the plain editor; `--feather` is documented in a new manual topic, Command-line options (Adam, 2026-11-11), where every later flag goes too | Opens text files from the file manager; Adam measures startup (if too slow, revisit a separate program) | Orchestrator plans, Qwen codes | ☐ |
-| M2.7 | ctxmon settings and server list (`--server` specs, warning levels, opacity) in `src/ctxmon/core` | Tests; names fixed | Plan first (rule 10) | ☐ |
-| M2.8 | ctxmon I/O on the main loop: log tail with `GFile` async reads, `/slots` and `/props` with libsoup async, a poll timer per server; feeds the M1 logic | Tests with a fake transport and a temp log | Orchestrator plans, Qwen codes | ☐ |
-| M2.9 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set), VRAM bar, the terminal (VTE; this is where Vermilion's terminal is first built, Adam 2026-11-07), `GNotification` warnings; no "Time until full" tile (dropped, Adam 2026-11-08); `Alert::level` changes from `std::optional<int>` to `int` (always set; Adam left it to the Orchestrator, 2026-11-10) | Matches the Python behaviour (Adam checks) | Qwen (split as needed) | ☐ |
-| M2.10 | Standalone `vermilion-ctxmon` executable (own `GtkApplication` window, same cards, no editor) | Runs without the editor; watches a real llama.cpp server | Qwen | ☐ |
-| M2.11 | Remove all Python (Adam, 2026-11-07): convert the oracle's expected JSON into inline C++ case tables in the ctxmon tests (the fixture `.log` files stay); delete `ctxmon_gtk.py` in `reference/ctxmon/`, `tools/ctxmon_oracle.py` and `expected/` in `tests/ctxmon/fixtures/`; tests no longer link json-glib unless another test needs it; `SourceCheck.Repo` fails on any tracked `.py` file | No `.py` file in `git ls-files`; same test count, all passing | Qwen | ☐ |
 
 **Notes**
 
@@ -100,6 +97,8 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 
 § 205 tests. Part A (core: scanner, formats, file documents, open messages; 165 then 181 tests), M2.2 UI (the open flow, STEPS 3 and 4; 185 tests), the save part (STEP 5 core, 205 tests; STEPS 6 and 7 the saver, the status bar menus, Save, Save As and the questions) and one fix (the dialogs start in the home folder; Save and Reopen). Adam ran 18 checks of open and save by hand; the byte checks all matched. Long-line limit 350,000 characters; saving 38.9 MB took 6.5 s.
 
+‖ 259 tests. Six one-step prompts (the spans, the page blocks, the page history, the manual as a second resource with two tests about the real files, the help window, the wiring); Qwen wrote `manual_spans.cpp`, `manual_page.cpp`, `page_history.cpp` and `help_window.cpp` from specifications and passed audits with a differential fuzz against the Orchestrator's reference implementations; one fix (comments moved off statements, an unused include). The manual gained the topic "Using the manual".
+
 ## M3: Directory sidebar (right-hand side)
 **Status**: ☐
 | Gate | Work | Done when | Who | Done |
@@ -110,9 +109,8 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M3.3 | Filter, hidden-files toggle, Sync, Refresh, keys | Manual check against the requirement | Qwen | ☐ |
 | M3.4 | Context menus, rename, delete (trash), copy, move, drag and drop | Same | Qwen | ☐ |
 | M3.5 | Folder monitor | Tree follows external changes | Qwen | ☐ |
-| M3.6 | CTXMon tab in the right-hand stack, hosting the M2.9 cards | Tab shows the same cards as the standalone program | Qwen | ☐ |
 
-## M4: Build, Output, Problems, Terminal (v0.1)
+## M4: Build, Output, Problems (v0.1)
 **Status**: ☐
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
@@ -120,52 +118,65 @@ Revised at the M0 review (2026-11-07): pure logic only, in `src/ctxmon/core` (no
 | M4.2 | Build-system detection presets | Tests on fixture folders | Qwen | ☐ |
 | M4.3 | Run on `GSubprocess`, Output pane; the Build menu with Build (F7), Run (F5) and Stop; no toolbar (Adam, 2026-11-10) | Builds Vermilion itself. **◆ DOGFOOD 1: Vermilion edits and builds its own source** | Qwen | ☐ |
 | M4.4 | Problem matchers, Problems list, clickable links | Tests on sample compiler output | Qwen | ☐ |
-| M4.5 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M2.9 (Adam, 2026-11-08: the ctxmon terminal serves as the editor's terminal for now; this gate is built only if that terminal proves burdensome to use) | Shell in the opened folder | Qwen | ☐ |
-| M4.6 | v0.1 review and tag | Adam signs off. **◆ DOGFOOD 2: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam | ☐ |
+| M4.5 | Review of M4 (Adam, 2026-11-11: the v0.1 tag moved to the end of M5, after the ctxmon UI) | Adam signs off. **◆ DOGFOOD 2: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam | ☐ |
 
-## M5: Agent core (v0.2)
+## M5: ctxmon UI (v0.1)
+**Status**: ☐
+Its own milestone since 2026-11-11 (Adam), placed before the agent core. It holds the gates that were M2.7 to M2.11 (now M5.1 to M5.4 and M5.6), the CTXMon tab (was M3.6, now M5.5), the conditional terminal tabs (was M4.5, now M5.7) and the v0.1 tag (was part of M4.6, now M5.8). The terminal (VTE) is first built with the ctxmon cards, M5.3.
+| Gate | Work | Done when | Who | Done |
+|---|---|---|---|---|
+| M5.1 | ctxmon settings and server list (`--server` specs, warning levels, opacity) in `src/ctxmon/core` | Tests; names fixed | Plan first (rule 10) | ☐ |
+| M5.2 | ctxmon I/O on the main loop: log tail with `GFile` async reads, `/slots` and `/props` with libsoup async, a poll timer per server; feeds the M1 logic | Tests with a fake transport and a temp log | Orchestrator plans, Qwen codes | ☐ |
+| M5.3 | ctxmon cards and graphs in `src/ctxmon/ui` (shared widget set; a talk with Adam about the UI specifications comes first), VRAM bar, the terminal (VTE; this is where Vermilion's terminal is first built, Adam 2026-11-07), `GNotification` warnings; no "Time until full" tile (dropped, Adam 2026-11-08); `Alert::level` changes from `std::optional<int>` to `int` (always set; Adam left it to the Orchestrator, 2026-11-10) | Matches the Python behaviour (Adam checks) | Qwen (split as needed) | ☐ |
+| M5.4 | Standalone `vermilion-ctxmon` executable (own `GtkApplication` window, same cards, no editor) | Runs without the editor; watches a real llama.cpp server | Qwen | ☐ |
+| M5.5 | CTXMon tab in the right-hand stack, hosting the M5.3 cards | Tab shows the same cards as the standalone program | Qwen | ☐ |
+| M5.6 | Remove all Python (Adam, 2026-11-07): convert the oracle's expected JSON into inline C++ case tables in the ctxmon tests (the fixture `.log` files stay); delete `ctxmon_gtk.py` in `reference/ctxmon/`, `tools/ctxmon_oracle.py` and `expected/` in `tests/ctxmon/fixtures/`; tests no longer link json-glib unless another test needs it; `SourceCheck.Repo` fails on any tracked `.py` file | No `.py` file in `git ls-files`; same test count, all passing | Qwen | ☐ |
+| M5.7 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M5.3 (Adam, 2026-11-11: the terminal is built with ctxmon and this is not urgent; Adam, 2026-11-08: the ctxmon terminal serves as the editor's terminal for now; this gate is built only if that terminal proves burdensome to use) | Shell in the opened folder | Qwen | ☐ |
+| M5.8 | v0.1 review and tag: the editor, ctxmon in both forms, the sidebar, build and Output, Problems, the terminal | Adam signs off; the v0.1 tag (moved here from the end of M4, Adam 2026-11-11) | Adam | ☐ |
+
+## M6: Agent core (v0.2)
 **Status**: ☐
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
-| M5.1 | Provider interface, OpenAI-compatible adapter (streaming, tool calls) behind a fake transport | Tests on recorded streams; real llama.cpp check by Adam | Plan first | ☐ |
-| M5.2 | Tool registry and the eight tools | Tests per tool | Qwen | ☐ |
-| M5.3 | Permission engine: presets, rules, hard guards, never-send list | Rule-matching tests incl. guards | Plan first | ☐ |
-| M5.4 | Agent loop with limits | Tests with a scripted provider | Qwen | ☐ |
-| M5.5 | Chat UI in the Agent tab: Stop, approvals, Copy buttons; while the agent works the status reads "Processing"; the model's reasoning is collapsed and expands to the full text (Adam, 2026-11-10) | Manual check. **◆ DOGFOOD 3 (proposed): first try of the built-in agent against local llama.cpp on small tasks; CLion/OpenCode remains the primary agent until Adam judges it good enough** | Qwen | ☐ |
-| M5.6 | Setup dialog and keyring | Endpoint configured without editing files | Plan first | ☐ |
-| M5.7 | `/clear`, archive, `/history`, `/copy` | Archive round trip tests | Qwen | ☐ |
-| M5.8 | Diff engine (Myers, aligned rows, word-level) | Tests incl. edge cases | Qwen | ☐ |
-| M5.9 | `DiffView` widget | Side by side, folding, per-hunk controls; adds the Compare button to the crash-recovery question (M2.2c) | Orchestrator plans, Qwen codes | ☐ |
-| M5.10 | Change sets, undo grouping, snapshots, buffer-version checks | Revert a turn restores files | Plan first | ☐ |
-| M5.11 | Request log and privacy indicator | Log written; indicator shows local or remote | Qwen | ☐ |
-| M5.12 | Context budget and summarising | Long conversation stays under the budget | Plan first | ☐ |
+| M6.1 | Provider interface, OpenAI-compatible adapter (streaming, tool calls) behind a fake transport | Tests on recorded streams; real llama.cpp check by Adam | Plan first | ☐ |
+| M6.2 | Tool registry and the eight tools | Tests per tool | Qwen | ☐ |
+| M6.3 | Permission engine: presets, rules, hard guards, never-send list | Rule-matching tests incl. guards | Plan first | ☐ |
+| M6.4 | Agent loop with limits | Tests with a scripted provider | Qwen | ☐ |
+| M6.5 | Chat UI in the Agent tab: Stop, approvals, Copy buttons; while the agent works the status reads "Processing"; the model's reasoning is collapsed and expands to the full text (Adam, 2026-11-10) | Manual check. **◆ DOGFOOD 3 (proposed): first try of the built-in agent against local llama.cpp on small tasks; CLion/OpenCode remains the primary agent until Adam judges it good enough** | Qwen | ☐ |
+| M6.6 | Setup dialog and keyring | Endpoint configured without editing files | Plan first | ☐ |
+| M6.7 | `/clear`, archive, `/history`, `/copy` | Archive round trip tests | Qwen | ☐ |
+| M6.8 | Diff engine (Myers, aligned rows, word-level) | Tests incl. edge cases | Qwen | ☐ |
+| M6.9 | `DiffView` widget | Side by side, folding, per-hunk controls; adds the Compare button to the crash-recovery question (M2.2c) | Orchestrator plans, Qwen codes | ☐ |
+| M6.10 | Change sets, undo grouping, snapshots, buffer-version checks | Revert a turn restores files | Plan first | ☐ |
+| M6.11 | Request log and privacy indicator | Log written; indicator shows local or remote | Qwen | ☐ |
+| M6.12 | Context budget and summarising | Long conversation stays under the budget | Plan first | ☐ |
 
-## M6: Debugger (v0.3)
+## M7: Debugger (v0.3)
 **Status**: ☐
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
-| M6.1 | DAP client state machine in core (transport injected) | Tests on scripted adapter sessions | Plan first | ☐ |
-| M6.2 | Spike: gdb's built-in DAP on a C++ sample | Breakpoint, step, variables work; else fall back to GDB/MI | Adam measures | ☐ |
-| M6.3 | Breakpoint gutter marks and current-line marker; breakpoints are kept by file in core, not in the buffer, so closing a tab does not lose them | Manual check | Qwen | ☐ |
-| M6.4 | Run control (continue, step over, into, out) from the Debug menu and F5, F10, F11, Shift+F11; no toolbar or button strip (Adam, 2026-11-10) | Same | Qwen | ☐ |
-| M6.5 | Stack, variables, watches | Same | Qwen | ☐ |
-| M6.6 | Terminal integration for the debuggee's stdin and stdout | Same | Qwen | ☐ |
+| M7.1 | DAP client state machine in core (transport injected) | Tests on scripted adapter sessions | Plan first | ☐ |
+| M7.2 | Spike: gdb's built-in DAP on a C++ sample | Breakpoint, step, variables work; else fall back to GDB/MI | Adam measures | ☐ |
+| M7.3 | Breakpoint gutter marks and current-line marker; breakpoints are kept by file in core, not in the buffer, so closing a tab does not lose them | Manual check | Qwen | ☐ |
+| M7.4 | Run control (continue, step over, into, out) from the Debug menu and F5, F10, F11, Shift+F11; no toolbar or button strip (Adam, 2026-11-10) | Same | Qwen | ☐ |
+| M7.5 | Stack, variables, watches | Same | Qwen | ☐ |
+| M7.6 | Terminal integration for the debuggee's stdin and stdout | Same | Qwen | ☐ |
 
-## M7: v0.4
+## M8: v0.4
 **Status**: ☐
 | Gate | Work | Done when | Who | Done |
 |---|---|---|---|---|
-| M7.2 | Cost display with user prices | Totals per conversation and session | Qwen | ☐ |
-| M7.3 | Anthropic adapter | Same tests as M5.1 | Plan first | ☐ |
-| M7.4 | Gemini (compatible endpoint check, native if needed) | Same | Plan first | ☐ |
-| M7.5 | Project file: New Project wizard, Adopt as project | Creates `PROJECT.md` and `project.json` | Plan first | ☐ |
-| M7.6 | Slash commands and the gate framework | `/gate` shows a copyable prompt; `/audit` issues a verdict | Plan first | ☐ |
-| M7.7 | MCP server (stdio) | A client lists and calls the tools | Plan first | ☐ |
-| M7.8 | MCP client (stdio) | The agent calls an outside tool | Plan first | ☐ |
+| M8.2 | Cost display with user prices | Totals per conversation and session | Qwen | ☐ |
+| M8.3 | Anthropic adapter | Same tests as M6.1 | Plan first | ☐ |
+| M8.4 | Gemini (compatible endpoint check, native if needed) | Same | Plan first | ☐ |
+| M8.5 | Project file: New Project wizard, Adopt as project | Creates `PROJECT.md` and `project.json` | Plan first | ☐ |
+| M8.6 | Slash commands and the gate framework | `/gate` shows a copyable prompt; `/audit` issues a verdict | Plan first | ☐ |
+| M8.7 | MCP server (stdio) | A client lists and calls the tools | Plan first | ☐ |
+| M8.8 | MCP client (stdio) | The agent calls an outside tool | Plan first | ☐ |
 
-## M8: Release
+## M9: Release
 **Status**: ☐
-`.deb` or AppImage, README, NOTICE of third-party material, version tag, manual test checklist. Then `1.0.0-beta.N` builds run for 8 weeks; the SECURITY.md work (pinned 2026-11-08) happens before the beta starts (Adam, 2026-11-10); `1.0.0-stable` follows, with `-stable` and `-beta` branches.
+`.deb` or AppImage, README, NOTICE of third-party material, a man page `vermilion.1` generated from the manual (the Command-line options topic) when 1.0.0-beta is packaged (Adam, 2026-11-11: no man page before then), version tag, manual test checklist. Then `1.0.0-beta.N` builds run for 8 weeks; the SECURITY.md work (pinned 2026-11-08) happens before the beta starts (Adam, 2026-11-10); `1.0.0-stable` follows, with `-stable` and `-beta` branches.
 
 ## Backlog (not scheduled)
 Agent shell confinement (Bubblewrap); git integration; multi-cursor; theme system; SSH; session restore; indexed search; plugin hook. All were considered and dropped from the first scope on 2026-11-05. New ideas go to `docs/ideas.md`; the roadmap does not grow before 1.0.0-stable (Adam, 2026-11-10).
