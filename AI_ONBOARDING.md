@@ -46,7 +46,7 @@ Every non-trivial task executes under this protocol. No exceptions.
 9.  **Engineering options are discussed with Adam (Adam, 2026-11-08).** Adam wants to take part in technical decisions and must not be excluded from them. The Orchestrator explains each option in plain words (what it means, what it costs, what could go wrong), gives a recommendation, and then they decide together. Adam may say "you decide" for a particular item; that is his choice each time, never the default. Questions are put one topic at a time, in terms he can judge, not as a bundle of jargon.
 
 ## 3. Architectural Rails (Decided; see ARCHITECTURE.md)
-1.  **Greenfield.** Written from scratch. Licence GPL-3.0-or-later; every source file carries the SPDX line and the copyright line (AGENTS.md rule 5).
+1.  **Greenfield.** Licence GPL-3.0-or-later; every source file carries the SPDX line and the copyright line (AGENTS.md rule 5).
 2.  **C++17 with the plain GTK 4 C API, GtkSourceView 5.** No gtkmm, no libadwaita, no bindings, no vendor SDKs, nothing that merely wraps another API. A new dependency needs Adam's decision.
 3.  **No C++ exceptions in project code; RAII only.** `GError` at the GTK boundary.
 4.  **Layers.** `src/core`, `src/agent` and `src/ctxmon/core` never include GTK, Pango, GtkSourceView or VTE headers; `src/ui` and `src/ctxmon/ui` hold all UI.
@@ -58,7 +58,7 @@ Every non-trivial task executes under this protocol. No exceptions.
 10. **Commands are `GAction`s; the look is CSS only (Adam, 2026-11-10).** Menu items, shortcuts and the few buttons share one action table; there is no toolbar (keyboard first, Adam 2026-11-10). The classic look comes from one stylesheet; no custom drawing code, bundled fonts, icons or custom title bar (ARCHITECTURE.md 7.10).
 
 ## 4. Project Summary & Component Map
-**Vermilion Editor**: native Linux text and code editor, written from scratch in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent (OpenAI-compatible, Anthropic and Gemini providers, MCP), build and Output/Problems panes, a DAP debugger, a VTE terminal, a right-hand directory sidebar, and a model monitor ported from Adam's `ctxmon`. IDE: CLion (CMake). Local working tree: `~/Projects/vermilion-editor`. Remote: `origin` = https://github.com/adamjeremy-sk/Vermilion-Editor.
+**Vermilion Editor**: native Linux text and code editor, written in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent (OpenAI-compatible, Anthropic and Gemini providers, MCP), build and Output/Problems panes, a DAP debugger, a VTE terminal, a right-hand directory sidebar, and a model monitor ported from Adam's `ctxmon`. IDE: CLion (CMake). Local working tree: `~/Projects/vermilion-editor`. Remote: `origin` = https://github.com/adamjeremy-sk/Vermilion-Editor.
 
 Component map: `src/core` (UI-free logic), `src/agent` (providers, loop, tools, MCP), `src/ctxmon/core` (model-monitor logic, UI-free) and `src/ctxmon/ui` (its cards and the standalone `vermilion-ctxmon`), `src/ui` (GTK application), `tests/` (with `tests/ctxmon/`). Details and the planned directory names are in ARCHITECTURE.md section 4; the milestone plan is docs/roadmap.md.
 

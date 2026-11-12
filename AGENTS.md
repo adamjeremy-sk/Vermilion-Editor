@@ -1,5 +1,5 @@
 # Agent rules — Vermilion Editor
-Vermilion Editor is a native Linux text and code editor written from scratch in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent, build integration, a debugger and a terminal. GPL-3.0-or-later.
+Vermilion Editor is a native Linux text and code editor written in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent, build integration, a debugger and a terminal. GPL-3.0-or-later.
 1. Read ARCHITECTURE.md before any change; it is the map. Read HANDOFF.md section 1 for where the project stands.
 2. Gate protocol: execute exactly ONE logical step per turn. One step = every numbered item under one STEP heading; do not split a step across turns unless your output limit forces it, and then say "CONTINUING <items> NEXT TURN" and never truncate a table mid-item. Step 0 audits are read-only (grep/read/report). Never proceed to a new step without an explicit "Proceed".
 3. Make the smallest change that satisfies the task. No drive-by refactors, reformatting, or dependency bumps.

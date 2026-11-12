@@ -14,19 +14,23 @@
 </p>
 
 > **Status: pre-alpha. Not usable yet.**
-> Vermilion Editor is being written from scratch. Milestones M0 (foundation) and M1 (the CTXMon monitor logic) are done:
-> log and timing parsing, server responses, server state and warnings, graph geometry and GPU memory readers are ported,
-> hardened against hostile input and tested. M2 (the editor) is under way: the main window
-> exists (menus, fixed-width tabs, status bar, the classic look below), files can be opened and saved (encodings, line
-> endings, close and quit questions: M2.2), and the user manual opens inside the program under Help → Index or F1 (M2.2b).
-> Crash recovery, search and settings come next in M2; the CTXMon window is its own milestone, M5. 259 tests, all passing.
-> Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
+>
+> **Done.** M0 (foundation) and M1 (the CTXMon monitor logic). Log and timing parsing, server responses, server state and
+> warnings, graph geometry and GPU memory readers are ported, hardened against hostile input and tested.
+>
+> **Under way: M2, the editor.** The main window exists (menus, fixed-width tabs, status bar, the classic look below). Files can
+> be opened and saved, with encodings, line endings and the close and quit questions (M2.2). The user manual opens inside the
+> program under Help → Index or F1 (M2.2b).
+>
+> **Next.** Crash recovery, search and settings come next in M2. The CTXMon window is its own milestone, M5.
+>
+> 259 tests, all passing. Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 **Progress**: `███░░░░░░░░░░░░░░░░░` 17% (weighted: M0 and M1 done; M2 6 of 12) ([roadmap](docs/roadmap.md))
 
 <p align="center">
-  <img src="res/github/vermilion-m2.2b.png" width="422" alt="Help → About in Vermilion Editor: the application icon, name, version and licence">
-  <br><em>Help → About in the current build (after M2.2b): the application icon, the version and the licence notice.</em>
+  <img src="res/github/vermilion-m2.2b.png" width="800" alt="Vermilion Editor: the editor window with a C++ file open, the Help window showing the keyboard shortcuts, and the About dialog">
+  <br><em>The current build (after M2.2b): the editor with tabs, syntax colours and the status bar; Help → Index showing the shortcuts topic; and Help → About.</em>
 </p>
 
 ---

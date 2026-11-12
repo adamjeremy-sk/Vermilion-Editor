@@ -1,8 +1,8 @@
 # ARCHITECTURE.md: Vermilion Editor
-**Status**: rewritten 2026-11-05 for the greenfield plan; section 7.10 (window, look, feather mode) added 2026-11-10. Sections marked *Decided* are Adam's decisions; *Proposed* sections are the Orchestrator's recommendations awaiting Adam; names marked *(name proposed)* are placeholders fixed at the gate that creates them. The project is written from scratch.
+**Status**: rewritten 2026-11-05 for the greenfield plan; section 7.10 (window, look, feather mode) added 2026-11-10. Sections marked *Decided* are Adam's decisions; *Proposed* sections are the Orchestrator's recommendations awaiting Adam; names marked *(name proposed)* are placeholders fixed at the gate that creates them.
 
 ## 1. What this is  *(Decided)*
-Vermilion Editor is a native Linux text and code editor written from scratch in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent, a project build system integration, a debugger and a terminal. It is released under GPL-3.0-or-later. Target system: Ubuntu 24.04 (GTK 4.14, GLib 2.80, gdb 15.1). Linux only.
+Vermilion Editor is a native Linux text and code editor written in C++17 on GTK 4 and GtkSourceView 5, with a built-in AI agent, a project build system integration, a debugger and a terminal. It is released under GPL-3.0-or-later. Target system: Ubuntu 24.04 (GTK 4.14, GLib 2.80, gdb 15.1). Linux only.
 
 ## 2. Decisions in force  *(Decided)*
 | Topic | Decision |
