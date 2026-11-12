@@ -1,7 +1,22 @@
 # Roadmap: Vermilion Editor
-**Status**: rewritten 2026-11-05 for the greenfield plan; this file is the live roadmap (the old claude.ai Roadmap Doc is obsolete). Architecture is in ARCHITECTURE.md; the process is in AI_ONBOARDING.md and AGENTS.md. Gate rules: each gate is one step with evidence and an audit verdict; a gate that adds code also adds its tests; Adam builds, tests and commits; push at each gate end. Every milestone ends with a milestone review with Adam before the next one starts (AI_ONBOARDING.md section 2, item 7); its conclusions go to `docs/milestones/M<n>-review.md`.
-**Done column (Adam, 2026-11-10)**: ☐ not done; ☑ done, with the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes under that milestone's table; the marks restart in each milestone. Each milestone also has a Status line.
-**Progress bar (Adam, 2026-11-11, weighted)**: every milestone has a fixed share of the 100%, set once below and split equally among that milestone's own gates, so a gate added to or split inside a milestone changes only that milestone's own fraction, never the total. Progress = the sum, over the milestones, of weight × gates ticked ☑ ÷ gates in the milestone; M9 counts as one gate. 20 cells, each 5%, rounded down. The weights are the Orchestrator's estimate of the effort, accepted by Adam; they change only when Adam decides. Updated with the Done column at every gate commit; the same line is in README.md.
+
+**Status**: rewritten 2026-11-05 for the greenfield plan. This file is the live roadmap; the old claude.ai Roadmap Doc is obsolete. The architecture is in ARCHITECTURE.md, and the process is in AI_ONBOARDING.md and AGENTS.md.
+
+## How this plan works
+
+**Gates.** Each gate is one step, with evidence and an audit verdict. A gate that adds code also adds its tests. Adam builds, tests and commits, and the work is pushed at the end of each gate.
+
+**Milestone reviews.** Every milestone ends with a review with Adam before the next one starts (AI_ONBOARDING.md section 2, item 7). Its conclusions go to `docs/milestones/M<n>-review.md`.
+
+**The Done column** (Adam, 2026-11-10). ☐ means not done. ☑ means done, followed by the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes under that milestone's table, and the marks start again in each milestone. Each milestone also has a Status line.
+
+## Progress
+
+**How it is counted** (Adam, 2026-11-11, weighted). Every milestone has a fixed share of the 100%, set once in the weights line below. A milestone's share is split equally among its own gates, so adding or splitting a gate inside a milestone changes only that milestone's own fraction, never the total. M9 counts as one gate.
+
+**The formula.** Progress is the sum, over all milestones, of weight × (gates ticked ☑ ÷ gates in the milestone). The bar has 20 cells of 5% each, and both the bar and the percentage are rounded down.
+
+**Who keeps it.** The weights are the Orchestrator's estimate of the effort, accepted by Adam, and they change only when Adam decides. The bar is updated with the Done column at every gate commit, and the same line is in README.md.
 
 **Weights**: M0 5 · M1 6 · M2 13 · M3 6 · M4 9 · M5 7 · M6 25 · M7 10 · M8 12 · M9 7 (sum 100).
 

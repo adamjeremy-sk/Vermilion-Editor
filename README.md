@@ -25,8 +25,8 @@
 **Progress**: `███░░░░░░░░░░░░░░░░░` 17% (weighted: M0 and M1 done; M2 6 of 12) ([roadmap](docs/roadmap.md))
 
 <p align="center">
-  <img src="res/github/vermilion-spike-1.png" width="800" alt="Vermilion look spike: classic menu bar, fixed-width tabs, editor, side panel and status bar">
-  <br><em>The classic look as tried in the M2.0b look spike (XFCE, Greybird). A test window, not the editor yet.</em>
+  <img src="res/github/vermilion-m2.2b.png" width="422" alt="Help → About in Vermilion Editor: the application icon, name, version and licence">
+  <br><em>Help → About in the current build (after M2.2b): the application icon, the version and the licence notice.</em>
 </p>
 
 ---
@@ -72,8 +72,38 @@ Principles:
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 (foundation) done: CMake build, empty window, `Result` type, logging with secret masking, `gtkx` helpers, source and format checks. M1 done: `src/ctxmon/core` holds all of CTXMon's logic (llama.cpp log token and timing lines, `/slots`, `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, AMD sysfs and `nvidia-smi` GPU memory), tested against the Python original and hardened against hostile input (1 MiB cap and nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers); 117 tests. M2.0 done: two throwaway spikes (large-file loading in GtkSourceView; the classic stylesheet and dark-mode detection), deleted in M2.1. M2.1 done: `DocumentList` in core (documents in tab order, untitled numbering, the active document on close), the main window in `src/ui` (menu bar, fixed-width document tabs, status bar, close and quit questions) with the stylesheet and menus compiled in as resources; 131 tests. M2.1c done: the application icon, rendered from the SVG masters at every build and compiled in, shown in About and by the desktop; 132 tests. M2.1d done: continuous integration on GitHub Actions (every push and pull request to `main` is configured, built and tested on a clean Ubuntu 24.04); 132 tests. M2.2 done: opening and saving files. A core scanner reads each file once before it loads and decides the encoding (UTF-8, UTF-16 with its mark, Windows-1252 or Latin-1), the byte-order mark, the line endings, and whether it is binary or has a line over 350,000 characters (which asks first); saving keeps the encoding, mark and line endings, and Save, Save As, the Encoding and Line Ending menus and the close and quit questions work; a 38.9 MB file saves in 6.5 s; 205 tests (the first gate where the coding agent wrote implementations from written specifications). M2.2b done: Help → Index (F1) opens the user manual in its own window. Every `docs/manual/*.md` is compiled in as a resource (a new topic needs no code change); a small renderer for a Markdown subset (headings, paragraphs, lists, bold, inline code, tables, links between topics) turns a page into labels and grids; Back and Index buttons walk a tested page history; tests keep every manual file inside the subset, linked from the index and equal to the compiled copy; 259 tests (the renderer, the page history and the help window were written by the coding agent from specifications). Next: M2.2c, crash recovery. |
+| Code | M0 and M1 done; M2 under way (6 of 12 gates). 259 tests, all passing. Next: M2.2c, crash recovery. What each gate built is listed below |
 | Releases | None |
+
+### Built so far
+Each item is one finished gate; the test count is the total after that gate.
+
+- **M0, foundation.** CMake build, an empty window, the `Result` type, logging with secret masking, the `gtkx` helpers, and
+  two repository checks (source headers and file sizes; code format).
+- **M1, CTXMon logic.** `src/ctxmon/core` holds all of CTXMon's logic: llama.cpp log token and timing lines, the `/slots`,
+  `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, and AMD sysfs and
+  `nvidia-smi` GPU memory. It is tested against the Python original and hardened against hostile input (a 1 MiB cap and a
+  nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers). 117 tests.
+- **M2.0, two spikes.** Large-file loading in GtkSourceView, and the classic stylesheet with dark-mode detection. Both were
+  throwaway programs and were deleted in M2.1.
+- **M2.1, the main window.** A `DocumentList` in core (documents in tab order, untitled numbering, which document becomes
+  active when one closes) and the window in `src/ui`: menu bar, fixed-width document tabs, status bar, and the close and
+  quit questions. The stylesheet and the menus are compiled in as resources. 131 tests.
+- **M2.1c, the application icon.** Rendered from the SVG masters at every build, compiled in, and shown in About and by the
+  desktop. 132 tests.
+- **M2.1d, continuous integration.** GitHub Actions configures, builds and tests every push and pull request to `main` on a
+  clean Ubuntu 24.04. 132 tests.
+- **M2.2, opening and saving files.** A core scanner reads each file once before it loads and decides the encoding (UTF-8,
+  UTF-16 with its mark, Windows-1252 or Latin-1), the byte-order mark, the line endings, and whether the file is binary or
+  has a line over 350,000 characters (which asks first). Saving keeps the encoding, the mark and the line endings. Save,
+  Save As, the Encoding and Line Ending menus and the close and quit questions work, and a 38.9 MB file saves in 6.5 s.
+  205 tests. This was the first gate where the coding agent wrote implementations from written specifications.
+- **M2.2b, the manual inside the program.** Help → Index (F1) opens the user manual in its own window. Every
+  `docs/manual/*.md` is compiled in as a resource, so a new topic needs no code change. A small renderer for a Markdown subset
+  (headings, paragraphs, lists, bold, inline code, tables, links between topics) turns a page into labels and grids, and Back
+  and Index buttons walk a tested page history. Tests keep every manual file inside the subset, linked from the index and equal
+  to the compiled copy. 259 tests. The renderer, the page history and the help window were written by the coding agent from
+  specifications.
 
 ---
 
@@ -96,6 +126,10 @@ One window, one opened folder. The right-hand stack has three tabs: the director
 has the build output, the problem list, terminals and the debugger views. There is no toolbar: the window is
 keyboard first, and every command is a menu item that shows its shortcut.
 
+Today (after M2.2b) the window has the menu bar, the document tabs with the editor, and the status bar. The right-hand stack
+arrives with the directory sidebar (M3), the bottom panel with the build gates (M4), the Agent tab with M6 and the CTXMon tab
+with M5.
+
 ---
 
 ## Planned features
@@ -111,15 +145,20 @@ keyboard first, and every command is a menu item that shows its shortcut.
   quitting asks about each edited document in turn. **Built (M2.2).**
 - Crash recovery: edited documents, untitled ones included, are copied to recovery files shortly after you stop typing; if
   Vermilion did not close properly, the next start offers the saved file or the recovered text, with the time of each.
-- Syntax highlighting, line numbers and colour schemes from GtkSourceView.
+- Syntax highlighting, line numbers and colour schemes from GtkSourceView. Highlighting (the language is guessed from the
+  file name and set after the file has loaded) and line numbers are **built (M2.2)**, with the classic colour scheme; choosing
+  another scheme, a dark one, and choosing the language by hand come later (settings, M2.5).
 - A fixed classic Windows 2000 look: one stylesheet over the desktop's own GTK theme, system fonts, no icons apart from the
   application's own (a small badge in the title bar, the full icon in Alt+Tab and About), square bevelled
-  controls; a light and a dark palette, with colour mode Light, Dark or Follow system (from M2.5).
+  controls; a light and a dark palette, with colour mode Light, Dark or Follow system. The light palette and the icons are
+  **built (M2.1, M2.1c)**; the dark palette and the colour mode setting come with M2.5.
 - Keyboard first: a menu bar and a gedit-style status bar (language, tab width, encoding, line ending, line and column,
   INS/OVR), no toolbar. Familiar shortcuts (Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+W, Ctrl+F, F3, Ctrl+H, Ctrl+G), and F5, F7 and
-  F9 to F11 for building and debugging.
+  F9 to F11 for building and debugging. The menu bar, the status bar and the file, edit, tab and help shortcuts are
+  **built (M2.1 to M2.2b)**; the language and tab width panels only show their value for now, and the search shortcuts and the
+  build and debug keys arrive with their features.
 - Fixed-width document tabs with the close button at the right edge, an unsaved marker and drag to reorder; Vermilion never
-  closes a tab on its own.
+  closes a tab on its own. **Built (M2.1).**
 - Large files load in the background with syntax colouring switched on after the load: a 50 MB C++ file opens in about
   4 seconds instead of 87 (measured in the M2.0a spike). A file with an extremely long line (over 350,000 characters; it
   can freeze any GTK text view) or with NUL bytes (a binary file) asks "Open anyway / Cancel" first. Word wrap is always
@@ -215,18 +254,17 @@ What a card shows (one per server, several servers side by side):
 
 - **Context:** percentage and bar, with tokens used, total and free. It says whether the number is exact (the request finished and
   the server log confirmed it) or an estimate (a request is still running).
-- **Speed:** generation speed (live while generating, otherwise the last request), prompt-processing speed, and the time until the
-  context is full.
+- **Speed:** generation speed (live while generating, otherwise the last request) and prompt-processing speed.
 - **Graphs:** context over time and speed over time.
 - **Recent requests:** the newest finished requests with prompt and generated tokens, speeds and the context size afterwards.
-- **Warnings:** at 80% and 95% of the context, as a banner
-  in the card and as a desktop notification.
+- **Warnings:** at 80% and 95% of the context, as a banner in the card and as a desktop notification.
 - **GPU memory:** VRAM used and total (AMD through sysfs, or `nvidia-smi`).
 - **Terminal:** shell tabs (VTE) so you can restart a server without leaving the window.
 
 It polls each server's `/slots` and `/props` endpoints and reads the server log (start the server with `--log-file`) for token counts
 and finished requests. It only talks to your own servers, and shows zeros when nothing is listening. Differences from the Python
-original: GTK 4 has no tray icon, so there is none, and notifications go through `GNotification`. Settings are remembered between
+original: GTK 4 has no tray icon, so there is none; notifications go through `GNotification`; and there is no "time until full"
+estimate, because it jumped by minutes with every change in the speed figure. Settings are remembered between
 runs; their file name is fixed when it is first written.
 
 ---
@@ -299,11 +337,11 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
+| `src/core/` | UI-free logic. Built: the document list, the text scanner and encodings, the manual's Markdown parser and page history, message texts, logging and the `Result` type. Planned: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
 | `src/ctxmon/core/` | CTXMon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
 | `src/ctxmon/ui/` | *(M5)* The CTXMon cards, graphs and terminal, shared by the CTXMon tab and the standalone `vermilion-ctxmon`. |
 | `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. |
-| `src/ui/` | The GTK application, and `gtkx/`, a small helper layer (GObject reference pointer, signal connection by lambda, string conversion). |
+| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the status bar, the help window and the compiled-in resources (stylesheet, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). |
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M5.6). |
 | `.github/workflows/` | `ci.yml`: the continuous-integration run on GitHub Actions (configure, build, full test run on Ubuntu 24.04). |
@@ -327,7 +365,9 @@ Vermilion Editor is developed with AI assistance in a structured way, and the st
 - **An orchestrator** (Claude, working in a claude.ai Project) plans the work, writes self-contained prompts, audits every
   result against the real tree with fresh commands, and maintains the documentation.
 - **A local coding agent** (Qwen3.8-27B served by llama.cpp, driven through OpenCode) makes the code changes, one logical step
-  per session, following [`AGENTS.md`](AGENTS.md).
+  per session, following [`AGENTS.md`](AGENTS.md). Since M2.2 it also writes implementation files from written specifications,
+while the orchestrator dictates the headers, the tests and the most delicate wiring; the audit is then a code review against
+the specification and the tests.
 
 Work proceeds in **gates**: small steps, each ending with verbatim evidence and an audit verdict (pass, pass with notes, or fail)
 before the next one starts. Every gate that adds code adds its tests. The agent features of Vermilion itself will standardise
