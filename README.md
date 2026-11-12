@@ -13,18 +13,22 @@
   C++17 &middot; GTK 4 &middot; GtkSourceView 5 &middot; GPL-3.0-or-later
 </p>
 
-> **Status: pre-alpha. Not usable yet.**
+> **Status: pre-alpha. It opens, edits and saves files, but it is not ready for daily use.**
 >
-> **Done.** M0 (foundation) and M1 (the CTXMon monitor logic). Log and timing parsing, server responses, server state and
+> **Done.** M0 (foundation) and M1 (the ctxmon monitor logic). Log and timing parsing, server responses, server state and
 > warnings, graph geometry and GPU memory readers are ported, hardened against hostile input and tested.
 >
 > **Under way: M2, the editor.** The main window exists (menus, fixed-width tabs, status bar, the classic look below). Files can
 > be opened and saved, with encodings, line endings and the close and quit questions (M2.2). The user manual opens inside the
 > program under Help → Index or F1 (M2.2b).
 >
-> **Next.** Crash recovery, search and settings come next in M2. The CTXMon window is its own milestone, M5.
+> **Just started: M2.2c, crash recovery.** The recovery file format and the copy schedule are written and tested; the rest
+> (the store, the wiring and the start-up question) follows. Until it is finished, unsaved edits are lost if the editor crashes.
+> This work is not committed yet, so it is not counted in the gate list below.
 >
-> 259 tests, all passing. Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
+> **Next.** After crash recovery, search and settings come next in M2. The ctxmon window is its own milestone, M5.
+>
+> 259 tests, all passing at the last commit (311 in the working tree with the first two steps of M2.2c). Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
 **Progress**: `███░░░░░░░░░░░░░░░░░` 17% (weighted: M0 and M1 done; M2 6 of 12) ([roadmap](docs/roadmap.md))
 
@@ -41,7 +45,7 @@
 3. [The window](#the-window)
 4. [Planned features](#planned-features)
 5. [The AI agent](#the-ai-agent)
-6. [CTXMon (model monitor)](#ctxmon-model-monitor)
+6. [ctxmon (model monitor)](#ctxmon-model-monitor)
 7. [Project file](#project-file)
 8. [Configuration and data](#configuration-and-data)
 9. [Building](#building)
@@ -72,11 +76,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, CTXMon window and tab, tree, build, terminal (v0.1) | M1 done: CTXMon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); next crash recovery (M2.2c) |
+| Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); next crash recovery (M2.2c) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 and M1 done; M2 under way (6 of 12 gates). 259 tests, all passing. Next: M2.2c, crash recovery. What each gate built is listed below |
+| Code | M0 and M1 done; M2 under way (6 of 12 gates). 259 tests, all passing at the last commit (311 with the uncommitted first two steps of M2.2c). Next: M2.2c, crash recovery (under way). What each gate built is listed below |
 | Releases | None |
 
 ### Built so far
@@ -84,7 +88,7 @@ Each item is one finished gate; the test count is the total after that gate.
 
 - **M0, foundation.** CMake build, an empty window, the `Result` type, logging with secret masking, the `gtkx` helpers, and
   two repository checks (source headers and file sizes; code format).
-- **M1, CTXMon logic.** `src/ctxmon/core` holds all of CTXMon's logic: llama.cpp log token and timing lines, the `/slots`,
+- **M1, ctxmon logic.** `src/ctxmon/core` holds all of ctxmon's logic: llama.cpp log token and timing lines, the `/slots`,
   `/props` and `/v1/models` responses, server state with warnings at 80% and 95%, graph geometry, and AMD sysfs and
   `nvidia-smi` GPU memory. It is tested against the Python original and hardened against hostile input (a 1 MiB cap and a
   nesting limit for server responses, bounded GPU file reads, tests with 1 MB lines and huge numbers). 117 tests.
@@ -112,9 +116,14 @@ Each item is one finished gate; the test count is the total after that gate.
 ---
 
 ## The window
+
+Vermilion ships as three programs: **`vermilion`**, the light editor (a gedit replacement: the editor, tabs, search and settings,
+no folder, panels or agent); **`vermilion-ide`**, the whole IDE; and **`ctxmon`**, the model monitor. The two editors share one
+code base, so an improvement to editing reaches both. The window drawn below is `vermilion-ide`.
+
 ```
 +------------------------------------------------------+------------------------+
-| tabs: main.cpp | util.h | ...                        | Files | Agent | CTXMon |
+| tabs: main.cpp | util.h | ...                        | Files | Agent | ctxmon |
 |------------------------------------------------------|------------------------|
 |                                                      | v project/             |
 |   editor (syntax colours, line numbers,              |   v src/               |
@@ -123,15 +132,15 @@ Each item is one finished gate; the test count is the total after that gate.
 |                                                      |   CMakeLists.txt       |
 |------------------------------------------------------|------------------------|
 | Output | Problems | Terminal | Debug                  | Agent: chat, diff;     |
-|   build log, clickable errors                        | CTXMon: server monitor |
+|   build log, clickable errors                        | ctxmon: server monitor |
 +------------------------------------------------------+------------------------+
 ```
-One window, one opened folder. The right-hand stack has three tabs: the directory sidebar (**Files**), the **Agent** and **CTXMon**, the live model monitor (which also exists as a standalone program). The bottom panel
+One window, one opened folder. The right-hand stack has three tabs: the directory sidebar (**Files**), the **Agent** and **ctxmon**, the live model monitor (which also exists as a standalone program). The bottom panel
 has the build output, the problem list, terminals and the debugger views. There is no toolbar: the window is
 keyboard first, and every command is a menu item that shows its shortcut.
 
 Today (after M2.2b) the window has the menu bar, the document tabs with the editor, and the status bar. The right-hand stack
-arrives with the directory sidebar (M3), the bottom panel with the build gates (M4), the Agent tab with M6 and the CTXMon tab
+arrives with the directory sidebar (M3), the bottom panel with the build gates (M4), the Agent tab with M6 and the ctxmon tab
 with M5.
 
 ---
@@ -169,8 +178,8 @@ with M5.
   off when a file opens and is switched on per document. **Built (M2.2).**
 - A user manual inside the program: Help → Index (F1) shows the topics of `docs/manual` in a read-only window, one page at a
   time, with links between topics and Back and Index buttons. **Built (M2.2b).**
-- Feather mode: `vermilion --feather` starts the same program as a plain text editor for quick edits (File, Edit, Search,
-  View and Help menus only), with its own application ID.
+- The light program: `vermilion` is a plain text editor for quick edits, a replacement for gedit or Mousepad (File, Edit,
+  Search, View and Help menus only), and `vermilion-ide` is the whole IDE. Both are built from the same editor code (M2.6b).
 - Search and replace with regular expressions, go to line.
 - External changes: a clean buffer reloads automatically when the file changes on disk; a modified buffer shows a banner with
   Reload, Keep mine and Show diff.
@@ -186,7 +195,7 @@ Bazel. Output streams into the Output pane; compiler errors from gcc, clang, rus
 clickable links to the source line.
 
 ### Terminal (v0.1)
-The terminal (VTE) is built first as part of CTXMon (M5.3), so you can restart a server from the monitor. Whether the editor's
+The terminal (VTE) is built first as part of ctxmon (M5.3), so you can restart a server from the monitor. Whether the editor's
 bottom panel also gets terminal tabs (the same terminal, started in the opened folder, for Run and Debug) is still open.
 
 ### Debugger (v0.3)
@@ -205,7 +214,7 @@ Replies stream in and can be stopped at any time.
 
 **Setup dialog.** The first time you open the Agent tab, a dialog takes care of everything: provider, base URL, API key (kept
 in the system keyring), model, a connection test and the permission preset. If a llama.cpp server is running locally, it fills
-in the model and context size and offers the CTXMon tab.
+in the model and context size and offers the ctxmon tab.
 
 **Tools.** The agent works through the editor: read a file (line ranges), replace text, create a file, list a directory, search,
 open a file in a tab, run the build, and run a shell command.
@@ -243,15 +252,15 @@ work would cost on a paid model. No prices are shipped.
 
 ---
 
-## CTXMon (model monitor)
-CTXMon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon`. It is developed in this
+## ctxmon (model monitor)
+ctxmon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon`. It is developed in this
 repository: its logic lives in `src/ctxmon/core` (no GTK) and its window in `src/ctxmon/ui`. The Python original in
 [`reference/ctxmon/`](reference/ctxmon/) is frozen and only supplies the expected values for the tests; it is removed once
-the port is complete (gate M5.6), after which the repository contains no Python. CTXMon comes in two forms that share the same
+the port is complete (gate M5.6), after which the repository contains no Python. ctxmon comes in two forms that share the same
 logic and the same cards:
 
-- **Built in:** the **CTXMon** tab in the right-hand stack, next to Files and Agent, so the server your agent is using is one click away.
-- **Standalone:** a separate program, `vermilion-ctxmon` *(name proposed)*, with its own window. It needs no editor and no folder, so
+- **Built in:** the **ctxmon** tab in the right-hand stack of `vermilion-ide`, next to Files and Agent, so the server your agent is using is one click away.
+- **Standalone:** a separate program, `ctxmon`, with its own window. It needs no editor and no folder, so
   you can watch a server while you work in any other tool. It is built from the same source tree.
 
 What a card shows (one per server, several servers side by side):
@@ -316,7 +325,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Optional: `python3 tools/ctxmon_oracle.py` regenerates the CTXMon tests' expected values from the Python original
+Optional: `python3 tools/ctxmon_oracle.py` regenerates the ctxmon tests' expected values from the Python original
 (`tests/ctxmon/fixtures/expected/`); the build does not need Python. The script goes away with the Python original (M5.6).
 
 The test run includes two repository checks: `SourceCheck.Repo` (`tools/check_sources.sh`: licence header, purpose comment
@@ -342,16 +351,16 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | Path | Contents |
 |---|---|
 | `src/core/` | UI-free logic. Built: the document list, the text scanner and encodings, the manual's Markdown parser and page history, message texts, logging and the `Result` type. Planned: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
-| `src/ctxmon/core/` | CTXMon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
-| `src/ctxmon/ui/` | *(M5)* The CTXMon cards, graphs and terminal, shared by the CTXMon tab and the standalone `vermilion-ctxmon`. |
+| `src/ctxmon/core/` | ctxmon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
+| `src/ctxmon/ui/` | *(M5)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon`. |
 | `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. |
-| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the status bar, the help window and the compiled-in resources (stylesheet, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). |
-| `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for CTXMon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
-| `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the CTXMon tests' expected values (until M5.6). |
+| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the status bar, the help window and the compiled-in resources (stylesheet, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). At M2.6b the editor code becomes a library shared by `vermilion` and `vermilion-ide` (ARCHITECTURE.md 7.12). |
+| `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for ctxmon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
+| `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the ctxmon tests' expected values (until M5.6). |
 | `.github/workflows/` | `ci.yml`: the continuous-integration run on GitHub Actions (configure, build, full test run on Ubuntu 24.04). |
 | `res/vedt/` | Vermilion's own artwork as SVG masters: application icon, small icon, logo (the build renders the icons to PNG). |
 | `res/github/` | Images used by this README (screenshots). |
-| `reference/ctxmon/` | The Python original of CTXMon (`ctxmon_gtk.py`, frozen; test oracle until M5.6) and its logo (`ctxmon.svg`). Not built. |
+| `reference/ctxmon/` | The Python original of ctxmon (`ctxmon_gtk.py`, frozen; test oracle until M5.6) and its logo (`ctxmon.svg`). Not built. |
 | `docs/manual/` | The user manual, one short topic per file ([index](docs/manual/index.md)). |
 | `docs/roadmap.md` | The milestone and gate plan. |
 | `docs/milestones/` | Milestone reviews (what was done, what was learned, what comes next). |
@@ -384,7 +393,7 @@ The plan is in [`docs/roadmap.md`](docs/roadmap.md):
 
 | Version | Contents |
 |---|---|
-| v0.1 | Editor, CTXMon (standalone `vermilion-ctxmon` and the CTXMon tab), right-hand directory sidebar, build and Output pane, Problems, terminal |
+| v0.1 | The light editor `vermilion` and the IDE `vermilion-ide` (right-hand directory sidebar, build and Output pane, Problems, terminal), ctxmon (standalone `ctxmon` and the ctxmon tab) |
 | v0.2 | Agent core: providers, tools, permission presets, setup dialog, chat, archive, side-by-side diff |
 | v0.3 | Debugger |
 | v0.4 | Cost display, Anthropic and Gemini adapters, project file, gate framework, MCP |

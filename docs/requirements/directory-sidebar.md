@@ -1,6 +1,6 @@
 # Requirement: directory sidebar (right-hand side)
 
-**Status: kept by Adam (2026-11-05).** In Vermilion the sidebar sits on the **right**, as the first tab of the right-hand stack (Files | Agent | CTXMon). Built in milestone M3.
+**Status: kept by Adam (2026-11-05).** In Vermilion the sidebar sits on the **right**, as the first tab of the right-hand stack (Files | Agent | ctxmon). Built in milestone M3, in `vermilion-ide` only (the light editor `vermilion` has no sidebar, ARCHITECTURE.md 7.12).
 
 ### 1 Layout
 - One tab, Files. There is no separate project tab.
