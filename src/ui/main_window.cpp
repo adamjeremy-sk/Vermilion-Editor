@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 
+#include "core/recovery_store.h"
 #include "core/version.h"
 #include "ui/editor_page.h"
 #include "ui/gtkx/object_ptr.h"
@@ -81,7 +82,17 @@ MainWindow::MainWindow(GtkApplication* app)
                    [this](const std::string& message) { status_.show_message(message); },
                    [this](DocumentId id, std::function<void(bool)> done) {
                        saves_.save(id, std::move(done));
-                   }}) {
+                   }}),
+      recovery_(list_, default_recovery_root(), RecoveryProgram::Light,
+                RecoveryController::Callbacks{
+                    [this](DocumentId id) -> std::optional<std::string> {
+                        EditorPage* page = tabs_.editor(id); // borrowed
+                        if (page == nullptr) {
+                            return std::nullopt;
+                        }
+                        return page->text();
+                    },
+                    [this](const std::string& message) { status_.show_message(message); }}) {
     gtk_widget_add_css_class(GTK_WIDGET(window_), "vm-main");
     gtk_window_set_title(window_, "Vermilion Editor");
     gtk_window_set_default_size(window_, 1100, 700);
@@ -96,8 +107,17 @@ MainWindow::MainWindow(GtkApplication* app)
     close_request_ = gtkx::connect<gboolean(GtkWindow*)>(
         window_, "close-request",
         [this](GtkWindow*) -> gboolean { return on_close_request() ? TRUE : FALSE; });
+    tabs_.set_observer(&recovery_);
     tabs_.add_untitled();
+    blank_id_ = list_.active();
     refresh();
+}
+
+// The tabs hold a pointer to recovery_, which is destroyed before them: they stop calling it
+// first. Then recovery_ waits for its worker and deletes the copies of the open documents (a
+// clean end: every unsaved document was saved or given up).
+MainWindow::~MainWindow() {
+    tabs_.set_observer(nullptr);
 }
 
 void MainWindow::present() {

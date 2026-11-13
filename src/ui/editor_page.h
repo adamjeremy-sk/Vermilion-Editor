@@ -6,13 +6,17 @@
 
 #include <gtksourceview/gtksource.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
+#include "core/recovered_base.h"
 #include "core/text_format.h"
 #include "ui/document_loader.h"
 #include "ui/document_saver.h"
+#include "ui/gtkx/async_guard.h"
 #include "ui/gtkx/object_ptr.h"
 #include "ui/gtkx/signal.h"
 #include "ui/status_bar.h"
@@ -36,6 +40,9 @@ public:
         std::function<void(int)> save_progress; // percent saved, only when it changes
         // The save ended; runs last and may destroy this page. The error text when Failed.
         std::function<void(DocumentSaver::Outcome, const std::string&)> saved;
+        // The text changed, or its format was marked as changed (mark_modified); not while a file
+        // loads.
+        std::function<void()> edited;
     };
 
     // An empty, editable page with the classic scheme, line numbers and no word wrap. The text is
@@ -63,9 +70,13 @@ public:
     void finish_load(const std::string& path, bool read_only);
 
     // Starts saving the text to path (absolute) with format; Save As when path is not where the
-    // page's file is. The page cannot be edited until the save ends.
+    // page's file is. The page cannot be edited until the save ends. When expect_file_time() was
+    // called for path and overwrite_changes is false, the file's time is read first; if it differs
+    // the save ends with ChangedOnDisk and writes nothing (the caller asks Save Anyway).
     void save(const std::string& path, const TextFormat& format, bool overwrite_changes);
-    bool saving() const { return saver_ != nullptr; }
+
+    // True from the call of save() until its end, also while the file's time is being read.
+    bool saving() const { return saver_ != nullptr || checking_; }
     bool busy() const { return loading() || saving(); }
 
     // Sets the language (syntax colouring) from the file name; plain text when nothing matches.
@@ -80,15 +91,39 @@ public:
     // Marks the text as changed, so a new format reaches the file with the next save.
     void mark_modified();
 
+    // Replaces the text with the text of a recovery copy (UTF-8 without NUL; at most INT_MAX
+    // bytes): one insert, outside the undo history, with the cursor at the start and the buffer
+    // modified. It is not passed on as an edit, because the copy it came from still exists.
+    void restore_text(const std::string& text);
+
+    // The text is based on the file at path (absolute) as it was at mtime_us (microseconds since
+    // the Unix epoch). See save(). Forgotten after a successful save, and by load().
+    void expect_file_time(const std::string& path, std::int64_t mtime_us);
+
     void set_wrap(bool wrap);
     bool wraps() const;
 
     // Line, column, mode, tab width and language; the format fields are left to the caller.
     CursorStatus status() const;
 
+    // The whole text as the buffer holds it: UTF-8, a byte-order mark as U+FEFF.
+    std::string text() const;
+
+    // The length of the text in characters (the buffer keeps the count, so this is cheap).
+    std::uint64_t char_count() const;
+
+    // Reads the modified time of the page's file as it is now, without blocking. callback gets
+    // microseconds since the Unix epoch, or nothing when the page has no file or the time cannot
+    // be read. It runs from the main loop (at once when the page has no file) and never after the
+    // page is destroyed.
+    void query_file_time(std::function<void(std::optional<std::int64_t>)> callback);
+
 private:
     void on_loaded(DocumentLoader::Outcome outcome, const std::string& error);
     void on_saved(DocumentSaver::Outcome outcome, const std::string& error);
+    void begin_save(const std::string& path, const TextFormat& format, bool overwrite_changes);
+    void end_save(DocumentSaver::Outcome outcome, const std::string& error);
+    void query_time(GFile* location, std::function<void(std::optional<std::int64_t>)> callback);
 
     Callbacks callbacks_;
     gtkx::ObjectPtr<GtkWidget> scrolled_; // the notebook holds its own reference as well
@@ -101,6 +136,14 @@ private:
     gtkx::SignalConnection modified_changed_;
     gtkx::SignalConnection cursor_moved_;
     gtkx::SignalConnection overwrite_toggled_;
+    gtkx::SignalConnection text_changed_;
+    // load() is emptying the buffer, or restore_text() is filling it: that is not an edit.
+    bool clearing_ = false;
+    // Set by expect_file_time(), cleared by a successful save and by load().
+    std::optional<RecoveredBase> base_;
+    // save() is reading the file's time before it starts the saver.
+    bool checking_ = false;
+    gtkx::AsyncGuard<EditorPage> guard_{this}; // last member: it goes first
 };
 
 } // namespace vermilion::ui

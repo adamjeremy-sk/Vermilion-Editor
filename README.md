@@ -22,15 +22,15 @@
 > be opened and saved, with encodings, line endings and the close and quit questions (M2.2). The user manual opens inside the
 > program under Help → Index or F1 (M2.2b).
 >
-> **Just started: M2.2c, crash recovery.** The recovery file format and the copy schedule are written and tested; the rest
-> (the store, the wiring and the start-up question) follows. Until it is finished, unsaved edits are lost if the editor crashes.
-> This work is not committed yet, so it is not counted in the gate list below.
+> **Done: M2.2c, crash recovery.** Edited documents, untitled ones included, are copied to recovery files shortly after you stop
+> typing. If the editor crashes or is killed, the next start asks about each copy: Recover, Discard or Decide Later (Recover All
+> when several wait). It was tried on a 50 MB file without any lag.
 >
-> **Next.** After crash recovery, search and settings come next in M2. The ctxmon window is its own milestone, M5.
+> **Next.** Search and replace (M2.3), then the file monitor and settings in M2. The ctxmon window is its own milestone, M5.
 >
-> 259 tests, all passing at the last commit (311 in the working tree with the first two steps of M2.2c). Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
+> 482 tests, all passing at the last commit. Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
-**Progress**: `███░░░░░░░░░░░░░░░░░` 17% (weighted: M0 and M1 done; M2 6 of 12) ([roadmap](docs/roadmap.md))
+**Progress**: `███░░░░░░░░░░░░░░░░░` 18% (weighted: M0 and M1 done; M2 7 of 12) ([roadmap](docs/roadmap.md))
 
 <p align="center">
   <img src="res/github/vermilion-m2.2b.png" width="800" alt="Vermilion Editor: the editor window with a C++ file open, the Help window showing the keyboard shortcuts, and the About dialog">
@@ -76,11 +76,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); next crash recovery (M2.2c) |
+| Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); crash recovery (M2.2c) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
-| Code | M0 and M1 done; M2 under way (6 of 12 gates). 259 tests, all passing at the last commit (311 with the uncommitted first two steps of M2.2c). Next: M2.2c, crash recovery (under way). What each gate built is listed below |
+| Code | M0 and M1 done; M2 under way (7 of 12 gates). 482 tests, all passing at the last commit. Next: M2.3, search. What each gate built is listed below |
 | Releases | None |
 
 ### Built so far
@@ -157,7 +157,8 @@ with M5.
   cut or a full disk never leaves a half-written file. Closing an edited tab asks Save, Close Without Saving or Cancel;
   quitting asks about each edited document in turn. **Built (M2.2).**
 - Crash recovery: edited documents, untitled ones included, are copied to recovery files shortly after you stop typing; if
-  Vermilion did not close properly, the next start offers the saved file or the recovered text, with the time of each.
+  Vermilion did not close properly, the next start asks about each copy (Recover, Discard or Decide Later, or Recover All),
+  with the time of the copy and whether the file changed since. **Built (M2.2c).**
 - Syntax highlighting, line numbers and colour schemes from GtkSourceView. Highlighting (the language is guessed from the
   file name and set after the file has loaded) and line numbers are **built (M2.2)**, with the classic colour scheme; choosing
   another scheme, a dark one, and choosing the language by hand come later (settings, M2.5).

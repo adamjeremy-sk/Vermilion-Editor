@@ -4,6 +4,9 @@
 
 #include "ui/editor_page.h"
 
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <utility>
 
 #include "ui/gtkx/string.h"
@@ -14,6 +17,36 @@ namespace {
 
 constexpr unsigned kTabWidth = 4; // per document; the settings value arrives with M2.5
 constexpr gunichar kByteOrderMark = 0xFEFF;
+constexpr const char* kFileTimeAttributes =
+    G_FILE_ATTRIBUTE_TIME_MODIFIED "," G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC;
+
+// A file time query on its way: what to call with the answer, and the ticket that says whether
+// the page is still there.
+struct FileTimeQuery {
+    std::function<void(std::optional<std::int64_t>)> callback;
+    gpointer ticket = nullptr;
+};
+
+// The end of a query started by query_file_time(); data is the FileTimeQuery it released.
+void on_file_time(GObject* source, GAsyncResult* result, gpointer data) {
+    std::unique_ptr<FileTimeQuery> query(static_cast<FileTimeQuery*>(data));
+    GError* raw = nullptr;
+    auto info =
+        gtkx::ObjectPtr<GFileInfo>::adopt(g_file_query_info_finish(G_FILE(source), result, &raw));
+    std::unique_ptr<GError, decltype(&g_error_free)> error(raw, &g_error_free);
+    if (gtkx::AsyncGuard<EditorPage>::take(query->ticket) == nullptr) {
+        return;
+    }
+    std::optional<std::int64_t> mtime_us;
+    if (info) {
+        std::unique_ptr<GDateTime, decltype(&g_date_time_unref)> time(
+            g_file_info_get_modification_date_time(info.get()), &g_date_time_unref);
+        if (time) {
+            mtime_us = g_date_time_to_unix_usec(time.get());
+        }
+    }
+    query->callback(mtime_us);
+}
 
 } // namespace
 
@@ -46,6 +79,11 @@ EditorPage::EditorPage(Callbacks callbacks)
                 callbacks_.modified(gtk_text_buffer_get_modified(text) != FALSE);
             }
         });
+    text_changed_ = gtkx::connect<void(GtkTextBuffer*)>(buffer_, "changed", [this](GtkTextBuffer*) {
+        if (!loading() && !clearing_) {
+            callbacks_.edited();
+        }
+    });
     cursor_moved_ = gtkx::connect<void(GObject*, GParamSpec*)>(buffer_, "notify::cursor-position",
                                                                [this](GObject*, GParamSpec*) {
                                                                    if (!loading()) {
@@ -73,9 +111,13 @@ void EditorPage::load(const std::string& path, TextEncoding encoding) {
     file_ = gtkx::ObjectPtr<GtkSourceFile>::adopt(gtk_source_file_new());
     auto location = gtkx::ObjectPtr<GFile>::adopt(g_file_new_for_path(path.c_str()));
     gtk_source_file_set_location(file_.get(), location.get());
+    // The file is read again, so GtkSourceView knows its time now: nothing to check at a save.
+    base_.reset();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(view_), FALSE);
     gtk_text_buffer_begin_irreversible_action(GTK_TEXT_BUFFER(buffer_));
+    clearing_ = true;
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(buffer_), "", 0);
+    clearing_ = false;
     loader_ = std::make_unique<DocumentLoader>(
         buffer_, file_.get(), encoding,
         DocumentLoader::Callbacks{[this](int percent) { callbacks_.load_progress(percent); },
@@ -95,13 +137,35 @@ void EditorPage::finish_load(const std::string& path, bool read_only) {
     gtk_text_buffer_set_modified(text, FALSE);
 }
 
-// An untitled page gets its source file here; the saver gives it the location after the save.
+// A page rebuilt from a recovery copy has no base time for GtkSourceView's own check, so its first
+// save to the copy's file reads the file's time itself and ends like the saver does, with
+// ChangedOnDisk and nothing written, when the time is not the recorded one. A file that is gone
+// is not a change: the save writes it again.
 void EditorPage::save(const std::string& path, const TextFormat& format, bool overwrite_changes) {
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(view_), FALSE);
+    if (!needs_base_check(base_, path, overwrite_changes)) {
+        begin_save(path, format, overwrite_changes);
+        return;
+    }
+    checking_ = true;
+    auto location = gtkx::ObjectPtr<GFile>::adopt(g_file_new_for_path(path.c_str()));
+    query_time(location.get(), [this, path, format](std::optional<std::int64_t> current_us) {
+        checking_ = false;
+        if (base_ && file_changed_since_base(*base_, current_us)) {
+            end_save(DocumentSaver::Outcome::ChangedOnDisk, std::string());
+            return;
+        }
+        begin_save(path, format, false);
+    });
+}
+
+// An untitled page gets its source file here; the saver gives it the location after the save.
+void EditorPage::begin_save(const std::string& path, const TextFormat& format,
+                            bool overwrite_changes) {
     if (!file_) {
         file_ = gtkx::ObjectPtr<GtkSourceFile>::adopt(gtk_source_file_new());
     }
     auto target = gtkx::ObjectPtr<GFile>::adopt(g_file_new_for_path(path.c_str()));
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(view_), FALSE);
     saver_ = std::make_unique<DocumentSaver>(
         buffer_, file_.get(), target.get(), format, overwrite_changes,
         DocumentSaver::Callbacks{[this](int percent) { callbacks_.save_progress(percent); },
@@ -143,6 +207,28 @@ void EditorPage::set_bom(bool bom) {
 
 void EditorPage::mark_modified() {
     gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(buffer_), TRUE);
+    if (!loading()) {
+        callbacks_.edited();
+    }
+}
+
+// One insert: GtkSourceView's undo history stays empty, so Undo cannot take the text away. The
+// insert is not an edit (clearing_), but the buffer's modified flag is set whatever the text.
+void EditorPage::restore_text(const std::string& text) {
+    GtkTextBuffer* buffer = GTK_TEXT_BUFFER(buffer_);
+    clearing_ = true;
+    gtk_text_buffer_begin_irreversible_action(buffer);
+    gtk_text_buffer_set_text(buffer, text.c_str(), static_cast<int>(text.size()));
+    gtk_text_buffer_end_irreversible_action(buffer);
+    clearing_ = false;
+    GtkTextIter start;
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_place_cursor(buffer, &start);
+    gtk_text_buffer_set_modified(buffer, TRUE);
+}
+
+void EditorPage::expect_file_time(const std::string& path, std::int64_t mtime_us) {
+    base_ = RecoveredBase{path, mtime_us};
 }
 
 void EditorPage::set_wrap(bool wrap) {
@@ -169,6 +255,40 @@ CursorStatus EditorPage::status() const {
     return status;
 }
 
+std::string EditorPage::text() const {
+    GtkTextBuffer* buffer = GTK_TEXT_BUFFER(buffer_);
+    GtkTextIter start;
+    GtkTextIter end;
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    return gtkx::take_string(gtk_text_buffer_get_text(buffer, &start, &end, TRUE));
+}
+
+// GtkTextBuffer counts characters in an int, so the count is never negative.
+std::uint64_t EditorPage::char_count() const {
+    int count = gtk_text_buffer_get_char_count(GTK_TEXT_BUFFER(buffer_));
+    return count > 0 ? static_cast<std::uint64_t>(count) : 0;
+}
+
+void EditorPage::query_file_time(std::function<void(std::optional<std::int64_t>)> callback) {
+    GFile* location = file_ ? gtk_source_file_get_location(file_.get()) : nullptr;
+    if (location == nullptr) {
+        callback(std::nullopt);
+        return;
+    }
+    query_time(location, std::move(callback));
+}
+
+// The location is borrowed; GIO keeps its own reference while the query runs. The query is not
+// cancelled when the page goes: the guard ticket makes its answer do nothing then.
+void EditorPage::query_time(GFile* location,
+                            std::function<void(std::optional<std::int64_t>)> callback) {
+    auto query = std::make_unique<FileTimeQuery>();
+    query->callback = std::move(callback);
+    query->ticket = guard_.ticket();
+    g_file_query_info_async(location, kFileTimeAttributes, G_FILE_QUERY_INFO_NONE,
+                            G_PRIORITY_DEFAULT, nullptr, &on_file_time, query.release());
+}
+
 // Runs from the loader's own callback, which allows destroying the loader here. The page's
 // callback runs last, because it may destroy the page.
 void EditorPage::on_loaded(DocumentLoader::Outcome outcome, const std::string& error) {
@@ -178,10 +298,18 @@ void EditorPage::on_loaded(DocumentLoader::Outcome outcome, const std::string& e
     loaded(outcome, error);
 }
 
-// Runs from the saver's own callback, which allows destroying the saver here. Saving is never
-// started for a read-only page, so the page is editable again afterwards.
+// Runs from the saver's own callback, which allows destroying the saver here.
 void EditorPage::on_saved(DocumentSaver::Outcome outcome, const std::string& error) {
     saver_.reset();
+    if (outcome == DocumentSaver::Outcome::Saved) {
+        base_.reset();
+    }
+    end_save(outcome, error);
+}
+
+// Saving is never started for a read-only page, so the page is editable again afterwards. The
+// page's callback runs last, because it may destroy the page.
+void EditorPage::end_save(DocumentSaver::Outcome outcome, const std::string& error) {
     gtk_text_view_set_editable(GTK_TEXT_VIEW(view_), TRUE);
     std::function<void(DocumentSaver::Outcome, const std::string&)> saved = callbacks_.saved;
     saved(outcome, error);

@@ -34,6 +34,8 @@ void on_activate(GtkApplication* app, AppState& state) {
     state.window_destroy = vermilion::gtkx::connect<void(GtkWidget*)>(
         state.window->window(), "destroy", [&state](GtkWidget*) { state.window.reset(); });
     state.window->present();
+    // The question about the recovery copies of an earlier run comes once the window is shown.
+    state.window->offer_recovery();
 }
 
 } // namespace

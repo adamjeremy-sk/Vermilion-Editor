@@ -5,9 +5,12 @@
 #include "ui/document_tabs.h"
 
 #include <algorithm>
+#include <string>
 #include <utility>
 
+#include "core/log.h"
 #include "core/open_messages.h"
+#include "core/recovery_store.h"
 #include "core/save_messages.h"
 #include "ui/gtkx/string.h"
 
@@ -75,6 +78,36 @@ void DocumentTabs::add_file(const std::string& path, const std::string& title,
     callbacks_.changed();
 }
 
+// The text goes in with one insert, which is timed in the log: the cost on a big document is what
+// the last step of M2.2c measures.
+DocumentId DocumentTabs::add_recovered(Recovered recovered) {
+    static_assert(kRecoveryMaxFileBytes < (std::uint64_t{1} << 31),
+                  "the buffer takes the text in one call, with an int length");
+    bool as_file = recovered.path && list_.find_by_path(*recovered.path) == nullptr;
+    DocumentId id = 0;
+    if (as_file) {
+        std::string title = gtkx::take_string(g_filename_display_basename(recovered.path->c_str()));
+        id = list_.add_file(*recovered.path, title, recovered.format, recovered.mixed_line_endings);
+    } else {
+        id = list_.add_untitled();
+        list_.set_format(id, recovered.format, recovered.mixed_line_endings);
+    }
+    Page& page = create_page(id);
+    gint64 started = g_get_monotonic_time();
+    page.editor.restore_text(recovered.text);
+    gint64 elapsed_ms = (g_get_monotonic_time() - started) / 1000;
+    logging::debug("recovery: " + std::to_string(page.editor.char_count()) +
+                   " characters inserted in " + std::to_string(elapsed_ms) + " ms");
+    if (as_file) {
+        page.editor.guess_language(*recovered.path);
+        if (recovered.file_mtime_us) {
+            page.editor.expect_file_time(*recovered.path, *recovered.file_mtime_us);
+        }
+    }
+    callbacks_.changed();
+    return id;
+}
+
 void DocumentTabs::reopen(DocumentId id, TextEncoding encoding) {
     Page* page = find_page(id);
     const DocumentRecord* record = list_.find(id);
@@ -83,6 +116,9 @@ void DocumentTabs::reopen(DocumentId id, TextEncoding encoding) {
     }
     // Read-only again only if this encoding also leaves bytes that cannot be shown (on_loaded).
     list_.set_read_only(id, false);
+    if (observer_ != nullptr) {
+        observer_->document_reloading(id);
+    }
     page->editor.load(record->path, encoding);
     callbacks_.changed();
 }
@@ -92,6 +128,9 @@ void DocumentTabs::close(DocumentId id) {
                            [id](const std::unique_ptr<Page>& page) { return page->id == id; });
     if (it == pages_.end()) {
         return;
+    }
+    if (observer_ != nullptr) {
+        observer_->document_closing(id);
     }
     int index = gtk_notebook_page_num(notebook(), (*it)->editor.widget());
     std::optional<DocumentId> restore;
@@ -200,8 +239,9 @@ DocumentTabs::Page& DocumentTabs::create_page(DocumentId id) {
             },
             [this, id](int percent) { on_save_progress(id, percent); },
             [this, id](DocumentSaver::Outcome outcome, const std::string& error) {
-                callbacks_.saved(id, outcome, error);
-            }});
+                on_saved(id, outcome, error);
+            },
+            [this, id] { on_edited(id); }});
     Page& added = *page;
     refresh_label(added);
     // In the list before it is appended: appending the first page announces it as current.
@@ -219,6 +259,9 @@ void DocumentTabs::on_modified(DocumentId id, bool modified) {
         return;
     }
     list_.set_modified(id, modified);
+    if (observer_ != nullptr) {
+        observer_->document_modified(id, modified);
+    }
     refresh_label(*page);
     callbacks_.changed();
 }
@@ -255,6 +298,7 @@ void DocumentTabs::on_loaded(DocumentId id, DocumentLoader::Outcome outcome,
     page->editor.finish_load(record->path, record->read_only);
     list_.set_modified(id, false);
     refresh_label(*page);
+    sync_file_time(id);
     callbacks_.message(loaded_message(*record));
     callbacks_.changed();
 }
@@ -264,6 +308,41 @@ void DocumentTabs::on_save_progress(DocumentId id, int percent) {
     if (record != nullptr) {
         callbacks_.message(saving_message(record->title, percent));
     }
+}
+
+// The length is read here, once per edit: the buffer keeps its character count.
+void DocumentTabs::on_edited(DocumentId id) {
+    Page* page = find_page(id);
+    if (page != nullptr && observer_ != nullptr) {
+        observer_->document_edited(id, page->editor.char_count());
+    }
+}
+
+// Runs inside the page's own save callback, so the page still exists. The receiver of the save is
+// told last.
+void DocumentTabs::on_saved(DocumentId id, DocumentSaver::Outcome outcome,
+                            const std::string& error) {
+    if (outcome == DocumentSaver::Outcome::Saved) {
+        if (observer_ != nullptr) {
+            observer_->document_saved(id);
+        }
+        sync_file_time(id);
+    }
+    callbacks_.saved(id, outcome, error);
+}
+
+// Asks the page for its file's modified time (a load or a save has just made the file and the
+// text equal); the answer goes to the observer when it arrives, unless the page is gone by then.
+void DocumentTabs::sync_file_time(DocumentId id) {
+    Page* page = find_page(id);
+    if (page == nullptr) {
+        return;
+    }
+    page->editor.query_file_time([this, id](std::optional<std::int64_t> mtime_us) {
+        if (observer_ != nullptr) {
+            observer_->document_synced(id, mtime_us);
+        }
+    });
 }
 
 void DocumentTabs::on_press(double x, double y) {
