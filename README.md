@@ -30,7 +30,7 @@
 >
 > 482 tests, all passing at the last commit. Everything under "Planned" is a plan, not a feature you can use. See [Status](#status).
 
-**Progress**: `███░░░░░░░░░░░░░░░░░` 18% (weighted: M0 and M1 done; M2 7 of 12) ([roadmap](docs/roadmap.md))
+**Progress**: `████░░░░░░░░░░░░░░░░` 21% (weighted: M0 and M1 done; M2 7 of 12) ([roadmap](docs/roadmap.md))
 
 <p align="center">
   <img src="res/github/vermilion-m2.2b.png" width="800" alt="Vermilion Editor: the editor window with a C++ file open, the Help window showing the keyboard shortcuts, and the About dialog">
@@ -64,10 +64,10 @@ whole loop: edit, ask the agent, review what it changed, build, run, debug and w
 
 Principles:
 - **Native and direct.** GTK 4 and GLib through their plain C APIs; no language bindings, no vendor SDKs, nothing that only
-  wraps another API. The agent speaks the providers' HTTP protocols itself; builds and debuggers run as subprocesses.
+  wraps another API. The agent speaks the llama.cpp server's OpenAI-compatible HTTP API itself; builds and debuggers run as subprocesses.
 - **The agent is built in, not bolted on.** It works through the editor's own tools, under permission presets you control.
-- **Reviewable.** Every change the agent makes is a change set you can read side by side and revert.
-- **Local first.** A local llama.cpp server is a first-class endpoint, with a monitor for it; cloud providers use your own keys.
+- **Reviewable.** Every agent turn is a change set you can read side by side and revert as a whole.
+- **Local first.** The agent is built for a local llama.cpp server, with a monitor for it. Other OpenAI-compatible servers work too (you bring your own key through an environment variable), but they are not the goal.
 - **Linux only.** Wayland and X11 through GTK. English interface. No telemetry.
 
 ---
@@ -79,7 +79,7 @@ Principles:
 | Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); crash recovery (M2.2c) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
-| Cost, extra providers, project file, gate framework, MCP (v0.4) | Designed, not started |
+| Cost, project file, gate framework (v0.4) | Designed, not started |
 | Code | M0 and M1 done; M2 under way (7 of 12 gates). 482 tests, all passing at the last commit. Next: M2.3, search. What each gate built is listed below |
 | Releases | None |
 
@@ -209,13 +209,14 @@ Not planned for the first version: attach, core dumps, remote debugging.
 ## The AI agent
 Planned for v0.2 and later; the design is in [`ARCHITECTURE.md`](ARCHITECTURE.md) section 7.6.
 
-**Providers.** OpenAI-compatible servers (which covers OpenAI, a local llama.cpp server and Gemini's compatible endpoint),
-Anthropic's native Messages API, and a native Gemini adapter if the compatible one falls short. You bring your own keys.
-Replies stream in and can be stopped at any time.
+**Provider.** The agent talks to a local llama.cpp server through the OpenAI-compatible API (start the server with `--jinja`
+for tool calls). Any other OpenAI-compatible server works as well, but nothing else is built: native Anthropic and Gemini
+adapters, MCP and key storage in the system keyring are parked in [`docs/ideas.md`](docs/ideas.md). Replies stream in and can
+be stopped at any time.
 
-**Setup dialog.** The first time you open the Agent tab, a dialog takes care of everything: provider, base URL, API key (kept
-in the system keyring), model, a connection test and the permission preset. If a llama.cpp server is running locally, it fills
-in the model and context size and offers the ctxmon tab.
+**Setup dialog.** The first time you open the Agent tab, a dialog takes care of everything: base URL, the name of the
+environment variable that holds the API key if the server needs one (Vermilion stores no key), model, a connection test and the
+permission preset. If a llama.cpp server is running locally, it fills in the model and context size and offers the ctxmon tab.
 
 **Tools.** The agent works through the editor: read a file (line ranges), replace text, create a file, list a directory, search,
 open a file in a tab, run the build, and run a shell command.
@@ -231,12 +232,12 @@ open a file in a tab, run the build, and run a shell command.
 
 Unrestricted needs a confirmation and shows a red badge. In every preset the agent cannot change its own preset and cannot
 read your API keys. A default list of files that are never sent to a remote endpoint (`.env`, `*.pem`, `id_*`, `*secret*`)
-is enforced, the status bar shows whether the active endpoint is local or remote, and a request log records what was sent
-(not the prompt text, unless you turn that on).
+is enforced, the status bar shows whether the active endpoint is local, on your network or remote, and a request log records
+what was sent (not the prompt text, unless you turn that on).
 
-**Reviewing what the agent did.** Every turn is a change set shown in a side-by-side diff with folding and per-hunk Accept or
-Revert. One undo step undoes a whole agent turn. Files changed on disk are snapshotted first, so reverting does not depend
-on git.
+**Reviewing what the agent did.** Every turn is a change set shown in a side-by-side diff with folding, and a whole turn can
+be reverted. Files are snapshotted before the agent's first edit, so reverting does not depend on git. Changes made by shell
+commands the agent runs are not tracked.
 
 **Chat.** `/clear` saves the conversation to an archive and starts fresh; `/history` opens archived chats; `/copy` copies the
 last output, and every message, code block and generated prompt has a Copy button. Slash commands are Markdown templates in
@@ -248,8 +249,6 @@ agent's tools and gives a verdict. The templates are yours to edit.
 
 **Cost.** Enter input and output prices per million tokens for any endpoint, including your local model, to see what the same
 work would cost on a paid model. No prices are shipped.
-
-**MCP.** Vermilion will be an MCP server (stdio) exposing its tools to other agents, and an MCP client for outside tool servers.
 
 ---
 
@@ -302,7 +301,7 @@ Everything follows the XDG directories; nothing is written next to the executabl
 | Chat archive | `~/.local/share/vermilion/chats/` |
 | Revert snapshots | `~/.cache/vermilion/snapshots/` |
 | Request log | `~/.local/state/vermilion/requests.log` |
-| API keys | system keyring |
+| API keys | not stored: `agent.json` names an environment variable |
 
 File names are provisional until the gates that create them. Settings can be changed in the application or by editing the files.
 
@@ -354,7 +353,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `src/core/` | UI-free logic. Built: the document list, the text scanner and encodings, the manual's Markdown parser and page history, message texts, logging and the `Result` type. Planned: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
 | `src/ctxmon/core/` | ctxmon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
 | `src/ctxmon/ui/` | *(M5)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon`. |
-| `src/agent/` | Provider adapters, the agent loop, the tool registry, MCP. No GTK headers. |
+| `src/agent/` | The provider adapter, the agent loop, the tool registry. No GTK headers. |
 | `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the status bar, the help window and the compiled-in resources (stylesheet, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). At M2.6b the editor code becomes a library shared by `vermilion` and `vermilion-ide` (ARCHITECTURE.md 7.12). |
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for ctxmon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the ctxmon tests' expected values (until M5.6). |
@@ -395,9 +394,9 @@ The plan is in [`docs/roadmap.md`](docs/roadmap.md):
 | Version | Contents |
 |---|---|
 | v0.1 | The light editor `vermilion` and the IDE `vermilion-ide` (right-hand directory sidebar, build and Output pane, Problems, terminal), ctxmon (standalone `ctxmon` and the ctxmon tab) |
-| v0.2 | Agent core: providers, tools, permission presets, setup dialog, chat, archive, side-by-side diff |
+| v0.2 | Agent core, local first: llama.cpp through the OpenAI-compatible API, tools, permission presets, setup dialog, chat, archive, side-by-side diff, whole-turn revert |
 | v0.3 | Debugger |
-| v0.4 | Cost display, Anthropic and Gemini adapters, project file, gate framework, MCP |
+| v0.4 | Cost display, project file, gate framework |
 | v1.0 | Packaging, documentation, notices |
 
 ---
@@ -416,5 +415,5 @@ Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 
 Every source file carries an SPDX licence header. The model monitor began as a port of ctxmon from
 [llm-suite-test](https://github.com/adamjeremy-sk/llm-suite-test), also by the author; it is now developed here. The libraries used (GTK, GtkSourceView,
-GLib, json-glib, libsoup, libsecret, VTE) are LGPL-licensed; GoogleTest is BSD-licensed. A full third-party notice file will be added before
+GLib, json-glib, libsoup, VTE) are LGPL-licensed; GoogleTest is BSD-licensed. A full third-party notice file will be added before
 the first release.
