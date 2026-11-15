@@ -394,7 +394,7 @@ The plan is in [`docs/roadmap.md`](docs/roadmap.md):
 | Version | Contents |
 |---|---|
 | v0.1 | The light editor `vermilion` and the IDE `vermilion-ide` (right-hand directory sidebar, build and Output pane, Problems, terminal), ctxmon (standalone `ctxmon` and the ctxmon tab) |
-| v0.2 | Agent core, local first: llama.cpp through the OpenAI-compatible API, tools, permission presets, setup dialog, chat, archive, side-by-side diff, whole-turn revert |
+| v0.2 | Agent core, local first: llama.cpp through the OpenAI-compatible API, tools, permission presets, setup dialog, chat, archive, side-by-side diff, staged edits, whole-turn and per-hunk revert |
 | v0.3 | Debugger |
 | v0.4 | Cost display, project file, gate framework |
 | v1.0 | Packaging, documentation, notices |

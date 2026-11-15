@@ -353,3 +353,10 @@ Before it: **M2.2c STEP 5c** (`claude/M2.2c_5c_hooks.md`, 27.4 KB, issued 2026-1
 
 ### 2026-11-12 (late night, after the 5f report) — M2.2c STEP 5f fix and 5g
 - Same chat as the 5e audit. Found the 5f failures in Adam's `evidence/M2.2c/s5f_ctest.txt` (no folder or invalid id), traced them to the evaluation order in `recover()` and `recover_next()`, sent the fix 1 continuation; Qwen's report: 22 of 22 and 482 of 482, audited PASS. Adam's lag question was worked through with his screenshots: CPU idle, RAM and swap filled by a day of CLion (fixed by a reboot), the 7900 XTX at 22.3 of 24 GiB at idle; plan in section 1 (Agent / runtime). Designed 5g (window wiring in a new file), checked it here and issued it as a 13 KB file; Qwen's 5g report then audited PASS (five digests equal the dictated ones, 482 of 482, 0 warnings). Open: Adam's hands-on check, then STEP 6.
+
+## Part 10 — rotated out of HANDOFF.md at the handoff of 2026-11-14 (M6 toolset talk)
+
+### Session log entry rotated out
+
+### 2026-11-12 (evening, local) — M2.2c STEP 5g, hands-on, STEP 6, docs sweep and the gate commit
+- Same chat. Audited the 5g report (five digests equal the dictated ones, 482 of 482), gave Adam the hands-on steps (all passed) and the STEP 6 procedure; read his logs (95 to 125 ms per copy, 976 ms restore), put three decisions to him (no slicing, ceiling kept, GtkGizmo: he answered with an upstream explanation) and wrote the docs sweep: ARCHITECTURE.md 7.11, a manual topic checked with the real parser, README, roadmap. Adam built and ran ctest (482 of 482), committed and pushed `4c2f6f6`; handoff called. Open: the M2.3 design talk.
