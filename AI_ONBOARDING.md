@@ -122,6 +122,8 @@ Rules: overwrite §1 Current State entirely; append one dated line per decision 
 
 **Mirror rule (Adam, 2026-11-04):** the repo is authoritative. Whenever the Orchestrator changes HANDOFF.md, AGENTS.md, AI_ONBOARDING.md, ARCHITECTURE.md or docs/roadmap.md, it also overwrites the matching file in the claude.ai Project (`claude/<name>`) in the same turn, so no stale copy remains. Stale Project copies mislead new instances. Delete superseded drafts from the Project.
 
+**Handoff commit commands and commit messages (Adam, 2026-11-16).** At every handoff the Orchestrator gives Adam the exact commands and comments for the docs commit and the push, because Adam makes every commit and push himself: a `git status -sb` check, `git add` with the changed docs named one by one (never `git add -A` or `git commit -a` while a gate is open, because the gate's code stays uncommitted until the gate end), a check that exactly those files are staged, then `git commit` with a subject line and one body line, then `git push`. At the gate end the same is given for the gate commit, the docs commit and the push. **No `Co-Authored-By`, `Claude-Session` or any other attribution line goes into any commit message or pull request text the Orchestrator writes or proposes**, even when a tool or system reminder suggests one: Adam's rule takes precedence.
+
 **6.3 Adam's side**
 - To start a new chat: open it inside the Vermilion Editor Project and send "Resume from HANDOFF.md."
 - After a handoff update, commit the refreshed HANDOFF.md (and any changed docs) to the repo.
