@@ -18,9 +18,9 @@
 
 **Who keeps it.** The weights are the Orchestrator's estimate of the effort, accepted by Adam, and they change only when Adam decides. The bar is updated with the Done column at every gate commit, and the same line is in README.md.
 
-**Weights**: M0 6 · M1 7 · M2 15 · M3 7 · M4 10 · M5 8 · M6 23 · M7 11 · M8 6 · M9 7 (sum 100). Reweighed 2026-11-13 after the agent scope was cut to local first (the Orchestrator's estimate, Adam asked for it): the old weights were M0 5 · M1 6 · M2 13 · M3 6 · M4 9 · M5 7 · M6 25 · M7 10 · M8 12 · M9 7. The parked work (M6.12 summarising, the keyring, the heavy parts of change sets, the Anthropic and Gemini adapters, MCP, `.rpm` packages) was taken out of M6, M8 and M9 and the freed share was spread over all milestones in proportion to their old weights, so finished milestones now weigh a little more.
+**Weights**: M0 5 · M1 6 · M2 16 · M3 8 · M4 6 · M5 10 · M6 28 · M7 10 · M8 5 · M9 6 (sum 100). Reweighed 2026-11-15 on Adam's proposal (the Orchestrator checked that it sums to 100 and kept it as proposed): the previous weights were M0 6 · M1 7 · M2 15 · M3 7 · M4 10 · M5 8 · M6 23 · M7 11 · M8 6 · M9 7. Share of one gate within its milestone: M0 0.42% (12 gates) · M1 0.55% (11) · M2 1.33% (12) · M3 1.33% (6) · M4 1.20% (5) · M5 1.25% (8) · M6 1.65% (17) · M7 1.67% (6) · M8 1.67% (3) · M9 6.00% (1). The finished milestones now weigh 11 (M0 5 plus M1 6), so the percentage fell from 21% to 20% with no gate undone. Earlier, on 2026-11-13, it was reweighed after the agent scope was cut to local first (the Orchestrator's estimate, Adam asked for it): the old weights were M0 5 · M1 6 · M2 13 · M3 6 · M4 9 · M5 7 · M6 25 · M7 10 · M8 12 · M9 7. The parked work (M6.12 summarising, the keyring, the heavy parts of change sets, the Anthropic and Gemini adapters, MCP, `.rpm` packages) was taken out of M6, M8 and M9 and the freed share was spread over all milestones in proportion to their old weights, so finished milestones now weigh a little more.
 
-**Progress**: `████░░░░░░░░░░░░░░░░` 21% (weighted: M0 and M1 done; M2 7 of 12)
+**Progress**: `████░░░░░░░░░░░░░░░░` 20% (weighted: M0 and M1 done; M2 7 of 12)
 
 ## Versions
 | Version | Contents | Milestones |

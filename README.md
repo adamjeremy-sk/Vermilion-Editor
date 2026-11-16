@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 21% (weighted: M0 and M1 done; M2 7 of 12) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 20% (weighted: M0 and M1 done; M2 7 of 12) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
