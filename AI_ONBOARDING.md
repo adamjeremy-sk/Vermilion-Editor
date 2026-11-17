@@ -60,7 +60,7 @@ Every non-trivial task executes under this protocol. No exceptions.
 ## 4. Project Summary & Component Map
 **Vermilion Editor**: native Linux text and code editor, written in C++17 on GTK 4 and GtkSourceView 5, with a built-in, local-first AI agent (llama.cpp through the OpenAI-compatible API), build and Output/Problems panes, a DAP debugger, a VTE terminal, a right-hand directory sidebar, and a model monitor ported from Adam's `ctxmon`. It ships as three programs: `vermilion` (light editor), `vermilion-ide` and `ctxmon` (ARCHITECTURE.md 7.12). IDE: CLion (CMake). Local working tree: `~/Projects/vermilion-editor`. Remote: `origin` = https://github.com/adamjeremy-sk/Vermilion-Editor.
 
-Component map: `src/core` (UI-free logic), `src/agent` (provider, loop, tools), `src/ctxmon/core` (model-monitor logic, UI-free) and `src/ctxmon/ui` (its cards and the standalone `ctxmon`), `src/ui` (GTK application: the editor base and, from M2.6b, one thin `main` per editor program), `tests/` (with `tests/ctxmon/`). Details and the planned directory names are in ARCHITECTURE.md section 4; the milestone plan is docs/roadmap.md.
+Component map: `src/core` (UI-free logic), `src/agent` (provider, loop, tools), `src/ctxmon/core` (model-monitor logic, UI-free) and `src/ctxmon/ui` (its cards and the standalone `ctxmon`), `src/ui` (GTK application: the editor base and, from M2.7b, one thin `main` per editor program), `tests/` (with `tests/ctxmon/`). Details and the planned directory names are in ARCHITECTURE.md section 4; the milestone plan is docs/roadmap.md.
 
 ## 5. Known Traps & Common Agent Drifts
 *Process drifts (seen with the local agent):*
@@ -108,7 +108,7 @@ Update it (and write it back to the Project) at each of these moments, without b
 **README checklist (Adam, 2026-11-11).** Every README sweep (end of day, end of milestone) goes through each item below, because a figure fixed in one place stays stale in another (the banner said 117 tests after M2.1c while the Status table said 132):
 1. Status banner (top quote): milestones done, what works now, the next gate, and the current test count (one current count, at the end).
 2. Progress line under the banner: identical to the roadmap header's.
-3. Status table: the v0.1 (or current version) row names the done gates and the next ones; the Code row gains one sentence per finished gate with that gate's test count, and ends with "Next: …".
+3. Status table: the row of the version under way names the done gates and the next ones; the Code row gains one sentence per finished gate with that gate's test count, and ends with "Next: …".
 4. The window: the screenshot and its caption still match what the window looks like.
 5. Planned features: anything now built is described as built (or removed from "Planned"); nothing planned reads as done.
 6. Building: new packages, build tools and `ctest` checks.

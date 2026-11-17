@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 20% (weighted: M0 and M1 done; M2 8 of 13) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 21% (weighted: M0 and M1 done; M2 8 of 15) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
@@ -66,11 +66,14 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); crash recovery (M2.2c); search, replace and Go to Line (M2.3) |
-| Agent (v0.2) | Designed, not started |
-| Debugger (v0.3) | Designed, not started |
-| Cost, project file, gate framework (v0.4) | Designed, not started |
-| Code | M0 and M1 done; M2 under way (8 of 13 gates). 715 tests, all passing at the last commit. What each gate built is listed below |
+| Editor and directory sidebar (v0.1.0), ctxmon logic | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); crash recovery (M2.2c); search, replace and Go to Line (M2.3) |
+| Build, Output, Problems (v0.2.0) | Designed, not started |
+| Agent (v0.3.0) | Designed, not started |
+| ctxmon window and tab, terminal (v0.4.0) | Designed, not started (the logic is done, M1) |
+| Debugger (v0.5.0) | Designed, not started |
+| Cost, project file, gate framework (v0.6.0) | Designed, not started |
+| Packaging and release (v0.9.0, then 1.0.0) | Designed, not started |
+| Code | M0 and M1 done; M2 under way (8 of 15 gates). 715 tests, all passing at the last commit. What each gate built is listed below |
 | Releases | None |
 
 ### Built so far
@@ -116,15 +119,15 @@ has the build output, the problem list, terminals and the debugger views. There 
 keyboard first, and every command is a menu item that shows its shortcut.
 
 Today (after M2.3) the window has the menu bar, the document tabs with the editor, and the status bar, and the Find, Replace and Go to Line windows open on top of it. The right-hand stack
-arrives with the directory sidebar (M3), the bottom panel with the build gates (M4), the Agent tab with M6 and the ctxmon tab
-with M5.
+arrives with the directory sidebar (M3), the bottom panel with the build gates (M4), the Agent tab with M5 and the ctxmon tab
+with M6.
 
 ---
 
 ## Planned features
 Rows marked Built exist today; everything else is a plan.
 
-### Editor (v0.1)
+### Editor and IDE
 | Feature | State | What it does |
 |---|---|---|
 | Tabs, open and save | Built (M2.2) | Line endings are detected and preserved (LF for new files) and changed from the Line Ending button in the status bar |
@@ -138,22 +141,24 @@ Rows marked Built exist today; everything else is a plan.
 | Large files | Built (M2.2) | Loaded in the background with highlighting switched on afterwards: a 50 MB C++ file opens in about 4 s instead of 87. A line over 350,000 characters or a binary file asks "Open anyway / Cancel" first; word wrap is off at open and switched on per document |
 | Manual inside the program | Built (M2.2b) | Help → Index (F1): the topics of `docs/manual` in a read-only window, with links between topics and Back and Index buttons |
 | Search, replace, go to line | Built (M2.3) | Two small windows, Find (Ctrl+F) and Replace (Ctrl+H), with Match case, whole word and regular expressions, highlighting of every match with a count, Find Next (F3) and Find Previous (Shift+F3), and a "Selection only" scope for Replace All; Go to Line (Ctrl+G, `line` or `line:column`). Replace All is one Undo step; on a very large file it works in slices and can be cancelled, but Undo of a huge run takes longer than the run, and a file of one enormous line with many matches may make the window slow. No search history |
-| External changes | Planned | A clean buffer reloads when the file changes on disk; a modified one shows a banner with Reload, Keep mine and Show diff |
-| Open Recent | Planned (M2.6c) | File → Open Recent: the files opened last, with a way to clear the list. The design is discussed with Adam first |
-| The light program | Planned (M2.6b) | `vermilion` as a plain editor for quick edits, a replacement for gedit or Mousepad (File, Edit, Search, View and Help menus); `vermilion-ide` is the whole IDE; both are built from the same editor code |
+| External changes | Planned (M2.4) | A clean buffer reloads when the file changes on disk; a modified one shows a banner with Reload and Keep mine (Show diff joins with the diff view, M2.6) |
+| Help window | Planned (M2.5b) | The manual window gets a Contents tree, a Search tab (match case, whole word, regular expressions) and Back, Forward and Hide buttons, in our own look |
+| Diff view | Planned (M2.6) | A side-by-side comparison with folding of unchanged lines, in the light editor too: opened from the external-change banner (Show diff) and from the crash-recovery question (Compare) |
+| Open Recent | Planned (M2.7c) | File → Open Recent: the files opened last, with a way to clear the list. The design is discussed with Adam first |
+| The light program | Planned (M2.7b) | `vermilion` as a plain editor for quick edits, a replacement for gedit or Mousepad (File, Edit, Search, View and Help menus); `vermilion-ide` is the whole IDE; both are built from the same editor code |
 
 ### Other parts
 | Part | Version | What it will do |
 |---|---|---|
-| Directory sidebar | v0.1 | Right-hand tree of folders and files (folders first), lazy loading, a file filter, a hidden-files toggle (off by default), a Sync button that follows the active tab, rename, delete (to trash), copy and move, drag and drop, automatic refresh. Specified in [`docs/requirements/directory-sidebar.md`](docs/requirements/directory-sidebar.md) |
-| Build, Output and Problems | v0.1 | Per-folder build and run commands in `.vermilion/project.json`, with presets that detect CMake, Make, Ninja, Cargo, Gradle and Bazel. Output streams into the Output pane; gcc, clang, rustc and javac errors become a Problems list and clickable links to the source line |
-| Terminal | v0.1 | A VTE terminal, built first inside ctxmon (M5.3) so you can restart a server from the monitor. Whether the editor's bottom panel also gets terminal tabs (started in the opened folder, for Run and Debug) is still open |
-| Debugger | v0.3 | Debug Adapter Protocol, gdb's built-in adapter first (C, C++, Rust): breakpoints from the gutter; continue, step over, step into, step out; call stack, local variables and watch expressions; the current line is marked. Not planned for the first version: attach, core dumps, remote debugging |
+| Directory sidebar | v0.1.0 | Right-hand tree of folders and files (folders first), lazy loading, a file filter, a hidden-files toggle (off by default), a Sync button that follows the active tab, rename, delete (to trash), copy and move, drag and drop, automatic refresh. Specified in [`docs/requirements/directory-sidebar.md`](docs/requirements/directory-sidebar.md) |
+| Build, Output and Problems | v0.2.0 | Per-folder build and run commands in `.vermilion/project.json`, with presets that detect CMake, Make, Ninja, Cargo, Gradle and Bazel. Output streams into the Output pane; gcc, clang, rustc and javac errors become a Problems list and clickable links to the source line |
+| Terminal | v0.4.0 | A VTE terminal, built first inside ctxmon (M6.3) so you can restart a server from the monitor. Whether the editor's bottom panel also gets terminal tabs (started in the opened folder, for Run and Debug) is still open |
+| Debugger | v0.5.0 | Debug Adapter Protocol, gdb's built-in adapter first (C, C++, Rust): breakpoints from the gutter; continue, step over, step into, step out; call stack, local variables and watch expressions; the current line is marked. Not planned for the first version: attach, core dumps, remote debugging |
 
 ---
 
 ## The AI agent
-Planned for v0.2 and later; the design is in [`ARCHITECTURE.md`](ARCHITECTURE.md) section 7.6.
+Planned for v0.3.0 and later; the design is in [`ARCHITECTURE.md`](ARCHITECTURE.md) section 7.6.
 
 **Provider.** The agent talks to a local llama.cpp server through the OpenAI-compatible API (start the server with `--jinja`
 for tool calls). Any other OpenAI-compatible server works as well, but nothing else is built: native Anthropic and Gemini
@@ -199,7 +204,7 @@ work would cost on a paid model. No prices are shipped.
 ---
 
 ## ctxmon (model monitor)
-ctxmon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon`. Its logic lives in `src/ctxmon/core` (no GTK) and its window in `src/ctxmon/ui`. The Python original in [`reference/ctxmon/`](reference/ctxmon/) is frozen: it only supplies the expected values for the tests and is removed at gate M5.6, after which the repository contains no Python. ctxmon comes in two forms that share the same logic and cards:
+ctxmon is a live monitor for a running llama.cpp server, a native C++ port of Adam's `ctxmon`. Its logic lives in `src/ctxmon/core` (no GTK) and its window in `src/ctxmon/ui`. The Python original in [`reference/ctxmon/`](reference/ctxmon/) is frozen: it only supplies the expected values for the tests and is removed at gate M6.6, after which the repository contains no Python. ctxmon comes in two forms that share the same logic and cards:
 
 | Form | What it is |
 |---|---|
@@ -267,7 +272,7 @@ ctest --test-dir build --output-on-failure
 ```
 
 Optional: `python3 tools/ctxmon_oracle.py` regenerates the ctxmon tests' expected values from the Python original
-(`tests/ctxmon/fixtures/expected/`); the build does not need Python. The script goes away with the Python original (M5.6).
+(`tests/ctxmon/fixtures/expected/`); the build does not need Python. The script goes away with the Python original (M6.6).
 
 The test run includes two repository checks: `SourceCheck.Repo` (`tools/check_sources.sh`: licence header, purpose comment
 and size of every source file) and `Format.Check` (`tools/check_format.sh`: `clang-format --dry-run --Werror` on every `.cpp`
@@ -293,15 +298,15 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 |---|---|
 | `src/core/` | UI-free logic. Built: the document list, the text scanner and encodings, the manual's Markdown parser and page history, the search options, replacement rules and Go to Line parsing, message texts, logging and the `Result` type. Planned: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
 | `src/ctxmon/core/` | ctxmon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
-| `src/ctxmon/ui/` | *(M5)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon`. |
+| `src/ctxmon/ui/` | *(M6)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon`. |
 | `src/agent/` | The provider adapter, the agent loop, the tool registry. No GTK headers. |
-| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the Find, Replace and Go to Line windows with the search and Replace All job, the status bar, the help window and the compiled-in resources (stylesheet, editor colour scheme, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). At M2.6b the editor code becomes a library shared by `vermilion` and `vermilion-ide` (ARCHITECTURE.md 7.12). |
+| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the Find, Replace and Go to Line windows with the search and Replace All job, the status bar, the help window and the compiled-in resources (stylesheet, editor colour scheme, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). At M2.7b the editor code becomes a library shared by `vermilion` and `vermilion-ide` (ARCHITECTURE.md 7.12). |
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for ctxmon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
-| `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the ctxmon tests' expected values (until M5.6). |
+| `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the ctxmon tests' expected values (until M6.6). |
 | `.github/workflows/` | `ci.yml`: the continuous-integration run on GitHub Actions (configure, build, full test run on Ubuntu 24.04). |
 | `res/vedt/` | Vermilion's own artwork as SVG masters: application icon, small icon, logo (the build renders the icons to PNG). |
 | `res/github/` | Images used by this README (screenshots). |
-| `reference/ctxmon/` | The Python original of ctxmon (`ctxmon_gtk.py`, frozen; test oracle until M5.6) and its logo (`ctxmon.svg`). Not built. |
+| `reference/ctxmon/` | The Python original of ctxmon (`ctxmon_gtk.py`, frozen; test oracle until M6.6) and its logo (`ctxmon.svg`). Not built. |
 | `docs/manual/` | The user manual, one short topic per file ([index](docs/manual/index.md)). |
 | `docs/roadmap.md` | The milestone and gate plan. |
 | `docs/milestones/` | Milestone reviews (what was done, what was learned, what comes next). |
@@ -334,10 +339,13 @@ The plan is in [`docs/roadmap.md`](docs/roadmap.md):
 
 | Version | Contents |
 |---|---|
-| v0.1 | The light editor `vermilion` and the IDE `vermilion-ide` (right-hand directory sidebar, build and Output pane, Problems, terminal), ctxmon (standalone `ctxmon` and the ctxmon tab) |
-| v0.2 | Agent core, local first: llama.cpp through the OpenAI-compatible API, tools, permission presets, setup dialog, chat, archive, side-by-side diff, staged edits, whole-turn and per-hunk revert |
-| v0.3 | Debugger |
-| v0.4 | Cost display, project file, gate framework |
+| 0.1.0 | The light editor `vermilion` and the IDE `vermilion-ide`: editor, search, settings, crash recovery, a diff view and the right-hand directory sidebar (M1 to M3) |
+| 0.2.0 | Build and run, Output pane, Problems (M4) |
+| 0.3.0 | Agent core, local first: llama.cpp through the OpenAI-compatible API, tools, permission presets, setup dialog, chat, archive, staged edits, whole-turn and per-hunk revert (M6) |
+| 0.4.0 | ctxmon: cards, graphs, the terminal, the standalone `ctxmon` and the ctxmon tab (M5) |
+| 0.5.0 | Debugger (M7) |
+| 0.6.0 | Cost display, project file, gate framework (M8) |
+| 0.9.0 | Packaging and release (M9); then an 8-week beta and 1.0.0 |
 | v1.0 | Packaging, documentation, notices |
 
 ---
