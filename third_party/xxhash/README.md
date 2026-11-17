@@ -1,5 +1,5 @@
-<!-- SPDX-FileCopyrightText: 2026 Adam Hainstock (@adamjeremy-sk) -->
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) -->
 
 # xxHash (vendored)
 
