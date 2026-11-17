@@ -306,6 +306,8 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `.github/workflows/` | `ci.yml`: the continuous-integration run on GitHub Actions (configure, build, full test run on Ubuntu 24.04). |
 | `res/vedt/` | Vermilion's own artwork as SVG masters: application icon, small icon, logo (the build renders the icons to PNG). |
 | `res/github/` | Images used by this README (screenshots). |
+| `third_party/` | Vendored third-party code, kept byte-exact and never edited: xxHash v0.8.3 (`xxhash.h`, BSD-2-Clause; planned use from M2.4: file-change detection), with its licence, a `.license` sidecar and a README. |
+| `LICENSES/` | The full texts of the licences in use (GPL-3.0-or-later, BSD-2-Clause), for REUSE. |
 | `reference/ctxmon/` | The Python original of ctxmon (`ctxmon_gtk.py`, frozen; test oracle until M6.6) and its logo (`ctxmon.svg`). Not built. |
 | `docs/manual/` | The user manual, one short topic per file ([index](docs/manual/index.md)). |
 | `docs/roadmap.md` | The milestone and gate plan. |
@@ -362,7 +364,7 @@ Vermilion Editor is free software under the **GNU General Public License, versio
 
 Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 
-Every source file carries an SPDX licence header. The model monitor began as a port of ctxmon from
+Every source file carries an SPDX licence header. REUSE certification (https://reuse.software) is an objective: files created from 2026-11-17 on carry their licence information, and older files are brought into line at M9. The model monitor began as a port of ctxmon from
 [llm-suite-test](https://github.com/adamjeremy-sk/llm-suite-test), also by the author; it is now developed here. The libraries used (GTK, GtkSourceView,
 GLib, json-glib, libsoup, VTE) are LGPL-licensed; GoogleTest is BSD-licensed. A full third-party notice file will be added before
 the first release.

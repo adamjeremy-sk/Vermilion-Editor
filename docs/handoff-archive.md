@@ -573,3 +573,10 @@ Items (0) and (1) below are DONE (kept for the record). (0) **Audit Qwen's 13e r
 
 ### 2026-11-17 (after midnight, local, tenth chat, continued) — M2.3 STEPs 13e and 13f closed; hands-on of 13 started
 - Adam pasted Qwen's 13e report: audited PASS against the files on disk (the pasted `search_session.cpp` hash line had 63 characters, typed not pasted; the file's hash is right). Adam's hands-on run on the 50 MB file: test 1 passed, but Ctrl+Z during a job froze the window; the log showed the undo fighting the job. Wrote and issued **13f** (10 KB, dictated, hashes checked in the cloud); Qwen's report audited PASS. Retest: keys inert, no Undo in the context menu, Esc order, clean run 289,088 matches in 64.5 s (4,500 a second), the Undo of a 19,040-match run 10.6 s. Adam's decisions: speed accepted, big Undo only documented. The very-long-line file froze (GTK drawing errors in the log): details asked. Open: the rest of the hands-on list, then the docs sweep and the gate end (this file is about 70 KB: trim to 15 to 25 KB then).
+
+## Part 24 — moved from HANDOFF.md on 2026-11-17 (twelfth chat, handoff after the M2.4 plan)
+
+### Session log entry beyond the third (moved word for word)
+
+### 2026-11-17 (night, local, tenth chat, last part) — M2.3 closed; docs sweep and gate end
+- Adam's hands-on list of STEP 13 passed (the sliced Replace All on the 50 MB file: clean run, Cancel, Undo, Redo and Ctrl+Z during a job, memory; the big Undo freeze and the long-line freeze documented as limits). Docs sweep: roadmap, ARCHITECTURE.md, the manual topic `search-and-replace.md`, README with Adam's new screenshot `res/github/vermilion-m2.3.png`, HANDOFF trimmed (Part 22 holds the M2.3 design and build decisions and the old state rows, word for word). Added gate M2.7c, Open Recent (design talk first). Open: Adam's build and `ctest`, the gate commit, the docs commit and the push.
