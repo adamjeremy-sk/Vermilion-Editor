@@ -11,3 +11,5 @@ The Edit menu works on the active document, also while the menu is open.
 | Select All | Ctrl+A | Selects the whole document. |
 
 Undoing back to the last unchanged state removes the `*` from the tab.
+
+Find, Replace and Go to Line are in the Search menu; see [Find, Replace and Go to Line](search-and-replace.md).

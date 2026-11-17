@@ -8,5 +8,6 @@ Help → Index, or with F1.
 - [Crash recovery](crash-recovery.md)
 - [Encodings and line endings](encodings-and-line-endings.md)
 - [Edit commands](edit-commands.md)
+- [Find, Replace and Go to Line](search-and-replace.md)
 - [Keyboard and mouse shortcuts](shortcuts.md)
 - [Using the manual](help.md)

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 20% (weighted: M0 and M1 done; M2 7 of 12) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 20% (weighted: M0 and M1 done; M2 8 of 13) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
@@ -18,13 +18,13 @@
   C++17 &middot; GTK 4 &middot; GtkSourceView 5 &middot; GPL-3.0-or-later
 </p>
 
-> **Status: pre-alpha.** It opens, edits and saves files and recovers its documents after a crash, but it is not ready for
-> daily use. Search and replace (M2.3) is under way. Everything under "Planned" is a plan, not a feature you can use. See
+> **Status: pre-alpha.** It opens, edits and saves files, finds and replaces text, and recovers its documents after a
+> crash, but it is not ready for daily use. Everything under "Planned" is a plan, not a feature you can use. See
 > [Status](#status).
 
 <p align="center">
-  <img src="res/github/vermilion-m2.2b.png" width="800" alt="Vermilion Editor: the editor window with a C++ file open, the Help window showing the keyboard shortcuts, and the About dialog">
-  <br><em>The current build (after M2.2b): the editor with tabs, syntax colours and the status bar; Help → Index showing the shortcuts topic; and Help → About.</em>
+  <img src="res/github/vermilion-m2.3.png" width="800" alt="Vermilion Editor: the editor window with a C++ file open and the Replace window, the Help window showing the crash recovery topic, and the About dialog">
+  <br><em>The current build (after M2.3): the editor with tabs, syntax colours, the shaded current line and the status bar, with the Replace window open; Help → Index showing the crash recovery topic; and Help → About.</em>
 </p>
 
 ---
@@ -66,11 +66,11 @@ Principles:
 
 | Area | State |
 |---|---|
-| Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); crash recovery (M2.2c); search and replace (M2.3) under way |
+| Editor, ctxmon window and tab, tree, build, terminal (v0.1) | M1 done: ctxmon logic (log and timing lines, server responses, server state and warnings, graph geometry, GPU memory), hardened against hostile input. M2 under way: large-file and look spikes done (M2.0); the main window done (M2.1: menus, tabs, status bar, close and quit questions) and the application icon (M2.1c); opening and saving files with encodings and line endings (M2.2); Help → Index, the manual inside the program (M2.2b); crash recovery (M2.2c); search, replace and Go to Line (M2.3) |
 | Agent (v0.2) | Designed, not started |
 | Debugger (v0.3) | Designed, not started |
 | Cost, project file, gate framework (v0.4) | Designed, not started |
-| Code | M0 and M1 done; M2 under way (7 of 12 gates). 482 tests, all passing at the last commit. M2.3 (search and replace) is under way. What each gate built is listed below |
+| Code | M0 and M1 done; M2 under way (8 of 13 gates). 715 tests, all passing at the last commit. What each gate built is listed below |
 | Releases | None |
 
 ### Built so far
@@ -87,7 +87,7 @@ Each row is one finished gate; the test count is the total after that gate.
 | M2.2, opening and saving | A core scanner decides encoding, byte-order mark, line endings and whether a file is binary or has a line over 350,000 characters; saving keeps all of them; Save, Save As, Encoding and Line Ending menus; a 38.9 MB file saves in 6.5 s. The first gate where the coding agent wrote implementations from specifications | 205 |
 | M2.2b, manual inside the program | Help → Index (F1); every `docs/manual/*.md` is compiled in; a small Markdown-subset renderer, a page history, and tests that keep the manual consistent | 259 |
 | M2.2c, crash recovery | Edited documents, untitled ones too, are copied shortly after you stop typing; after a crash the next start asks Recover, Discard or Decide Later (Recover All when several wait); tried on a 50 MB file without lag | 482 |
-| M2.3, search and replace (in progress) | The logic behind search is written and tested: search options and regular-expression checks, replacement rules, Go to Line parsing, status texts, and a display-free search session on GtkSourceView 5.12 (options, count, Find Next and Previous, Replace, Replace All, Replace All inside a selection). Next: the Find, Replace and Go to Line windows | 573 (local) |
+| M2.3, search and replace | The Search menu with the Find, Replace and Go to Line windows, F3 and Shift+F3; regular expressions with group checks on the replacement; matches highlighted with a count ("3 of 12 matches"); Replace All in the whole document or in a selection, as one Undo step; on a very large file Replace All works in slices, shows its progress, can be cancelled and keeps the window alive (50 MB, 289,000 matches in about a minute); the current line is always shaded; the manual's new topic describes it all | 715 |
 
 ---
 
@@ -115,7 +115,7 @@ One window, one opened folder. The right-hand stack has three tabs: the director
 has the build output, the problem list, terminals and the debugger views. There is no toolbar: the window is
 keyboard first, and every command is a menu item that shows its shortcut.
 
-Today (after M2.2c) the window has the menu bar, the document tabs with the editor, and the status bar. The right-hand stack
+Today (after M2.3) the window has the menu bar, the document tabs with the editor, and the status bar, and the Find, Replace and Go to Line windows open on top of it. The right-hand stack
 arrives with the directory sidebar (M3), the bottom panel with the build gates (M4), the Agent tab with M6 and the ctxmon tab
 with M5.
 
@@ -133,12 +133,13 @@ Rows marked Built exist today; everything else is a plan.
 | Crash recovery | Built (M2.2c) | Edited documents are copied to recovery files shortly after you stop typing; the next start after a crash asks Recover, Discard or Decide Later (or Recover All), with the time of the copy and whether the file changed since |
 | Syntax highlighting, line numbers | Built (M2.2) | GtkSourceView; the language is guessed from the file name and set after the load; classic colour scheme. Other and dark schemes and choosing the language by hand come with settings (M2.5) |
 | Classic Windows 2000 look | Light palette and icons built (M2.1, M2.1c) | One stylesheet over the desktop's GTK theme, system fonts, square bevelled controls, no icons apart from the application's own. The dark palette and the colour mode setting (Light, Dark, Follow system) come with M2.5 |
-| Keyboard first | Menus, status bar and the file, edit, tab and help shortcuts built (M2.1 to M2.2b) | Gedit-style status bar, no toolbar, every command a menu item that shows its shortcut. The language and tab width panels only show their value for now. Search shortcuts (Ctrl+F, F3, Ctrl+H, Ctrl+G) come with M2.3, build and debug keys (F5, F7, F9 to F11) with their features |
+| Keyboard first | Menus, status bar and the file, edit, search, tab and help shortcuts built (M2.1 to M2.3) | Gedit-style status bar, no toolbar, every command a menu item that shows its shortcut. The language and tab width panels only show their value for now. Build and debug keys (F5, F7, F9 to F11) with their features |
 | Fixed-width tabs | Built (M2.1) | Close button at the right edge, an unsaved marker, drag to reorder; Vermilion never closes a tab on its own |
 | Large files | Built (M2.2) | Loaded in the background with highlighting switched on afterwards: a 50 MB C++ file opens in about 4 s instead of 87. A line over 350,000 characters or a binary file asks "Open anyway / Cancel" first; word wrap is off at open and switched on per document |
 | Manual inside the program | Built (M2.2b) | Help → Index (F1): the topics of `docs/manual` in a read-only window, with links between topics and Back and Index buttons |
-| Search, replace, go to line | In progress (M2.3) | Two small windows, Find (Ctrl+F) and Replace (Ctrl+H), with regular expressions, highlighting as you type and a "Selection only" scope; Go to Line (Ctrl+G). No search history |
+| Search, replace, go to line | Built (M2.3) | Two small windows, Find (Ctrl+F) and Replace (Ctrl+H), with Match case, whole word and regular expressions, highlighting of every match with a count, Find Next (F3) and Find Previous (Shift+F3), and a "Selection only" scope for Replace All; Go to Line (Ctrl+G, `line` or `line:column`). Replace All is one Undo step; on a very large file it works in slices and can be cancelled, but Undo of a huge run takes longer than the run, and a file of one enormous line with many matches may make the window slow. No search history |
 | External changes | Planned | A clean buffer reloads when the file changes on disk; a modified one shows a banner with Reload, Keep mine and Show diff |
+| Open Recent | Planned (M2.6c) | File → Open Recent: the files opened last, with a way to clear the list. The design is discussed with Adam first |
 | The light program | Planned (M2.6b) | `vermilion` as a plain editor for quick edits, a replacement for gedit or Mousepad (File, Edit, Search, View and Help menus); `vermilion-ide` is the whole IDE; both are built from the same editor code |
 
 ### Other parts
@@ -239,6 +240,7 @@ Everything follows the XDG directories; nothing is written next to the executabl
 | Per-project settings | `<folder>/.vermilion/project.json`, `<folder>/PROJECT.md` |
 | Chat archive | `~/.local/share/vermilion/chats/` |
 | Revert snapshots | `~/.cache/vermilion/snapshots/` |
+| Editor colour scheme (a copy written on first use) | `~/.cache/vermilion/styles/` |
 | Request log | `~/.local/state/vermilion/requests.log` |
 | API keys | not stored: `agent.json` names an environment variable |
 
@@ -289,11 +291,11 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic. Built: the document list, the text scanner and encodings, the manual's Markdown parser and page history, message texts, logging and the `Result` type. Planned: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
+| `src/core/` | UI-free logic. Built: the document list, the text scanner and encodings, the manual's Markdown parser and page history, the search options, replacement rules and Go to Line parsing, message texts, logging and the `Result` type. Planned: diff engine, permission engine, build presets and problem matchers, the debug-protocol client, slash commands, cost, archive. No GTK headers. |
 | `src/ctxmon/core/` | ctxmon logic, UI-free: log token and timing lines, server API responses, server state and warnings, graph geometry, VRAM readers. No GTK headers. |
 | `src/ctxmon/ui/` | *(M5)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon`. |
 | `src/agent/` | The provider adapter, the agent loop, the tool registry. No GTK headers. |
-| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the status bar, the help window and the compiled-in resources (stylesheet, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). At M2.6b the editor code becomes a library shared by `vermilion` and `vermilion-ide` (ARCHITECTURE.md 7.12). |
+| `src/ui/` | The GTK application: main window and actions, document tabs and editor pages, the open and save flow, the Find, Replace and Go to Line windows with the search and Replace All job, the status bar, the help window and the compiled-in resources (stylesheet, editor colour scheme, menus, icons, manual). `gtkx/` is a small helper layer (GObject reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks). At M2.6b the editor code becomes a library shared by `vermilion` and `vermilion-ide` (ARCHITECTURE.md 7.12). |
 | `tests/` | GoogleTest tests for core and agent; `tests/ctxmon/` for ctxmon, with sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/`. |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py`, which writes the ctxmon tests' expected values (until M5.6). |
 | `.github/workflows/` | `ci.yml`: the continuous-integration run on GitHub Actions (configure, build, full test run on Ubuntu 24.04). |

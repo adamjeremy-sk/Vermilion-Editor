@@ -15,6 +15,11 @@
 | Ctrl+C | Copy |
 | Ctrl+V | Paste |
 | Ctrl+A | Select All |
+| Ctrl+F | Find… |
+| F3 | Find Next |
+| Shift+F3 | Find Previous |
+| Ctrl+H | Replace… |
+| Ctrl+G | Go to Line… |
 | Ctrl+Page Down | Next tab (after the last tab comes the first) |
 | Ctrl+Page Up | Previous tab (before the first tab comes the last) |
 | Insert | Switch between inserting (INS) and overwriting (OVR) |
