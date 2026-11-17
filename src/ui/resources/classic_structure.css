@@ -301,3 +301,12 @@ window.vm-help grid.vm-help-table > label.vm-help-th {
 window.vm-help .vm-help-page label link {
     color: @vm_select_bg;
 }
+
+/* Find, Replace and Go to Line windows (M2.3): they also have the class vm-main, so their
+   buttons, entries and chassis come from the rules above; the status line is bold when it shows
+   a problem (a pattern or a replacement that does not compile, text that is not a line). */
+window.vm-find .vm-find-problem,
+window.vm-replace .vm-find-problem,
+window.vm-goto .vm-find-problem {
+    font-weight: bold;
+}

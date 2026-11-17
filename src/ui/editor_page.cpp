@@ -9,6 +9,7 @@
 #include <optional>
 #include <utility>
 
+#include "ui/editor_scheme.h"
 #include "ui/gtkx/string.h"
 
 namespace vermilion::ui {
@@ -19,6 +20,14 @@ constexpr unsigned kTabWidth = 4; // per document; the settings value arrives wi
 constexpr gunichar kByteOrderMark = 0xFEFF;
 constexpr const char* kFileTimeAttributes =
     G_FILE_ATTRIBUTE_TIME_MODIFIED "," G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC;
+
+// The keys that run Undo or Redo in the text view: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z.
+bool is_undo_or_redo_key(guint keyval, GdkModifierType state) {
+    if ((state & GDK_CONTROL_MASK) == 0 || (state & GDK_ALT_MASK) != 0) {
+        return false;
+    }
+    return keyval == GDK_KEY_z || keyval == GDK_KEY_Z || keyval == GDK_KEY_y || keyval == GDK_KEY_Y;
+}
 
 // A file time query on its way: what to call with the answer, and the ticket that says whether
 // the page is still there.
@@ -58,13 +67,14 @@ EditorPage::EditorPage(Callbacks callbacks)
       scrolled_(gtkx::ObjectPtr<GtkWidget>::adopt_floating(gtk_scrolled_window_new())) {
     auto buffer = gtkx::ObjectPtr<GtkSourceBuffer>::adopt(gtk_source_buffer_new(nullptr));
     gtk_source_buffer_set_implicit_trailing_newline(buffer.get(), FALSE);
-    GtkSourceStyleScheme* scheme = gtk_source_style_scheme_manager_get_scheme(
-        gtk_source_style_scheme_manager_get_default(), "classic"); // borrowed
+    GtkSourceStyleScheme* scheme = editor_scheme(); // borrowed
     if (scheme != nullptr) {
         gtk_source_buffer_set_style_scheme(buffer.get(), scheme);
     }
     GtkWidget* view = gtk_source_view_new_with_buffer(buffer.get());
     gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view), TRUE);
+    // Faint band on the cursor's line, in every tab (Adam, 2026-11-16); a setting comes with M2.5.
+    gtk_source_view_set_highlight_current_line(GTK_SOURCE_VIEW(view), TRUE);
     gtk_source_view_set_tab_width(GTK_SOURCE_VIEW(view), kTabWidth);
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
     gtk_widget_add_css_class(scrolled_.get(), "vm-editor-well");
@@ -80,22 +90,35 @@ EditorPage::EditorPage(Callbacks callbacks)
             }
         });
     text_changed_ = gtkx::connect<void(GtkTextBuffer*)>(buffer_, "changed", [this](GtkTextBuffer*) {
-        if (!loading() && !clearing_) {
+        if (!loading() && !clearing_ && !held_.hold_edited()) {
             callbacks_.edited();
         }
     });
-    cursor_moved_ = gtkx::connect<void(GObject*, GParamSpec*)>(buffer_, "notify::cursor-position",
-                                                               [this](GObject*, GParamSpec*) {
-                                                                   if (!loading()) {
-                                                                       callbacks_.cursor();
-                                                                   }
-                                                               });
-    overwrite_toggled_ = gtkx::connect<void(GObject*, GParamSpec*)>(view_, "notify::overwrite",
-                                                                    [this](GObject*, GParamSpec*) {
-                                                                        if (!loading()) {
-                                                                            callbacks_.cursor();
-                                                                        }
-                                                                    });
+    cursor_moved_ = gtkx::connect<void(GObject*, GParamSpec*)>(
+        buffer_, "notify::cursor-position", [this](GObject*, GParamSpec*) {
+            if (!loading() && !held_.hold_cursor()) {
+                callbacks_.cursor();
+            }
+        });
+    overwrite_toggled_ = gtkx::connect<void(GObject*, GParamSpec*)>(
+        view_, "notify::overwrite", [this](GObject*, GParamSpec*) {
+            if (!loading() && !held_.hold_cursor()) {
+                callbacks_.cursor();
+            }
+        });
+    // While a Replace All job runs (the page is locked) the view's own Ctrl+Z, Ctrl+Y and
+    // Ctrl+Shift+Z must do nothing: the window's Undo and Redo actions are greyed out then, so
+    // the keys fall through to the view's built-in bindings, which undid the job's edits while it
+    // was still replacing (Adam's hands-on test, 2026-11-17). The controller belongs to the view;
+    // it runs in the capture phase, before the view's own bindings.
+    GtkEventController* lock_keys = gtk_event_controller_key_new();
+    gtk_event_controller_set_propagation_phase(lock_keys, GTK_PHASE_CAPTURE);
+    lock_keys_ = gtkx::connect<gboolean(GtkEventControllerKey*, guint, guint, GdkModifierType)>(
+        lock_keys, "key-pressed",
+        [this](GtkEventControllerKey*, guint keyval, guint, GdkModifierType state) -> gboolean {
+            return (held_.holding() && is_undo_or_redo_key(keyval, state)) ? TRUE : FALSE;
+        });
+    gtk_widget_add_controller(view, lock_keys);
 }
 
 void EditorPage::set_label(const std::string& title, const std::string& tooltip, bool modified) {
@@ -229,6 +252,33 @@ void EditorPage::restore_text(const std::string& text) {
 
 void EditorPage::expect_file_time(const std::string& path, std::int64_t mtime_us) {
     base_ = RecoveredBase{path, mtime_us};
+}
+
+// The lock reuses the view's own editable flag, as save() does. The job edits the buffer through
+// the API, which the flag does not stop, so the flag only stops what the user does in the view:
+// typing, Cut, Paste and drag and drop. The Undo and Redo keys are stopped by `lock_keys_`.
+void EditorPage::set_locked(bool locked) {
+    if (locked == held_.holding()) {
+        return;
+    }
+    GtkTextView* text_view = GTK_TEXT_VIEW(view_);
+    if (locked) {
+        if (busy()) {
+            return;
+        }
+        editable_before_lock_ = gtk_text_view_get_editable(text_view) != FALSE;
+        gtk_text_view_set_editable(text_view, FALSE);
+        held_.hold();
+        return;
+    }
+    const HeldEvents::Pending pending = held_.release();
+    gtk_text_view_set_editable(text_view, editable_before_lock_ ? TRUE : FALSE);
+    if (pending.edited && !loading()) {
+        callbacks_.edited();
+    }
+    if (pending.cursor && !loading()) {
+        callbacks_.cursor();
+    }
 }
 
 void EditorPage::set_wrap(bool wrap) {

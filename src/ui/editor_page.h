@@ -12,6 +12,7 @@
 #include <optional>
 #include <string>
 
+#include "core/held_events.h"
 #include "core/recovered_base.h"
 #include "core/text_format.h"
 #include "ui/document_loader.h"
@@ -55,6 +56,8 @@ public:
     GtkWidget* widget() const { return scrolled_.get(); } // the notebook page
     GtkWidget* tab() const { return label_->widget(); }
     GtkWidget* view() const { return GTK_WIDGET(view_); }
+    // The document's text buffer (borrowed); the search runs on it.
+    GtkSourceBuffer* buffer() const { return buffer_; }
 
     void set_label(const std::string& title, const std::string& tooltip, bool modified);
     bool contains_close_button(GtkWidget* widget) const;
@@ -77,7 +80,17 @@ public:
 
     // True from the call of save() until its end, also while the file's time is being read.
     bool saving() const { return saver_ != nullptr || checking_; }
-    bool busy() const { return loading() || saving(); }
+
+    // Locks the page for a job that edits the buffer in slices (Replace All, Adam 2026-11-16): the
+    // view cannot be edited (a read-only page stays read-only after the unlock), busy() is true,
+    // and the buffer's edit and cursor notifications are held back and passed on once at the
+    // unlock. Locking a page that loads or saves, locking a locked page and unlocking a page that
+    // is not locked do nothing.
+    void set_locked(bool locked);
+    bool locked() const { return held_.holding(); }
+
+    // True while the page loads, saves or is locked: the commands that write it are off.
+    bool busy() const { return loading() || saving() || locked(); }
 
     // Sets the language (syntax colouring) from the file name; plain text when nothing matches.
     void guess_language(const std::string& path);
@@ -137,12 +150,17 @@ private:
     gtkx::SignalConnection cursor_moved_;
     gtkx::SignalConnection overwrite_toggled_;
     gtkx::SignalConnection text_changed_;
+    gtkx::SignalConnection lock_keys_; // stops the Undo and Redo keys while the page is locked
     // load() is emptying the buffer, or restore_text() is filling it: that is not an edit.
     bool clearing_ = false;
     // Set by expect_file_time(), cleared by a successful save and by load().
     std::optional<RecoveredBase> base_;
     // save() is reading the file's time before it starts the saver.
     bool checking_ = false;
+    // set_locked(): the notifications held back while a job edits the buffer, and whether the
+    // view was editable before the lock.
+    HeldEvents held_;
+    bool editable_before_lock_ = true;
     gtkx::AsyncGuard<EditorPage> guard_{this}; // last member: it goes first
 };
 

@@ -64,6 +64,59 @@ TEST(UiResources, HelpWindowHasItsRules) {
     EXPECT_NE(css.find("window.vm-help .vm-help-page label link"), std::string::npos);
 }
 
+TEST(UiResources, FindWindowHasItsRule) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-find .vm-find-problem"), std::string::npos);
+}
+
+TEST(UiResources, ReplaceWindowHasItsRule) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-replace .vm-find-problem"), std::string::npos);
+}
+
+TEST(UiResources, SearchMenuHasFind) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    EXPECT_NE(ui.find("_Search"), std::string::npos);
+    EXPECT_NE(ui.find("win.find"), std::string::npos);
+}
+
+TEST(UiResources, SearchMenuHasReplace) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    EXPECT_NE(ui.find("win.replace"), std::string::npos);
+}
+
+TEST(UiResources, GotoLineWindowHasItsRule) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-goto .vm-find-problem"), std::string::npos);
+}
+
+TEST(UiResources, SearchMenuHasFindNextAndFindPrevious) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    EXPECT_NE(ui.find("win.find-next</attribute>"), std::string::npos);
+    EXPECT_NE(ui.find("win.find-previous</attribute>"), std::string::npos);
+}
+
+// ARCHITECTURE.md 7.10: the Search menu reads Find, Find Next, Find Previous, Replace, Go to Line.
+TEST(UiResources, SearchMenuOrder) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    const char* order[] = {"win.find</attribute>", "win.find-next</attribute>",
+                           "win.find-previous</attribute>", "win.replace</attribute>",
+                           "win.go-to-line</attribute>"};
+    std::size_t last = 0;
+    for (const char* action : order) {
+        SCOPED_TRACE(action);
+        std::size_t at = ui.find(action);
+        ASSERT_NE(at, std::string::npos);
+        EXPECT_GT(at, last);
+        last = at;
+    }
+}
+
+TEST(UiResources, SearchMenuHasGotoLine) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    EXPECT_NE(ui.find("win.go-to-line"), std::string::npos);
+}
+
 TEST(UiResources, MenuBarUsesWindowActions) {
     std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
     EXPECT_NE(ui.find("<menu id=\"menubar\">"), std::string::npos);

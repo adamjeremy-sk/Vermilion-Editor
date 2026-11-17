@@ -55,6 +55,21 @@ void on_paste(GSimpleAction*, GVariant*, gpointer data) {
 void on_select_all(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->edit("selection.select-all");
 }
+void on_find(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->find();
+}
+void on_find_next(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->find_next();
+}
+void on_find_previous(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->find_previous();
+}
+void on_replace(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->replace();
+}
+void on_go_to_line(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->go_to_line();
+}
 void on_next_tab(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->next_tab();
 }
@@ -96,6 +111,11 @@ const GActionEntry kActions[] = {
     {"copy", on_copy, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"paste", on_paste, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"select-all", on_select_all, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"find", on_find, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"find-next", on_find_next, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"find-previous", on_find_previous, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"replace", on_replace, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"go-to-line", on_go_to_line, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"next-tab", on_next_tab, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"previous-tab", on_previous_tab, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"word-wrap", nullptr, nullptr, "false", on_word_wrap, {0, 0, 0}},
@@ -124,6 +144,11 @@ const Shortcut kShortcuts[] = {
     {"win.copy", {"<Control>c", nullptr, nullptr}},
     {"win.paste", {"<Control>v", nullptr, nullptr}},
     {"win.select-all", {"<Control>a", nullptr, nullptr}},
+    {"win.find", {"<Control>f", nullptr, nullptr}},
+    {"win.find-next", {"F3", nullptr, nullptr}},
+    {"win.find-previous", {"<Shift>F3", nullptr, nullptr}},
+    {"win.replace", {"<Control>h", nullptr, nullptr}},
+    {"win.go-to-line", {"<Control>g", nullptr, nullptr}},
     {"win.next-tab", {"<Control>Page_Down", nullptr, nullptr}},
     {"win.previous-tab", {"<Control>Page_Up", nullptr, nullptr}},
     {"win.help-index", {"F1", nullptr, nullptr}},

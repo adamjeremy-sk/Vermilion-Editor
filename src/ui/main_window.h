@@ -14,12 +14,17 @@
 #include "core/document_list.h"
 #include "ui/document_tabs.h"
 #include "ui/file_opener.h"
+#include "ui/find_window.h"
 #include "ui/format_commands.h"
+#include "ui/goto_line_window.h"
 #include "ui/gtkx/signal.h"
 #include "ui/help_window.h"
 #include "ui/recovery_controller.h"
 #include "ui/recovery_prompt.h"
+#include "ui/replace_controller.h"
+#include "ui/replace_window.h"
 #include "ui/save_controller.h"
+#include "ui/search_controller.h"
 #include "ui/status_bar.h"
 
 namespace vermilion::ui {
@@ -60,7 +65,15 @@ public:
     void save_with_encoding(const std::string& encoding_id);
     void set_line_ending(const std::string& line_ending_id);
     void about();
-    void show_help(); // Help > Index: opens the help window, or brings it forward
+    void show_help();  // Help > Index: opens the help window, or brings it forward
+    void find();       // Search > Find: shows the Find window for the active document
+    void replace();    // Search > Replace: shows the Replace window for the active document
+    void go_to_line(); // Search > Go to Line: shows the Go to Line window for the active document
+    // Search > Find Next (F3) and Find Previous (Shift+F3): the next or previous match of the
+    // shared search, with the Find and Replace windows open or closed. Before anything has been
+    // searched they open the Find window instead.
+    void find_next();
+    void find_previous();
 
     // Starts the start-up question about the recovery copies an earlier run left. Call once, after
     // present(); a second call does nothing. The code is in main_window_recovery.cpp.
@@ -68,16 +81,50 @@ public:
 
 private:
     bool on_close_request(); // true stops the window from closing
+    // The search follows the active document, then the actions and the status bar are brought up
+    // to date.
     void refresh();
+    // The second half of refresh(): the state of the actions and the status bar. It does not touch
+    // the search, so a Replace All job's end can call it from inside a change of buffer.
+    void update_state();
+    // Closes a document after ending a Replace All job, which has locked it (the close may save).
+    void close_document(DocumentId id);
+    // Replace All jobs (main_window_search.cpp): the job just started, so the document is locked;
+    // the job ended, so it is unlocked; and ending a running job before something acts on its
+    // document.
+    void replace_job_started();
+    void replace_job_ended();
+    void end_replace_job();
     void set_enabled(const char* action, bool enabled);
     void show_error(const std::string& message, const std::string& detail);
     // The window's parts of the recovery prompt's Host (main_window_recovery.cpp).
     void close_blank_document();
     RecoveryPrompt::Added add_recovered_document(RecoveryPrompt::Document document);
+    // The search follows the active document (main_window_search.cpp).
+    void sync_search_buffer();
+    // The selected text when it is on one line and short enough to be a search text.
+    std::optional<std::string> selected_search_text() const;
+    // Brings the main window forward and puts the keyboard focus in the active text.
+    void focus_active_view();
+    // The text view of the active document (borrowed), or nullptr without one.
+    GtkTextView* active_text_view() const;
+    // Shows the Find or the Replace window and hides the other one (without a focus change).
+    // `selection` is the text for "Find what"; nullopt keeps the shared search text, which is what
+    // the windows' own Ctrl+F and Ctrl+H use.
+    void open_find(const std::optional<std::string>& selection);
+    void open_replace(const std::optional<std::string>& selection);
+    // The work of find_next() and find_previous() (main_window_search.cpp).
+    void find_again(bool forward);
 
     GtkWindow* window_ = nullptr; // borrowed; GTK owns the window, this object dies with it
     DocumentList list_;
     StatusBar status_;
+    // The one search of the Find window (and, later, the Replace window). Before tabs_: the tabs
+    // may call refresh(), which uses it, while they are destroyed, so it must outlive them.
+    SearchController search_;
+    // The replacement text and the scope of the Replace window. After search_, which it uses; it
+    // is destroyed before search_, whose session keeps the buffer alive for its marks.
+    ReplaceController replace_;
     DocumentTabs tabs_;      // after list_ and status_, which it uses
     FileOpener opener_;      // after tabs_ and status_, which it uses
     SaveController saves_;   // after tabs_; DocumentTabs reports saves to it
@@ -87,6 +134,8 @@ private:
     RecoveryController recovery_;
     // The blank document the window made at start; none once it was closed by the recovery.
     std::optional<DocumentId> blank_id_;
+    // The document that a running Replace All job has locked; none without a job.
+    std::optional<DocumentId> job_document_;
     // After recovery_ and tabs_, which its Host uses, so it is destroyed before them: a question
     // or a read that is still open then ends without effect. Created by offer_recovery().
     std::unique_ptr<RecoveryPrompt> prompt_;
@@ -94,6 +143,18 @@ private:
     gtkx::SignalConnection close_request_;
     std::unique_ptr<HelpWindow> help_; // created on first use, reset when its window is destroyed
     gtkx::SignalConnection help_destroy_;
+    // After search_ and tabs_, which it uses, so it is destroyed first. Created by find() on first
+    // use and reset when its window is destroyed.
+    std::unique_ptr<FindWindow> find_;
+    gtkx::SignalConnection find_destroy_;
+    // Like find_: created by replace() on first use, reset when its window is destroyed.
+    std::unique_ptr<ReplaceWindow> replace_window_;
+    gtkx::SignalConnection replace_destroy_;
+    // Created by go_to_line() on first use, reset when its window is destroyed. Declared last, so
+    // it is destroyed first. It uses only the callbacks of its Host, which reach tabs_ and
+    // status_.
+    std::unique_ptr<GotoLineWindow> goto_;
+    gtkx::SignalConnection goto_destroy_;
 };
 
 } // namespace vermilion::ui

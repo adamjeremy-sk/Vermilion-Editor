@@ -1,4 +1,4 @@
-add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp manual_spans_test.cpp manual_page_test.cpp page_history_test.cpp manual_files_test.cpp recovery_file_test.cpp recovery_file_reject_test.cpp recovery_schedule_test.cpp recovery_store_test.cpp recovery_store_files_test.cpp recovery_tracker_test.cpp recovery_tracker_rules_test.cpp recovery_tracker_events_test.cpp recovery_tracker_adopt_test.cpp recovery_offer_test.cpp recovery_question_test.cpp recovered_base_test.cpp recovery_answers_test.cpp recovery_blank_test.cpp)
+add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp manual_spans_test.cpp manual_page_test.cpp page_history_test.cpp manual_files_test.cpp recovery_file_test.cpp recovery_file_reject_test.cpp recovery_schedule_test.cpp recovery_store_test.cpp recovery_store_files_test.cpp recovery_tracker_test.cpp recovery_tracker_rules_test.cpp recovery_tracker_events_test.cpp recovery_tracker_adopt_test.cpp recovery_offer_test.cpp recovery_question_test.cpp recovered_base_test.cpp recovery_answers_test.cpp recovery_blank_test.cpp search_options_test.cpp search_replacement_test.cpp count_text_test.cpp goto_line_test.cpp goto_column_test.cpp search_messages_test.cpp held_events_test.cpp)
 target_link_libraries(vermilion_tests PRIVATE
     GTest::gtest_main
     vermilion_core
@@ -61,6 +61,83 @@ target_link_libraries(vermilion_recovery_prompt_tests PRIVATE
     vermilion_warnings
     PkgConfig::GTK4)
 gtest_discover_tests(vermilion_recovery_prompt_tests)
+
+# The search session on a real GtkSourceBuffer with no window and no display (GtkSourceView 5 is
+# linked for the buffer and the search context; no widget is created).
+add_executable(vermilion_search_session_tests search_session_test.cpp
+    search_session_replace_test.cpp
+    search_session_run_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/search_session.cpp)
+target_link_libraries(vermilion_search_session_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTKSOURCEVIEW5)
+gtest_discover_tests(vermilion_search_session_tests)
+# The GLib debounce timer on a real main loop, no window and no display.
+add_executable(vermilion_glib_timer_tests glib_timer_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/glib_timer.cpp)
+target_link_libraries(vermilion_glib_timer_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_warnings
+    PkgConfig::GLIB2)
+gtest_discover_tests(vermilion_glib_timer_tests)
+
+# The search controller on real buffers with no window and no display (the libraries of the
+# search session; no widget is created). The timer is a fake in the tests.
+add_executable(vermilion_search_controller_tests search_controller_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/search_controller.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/search_session.cpp)
+target_link_libraries(vermilion_search_controller_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTKSOURCEVIEW5)
+gtest_discover_tests(vermilion_search_controller_tests)
+
+# The replace controller on real buffers with no window and no display (the libraries of the
+# search session; no widget is created). The timer never fires: the tests apply the text.
+add_executable(vermilion_replace_controller_tests replace_controller_test.cpp
+    replace_job_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/replace_controller.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/replace_controller_job.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/search_controller.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/search_session.cpp)
+target_link_libraries(vermilion_replace_controller_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTKSOURCEVIEW5)
+gtest_discover_tests(vermilion_replace_controller_tests)
+
+# Go to Line on real buffers with no window and no display (the libraries of the search session;
+# no widget is created).
+add_executable(vermilion_line_jump_tests line_jump_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/line_jump.cpp)
+target_link_libraries(vermilion_line_jump_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTKSOURCEVIEW5)
+gtest_discover_tests(vermilion_line_jump_tests)
+
+# The editor's style scheme, found in the program's resources through GtkSourceView's scheme
+# manager (no window and no display).
+add_executable(vermilion_editor_scheme_tests editor_scheme_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/editor_scheme.cpp)
+target_link_libraries(vermilion_editor_scheme_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_resources
+    vermilion_warnings
+    PkgConfig::GTKSOURCEVIEW5)
+gtest_discover_tests(vermilion_editor_scheme_tests)
 
 add_executable(vermilion_ui_tests ui_resources_test.cpp manual_resources_test.cpp)
 target_link_libraries(vermilion_ui_tests PRIVATE

@@ -54,6 +54,7 @@ add_custom_command(
             ${VERMILION_RESOURCE_DIR}/classic_light.css
             ${VERMILION_RESOURCE_DIR}/classic_structure.css
             ${VERMILION_RESOURCE_DIR}/menus.ui
+            ${VERMILION_RESOURCE_DIR}/styles/vermilion-classic.xml
             ${VERMILION_ICON_PNGS}
     VERBATIM)
 # The user manual (Adam, 2026-11-11): every docs/manual/*.md is compiled into the program as a
@@ -93,7 +94,7 @@ target_link_libraries(vermilion_resources
     PUBLIC PkgConfig::GTK4
     PRIVATE vermilion_warnings vermilion_noexc)
 
-add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp recovery_controller.cpp recovery_io.cpp recovery_prompt.cpp main_window_recovery.cpp)
+add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp recovery_controller.cpp recovery_io.cpp recovery_prompt.cpp main_window_recovery.cpp find_window.cpp search_controller.cpp search_session.cpp glib_timer.cpp main_window_search.cpp replace_controller.cpp replace_controller_job.cpp replace_window.cpp line_jump.cpp goto_line_window.cpp editor_scheme.cpp)
 target_include_directories(vermilion PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(vermilion PRIVATE
     PkgConfig::GTK4

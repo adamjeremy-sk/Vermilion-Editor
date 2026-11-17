@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) -->
+<!-- The classic scheme with a visible current line (Adam, 2026-11-16). -->
+<style-scheme id="vermilion-classic" name="Vermilion Classic" parent-scheme="classic" version="1.0">
+  <author>Adam Hainstock</author>
+  <description>The classic scheme with a light blue band on the cursor's line.</description>
+  <style name="current-line" background="#DCE6F5"/>
+  <style name="current-line-number" foreground="#8A8A8A" background="#DCE6F5"/>
+</style-scheme>

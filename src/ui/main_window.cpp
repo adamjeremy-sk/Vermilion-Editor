@@ -4,14 +4,17 @@
 
 #include "ui/main_window.h"
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 
+#include "core/log.h"
 #include "core/recovery_store.h"
 #include "core/version.h"
 #include "ui/editor_page.h"
+#include "ui/glib_timer.h"
 #include "ui/gtkx/object_ptr.h"
 #include "ui/window_actions.h"
 
@@ -22,9 +25,14 @@ namespace {
 constexpr const char* kMenuResource = "/io/github/adamjeremy_sk/Vermilion/menus.ui";
 
 // Commands that need an open document; greyed out in the blank window.
-constexpr const char* kDocumentActions[] = {"close-tab",    "undo",     "redo",       "cut",
-                                            "copy",         "paste",    "select-all", "next-tab",
-                                            "previous-tab", "word-wrap"};
+constexpr const char* kDocumentActions[] = {"close-tab", "copy",         "select-all", "replace",
+                                            "next-tab",  "previous-tab", "go-to-line"};
+
+// Commands that change the text, the view or the search: also greyed out while a Replace All job
+// runs, which has locked the text and is using the search. Replace stays on, because it only
+// brings the Replace window, where Cancel is, forward.
+constexpr const char* kEditingActions[] = {"undo", "redo",      "cut",           "paste",
+                                           "find", "find-next", "find-previous", "word-wrap"};
 
 // Commands that write the document or change its format: also greyed out while it loads or
 // saves, and for a read-only document. Reopen as needs a file and an idle document.
@@ -45,9 +53,10 @@ void MainWindow::install_menus_and_shortcuts(GtkApplication* app) {
 // The window from _new is owned by GTK (its toplevel list and the application), so it is
 // borrowed here, not adopted.
 MainWindow::MainWindow(GtkApplication* app)
-    : window_(GTK_WINDOW(gtk_application_window_new(app))),
+    : window_(GTK_WINDOW(gtk_application_window_new(app))), search_(std::make_unique<GlibTimer>()),
+      replace_(search_, std::make_unique<GlibTimer>()),
       tabs_(list_, DocumentTabs::Callbacks{
-                       [this] { refresh(); }, [this](DocumentId id) { saves_.request_close(id); },
+                       [this] { refresh(); }, [this](DocumentId id) { close_document(id); },
                        [this](const std::string& message) { status_.show_message(message); },
                        [this](const std::string& message, const std::string& detail) {
                            show_error(message, detail);
@@ -149,8 +158,13 @@ void MainWindow::save_as() {
 void MainWindow::close_active() {
     std::optional<DocumentId> active = list_.active();
     if (active) {
-        saves_.request_close(*active);
+        close_document(*active);
     }
+}
+
+void MainWindow::close_document(DocumentId id) {
+    end_replace_job();
+    saves_.request_close(id);
 }
 
 // Goes through "close-request", so unsaved changes are asked about the same way as the
@@ -163,8 +177,19 @@ void MainWindow::quit() {
 // focused widget.
 void MainWindow::edit(const char* widget_action) {
     EditorPage* editor = tabs_.active_editor(); // borrowed
-    if (editor != nullptr) {
-        gtk_widget_activate_action(editor->view(), widget_action, nullptr);
+    if (editor == nullptr) {
+        return;
+    }
+    const std::string action(widget_action);
+    const bool timed = action == "text.undo" || action == "text.redo";
+    const std::int64_t begin = g_get_monotonic_time();
+    gtk_widget_activate_action(editor->view(), widget_action, nullptr);
+    if (timed) {
+        // Undo and Redo of a big Replace All are one call that blocks the window: the log shows how
+        // long (G_MESSAGES_DEBUG=vermilion).
+        logging::debug("edit: action=" + action +
+                       " ms=" + std::to_string((g_get_monotonic_time() - begin) / 1000) +
+                       " characters=" + std::to_string(editor->char_count()));
     }
 }
 
@@ -232,6 +257,7 @@ void MainWindow::show_help() {
 // Unsaved documents are asked about one by one (SaveController); when all are answered, the
 // window closes for real.
 bool MainWindow::on_close_request() {
+    end_replace_job();
     if (quit_confirmed_ || list_.modified_count() == 0) {
         return false;
     }
@@ -243,9 +269,18 @@ bool MainWindow::on_close_request() {
 }
 
 void MainWindow::refresh() {
+    sync_search_buffer();
+    update_state();
+}
+
+void MainWindow::update_state() {
     bool has_document = !list_.empty();
     for (const char* action : kDocumentActions) {
         set_enabled(action, has_document);
+    }
+    const bool editing = has_document && !replace_.job_active();
+    for (const char* action : kEditingActions) {
+        set_enabled(action, editing);
     }
     EditorPage* editor = tabs_.active_editor(); // borrowed
     std::optional<DocumentId> active = list_.active();
