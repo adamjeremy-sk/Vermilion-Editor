@@ -720,3 +720,286 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 
 ### 2026-11-17 (23:40, thirteenth chat) — M2.4 step 8a PASS WITH NOTES
 - Step 8 was split: 8a is the controller behind an abstract `ExternalChangeHost` (34 tests, no display), 8b the wiring. 885 tests, all dictated hashes matched.
+
+## Part 30 — rotated out of HANDOFF.md on 2026-11-18 (fifteenth chat, M2.4 step 10c1 issued)
+
+### Session log entries rotated out
+
+### 2026-11-18 (12:10, fifteenth chat) - M2.4 step 10a PASS; 10b issued, 10b2 prepared
+- Audit of 10a: HEAD `38eaaa4` (docs); the three sha256 prefixes match (5a044fec82cedfeb, ac8d4fc807ec6104, c2b9a958e06cd0f4); 943 of 943, 0 warnings. Both Prompt doubts were my own grep false positives (the words "throw away" and the test name `ReloadAsk`); accepted. **Verdict PASS.** Designed 10b in the cloud: `reload_from_disk` inspects the file, asks through the host when `reload_ask` says so (the answer callback is guarded by a ticket), then runs the same scan as the banner's Reload with a by-hand flag so the status line reads "Reloaded T from disk". 22 tests plus mutation testing (11 mutants, 4 tests added). The first prompt was 40 KB, over the 35 KB ceiling, so it was split into 10b (code) and 10b2 (tests). **Next: Adam runs 10b; the Orchestrator audits it, issues 10b2, then writes 10c.**
+
+### 2026-11-18 (11:50, fifteenth chat) — M2.4 step 9c hands-on passed; 10a issued
+- Adam's hands-on of 9c passed (all 11 points). Designed step 10 against the code (`ExternalChangeController`, `TabsExternalHost`, `MainWindow`, `window_actions`, `close_dialog`, `settings_file`): no choice was open (the questions and the check box were decided in the M2.4 plan, Part 28); the one technical finding is that GtkAlertDialog has no check box, so 10b adds a small modal window for the "Do not ask again" question. Split into 10a (core, 12 tests), 10b (controller, dialog, settings load) and 10c (window command) to stay under 25 KB each and to keep the GTK-free parts cloud-tested. 10a was compiled and run in the cloud (gtest shim, 39 of 39 with its neighbours) with six mutants killed; the headers reproduce sha 5a044fec82cedfeb and ac8d4fc807ec6104 and the test file c2b9a958e06cd0f4. Prompt mirrored. Nothing in the code is committed; the docs commit is HANDOFF.md only. **Next: Adam runs 10a; the Orchestrator audits it, then writes 10b.**
+
+### 2026-11-18 (10:45, fifteenth chat) — M2.4 step 9c PASS
+- Audit of 9c: HEAD `ee9194e` (docs) on top of `9266d8e`; the three sha256 prefixes match the dictated result; evidence fresh (10:28 to 10:29); built, 931 of 931, 0 warnings; proof greps show `modified_count` no longer used outside `document_list`, `close_question_for` and `close_case` used in `save_controller.cpp` twice, the `look` callback in `main_window.cpp`. Report slip: it counted 27 untracked files, the real count is 43 (the expected list). Qwen's size note (340 and 347 lines) accepted: both already on the review list. **Verdict PASS.** Adam's hands-on follows.
+
+### 2026-11-18 (10:50, fifteenth chat) — M2.4 step 9b PASS; 9c issued
+- Audit of 9b: HEAD `9266d8e` (my docs commit) on top of `6a92296`; the header, test and controller `.cpp` sha256 prefixes match (`aec618f4fe14b546`, `4b9855fd8a900a55`, `cffae1b3c7f4b790` unchanged); evidence fresh (10:11 to 10:13); 931 of 931, 0 warnings; 20 look tests and 34 controller tests counted; Qwen's `external_change_look.cpp` (77 lines, hash `f0bcdd991e85d008`) equals my reference in behaviour (only `const` on two locals differs); the proof's forbidden grep is empty. Prompt doubt (HEAD differs from the expected 6a92296) accepted: my docs commit. **Verdict PASS.**
+- Designed 9c from `save_controller` and `main_window.on_close_request`: close looks at the closed tab (any tab) first; quit looks at every document at once and asks when all answered; `defer()` keeps every answer out of the controller's callback chain; `closing_` guards a second close request; `on_close_request` returns false only for `quit_confirmed_` or an empty list. The dictated edits were applied and clang-format checked in the cloud (no GTK headers there, so not compiled). Prompt (15 KB) mirrored. The 00:30 session entry below stays until the gate's docs sweep moves it to the archive. **Next: Adam runs 9c; the Orchestrator audits it and gives Adam the 9c hands-on list.**
+
+### 2026-11-18 (morning, fifteenth chat) — M2.4 step 9a PASS; 9b issued
+- Audit of 9a: HEAD `6a92296` is docs-only on top of `20fe621`; 25 modified tracked files, 41 untracked (the 40 known plus `external_look_test.cpp`); the seven sha256 prefixes match; evidence files fresh (09:54 to 09:56), 911 of 911, 0 warnings, 12 look and close-case tests; `classify_look`, `close_case` and `close_question_for` read against 9.4 and 9.5 and correct. Prompt doubts accepted: `ExternalMessages` tests are 15 (12 plus 3), the prompt's 14 was the Orchestrator's miscount; the FileGone detail is split into two literals (same value, within 100 columns). A retyped grep line in the report lacked `DocumentList::` before `modified_ids()`; the file has it (checked on disk). **Verdict PASS.**
+- Wrote 9b. Rebuilt the cloud check (gtest shim, GLib and GIO only): look tests 20 of 20 and controller tests 34 of 34 as uid 65534; three mutants killed (unreadable file marked gone, mark without the already-marked test, baseline path test dropped); the prompt's header edits reproduce sha aec618f4fe14b546 and its test block 4b9855fd8a900a55. Prompt mirrored. Nothing in the code is committed; the docs commit is HANDOFF.md only. **Next: Adam runs 9b; the Orchestrator audits it, then writes 9c.**
+
+### 2026-11-18 (00:55, local, fourteenth chat, evening handoff) — M2.4 step 9 designed and split; 9a issued
+- Adam's hands-on of 8b passed (all 8 points). Designed step 9 against the code (`save_controller`, `main_window.on_close_request`, `document_tabs.on_saved`, `file_inspector`): the look at a file is read-only with its own code path (no banner, no reload, no new baseline; a missing file is marked deleted exactly as `check()` does), the decision is pure (`classify_look`, `close_case`), and the wording is `close_question_for`. Split into 9a (core, 16 new tests, 911 expected), 9b (controller `look()`, 20 tests), 9c (wiring) to stay under 25 KB. 9a and 9b were compiled and mutation-tested in the cloud (core 86 of 86, controller 54 of 54, mutants killed except UB-guard equivalents, clang-format 18.1.3 stable). The 9a prompt is issued; the 9b material is saved in the Project because the cloud workspace does not survive the chat. Nothing in the code is committed; the evening docs commit is HANDOFF.md and README.md only. **Next: Adam runs 9a; the Orchestrator audits it, then writes 9b.**
+
+### 2026-11-18 (00:30, local, fourteenth chat, handoff) — M2.4 step 8b PASS WITH NOTES
+- Wrote step 8b (core and recovery edits, then the page, tabs, host adapter and window wiring; the dictated parts were compiled and mutation-tested in the cloud first). Adam committed the docs (`81826c9`) and ran the prompt. The first UI build failed once on the unqualified `PageState` (a spec gap, fixed by Qwen in its own file). **Audit:** the five dictated hashes match, the evidence files are fresh (05:54 to 06:04), 895 of 895 at both checkpoints, 0 warnings, no stray files, no `~/.config/vermilion`; `tabs_external_host.cpp`, `document_tabs_reload.cpp`, the `main_window.cpp` wiring (controller created after `set_observer`, reset first in the destructor, `follow_active()` at the end of `refresh()`, `settled` wired from the tabs and from Replace All's end) and the idle scroll callback (guarded ticket) were read against the prompt. Adam then set the new size limits (this file 15/25 KB, prompts 25/35 KB), and this file was cut from 61 KB; its full old text is in the archive (Part 28). Nothing committed since `81826c9`; **Adam's hands-on for 8b is next, then step 9.**
+
+## Part 31: roadmap rewrite (2026-11-18), text moved out of docs/roadmap.md
+
+The roadmap was rewritten to keep every line at 60 words or fewer. The texts below were removed or condensed there. They are kept verbatim.
+
+### Old weights and weight history (old line 23)
+
+**Weights**: M0 5 · M1 6 · M2 19 · M3 8 · M4 6 · M5 25 · M6 10 · M7 10 · M8 5 · M9 6 (sum 100). Reweighed again on 2026-11-17 (below); reweighed 2026-11-15 on Adam's proposal (the Orchestrator checked that it sums to 100 and kept it as proposed): the previous weights were M0 6 · M1 7 · M2 15 · M3 7 · M4 10 · M5 23 · M6 8 · M7 11 · M8 6 · M9 7. Share of one gate within its milestone: M0 0.42% (12 gates) · M1 0.55% (11) · M2 1.27% (15) · M3 1.33% (6) · M4 1.20% (5) · M5 1.67% (15) · M6 1.25% (8) · M7 1.67% (6) · M8 1.67% (3) · M9 6.00% (1). The finished milestones now weigh 11 (M0 5 plus M1 6), so the percentage fell from 21% to 20% with no gate undone. Earlier, on 2026-11-13, it was reweighed after the agent scope was cut to local first (the Orchestrator's estimate, Adam asked for it): the old weights were M0 5 · M1 6 · M2 13 · M3 6 · M4 9 · M5 25 · M6 7 · M7 10 · M8 12 · M9 7. The parked work (M5.12 summarising, the keyring, the heavy parts of change sets, the Anthropic and Gemini adapters, MCP, `.rpm` packages) was taken out of M5, M8 and M9 and the freed share was spread over all milestones in proportion to their old weights, so finished milestones now weigh a little more. **Reweighed on 2026-11-17** (Adam moved the diff from the agent milestone into M2 as gate M2.6, swapped M5 and M6, and asked for a reweigh if needed; the Orchestrator's estimate, Adam can correct it). The two moved gates carry about 3 points with them (the agent milestone's 28 points over 17 gates were 1.65 a gate, so two gates are about 3), so M2 goes from 16 to 19 and the agent core (M5, was M6) from 28 to 25; the ctxmon UI (M6, was M5) keeps its 10 through the swap and every other weight is unchanged (sum 100). Per-gate shares above are the new ones. Progress: 5 + 6 + 19 × 8/14 = 21.9, so 21% (it was 20%). The same day the Help window gate M2.5b was added (M2 now has 15 gates): 5 + 6 + 19 × 8/15 = 21.1, still 21%.
+
+### Old footnotes of finished M2 gates
+
+† 131 tests. Run as five steps in one prompt, then a fresh session for STEP 4b (fixes after Adam tried the tabs: fixed tab width, background close, left neighbour, Edit commands on the active editor) and STEP 5 with the menu colours; fix 1 shortened Help → About.
+
+‡ 132 tests. Two steps (the rename, then rendering and use). Fix 1 after Adam opened About: GTK gives the focus to the program name when About opens, which selects it, so the stylesheet draws selected text in About without a highlight (Adam's option B over leaving it or moving the focus in code). On Adam's XFCE with Greybird the title bar shows the window-menu arrow, not an application icon, so the badge is used where XFCE asks for small icons.
+
+¶ 132 tests. One step; the workflow was checked as YAML before it was issued and is first run by GitHub after the push.
+
+§ 205 tests. Part A (core: scanner, formats, file documents, open messages; 165 then 181 tests), M2.2 UI (the open flow, STEPS 3 and 4; 185 tests), the save part (STEP 5 core, 205 tests; STEPS 6 and 7 the saver, the status bar menus, Save, Save As and the questions) and one fix (the dialogs start in the home folder; Save and Reopen). Adam ran 18 checks of open and save by hand; the byte checks all matched. Long-line limit 350,000 characters; saving 38.9 MB took 6.5 s.
+
+‖ 259 tests. Six one-step prompts (the spans, the page blocks, the page history, the manual as a second resource with two tests about the real files, the help window, the wiring); Qwen wrote `manual_spans.cpp`, `manual_page.cpp`, `page_history.cpp` and `help_window.cpp` from specifications and passed audits with a differential fuzz against the Orchestrator's reference implementations; one fix (comments moved off statements, an unused include). The manual gained the topic "Using the manual".
+
+\# 482 tests. Fifteen prompts in all (the format and rejection tests, the schedule, the store in two parts, the tracker, the hooks, the controller and its wiring, the working-again message, and STEP 5 in seven: the offer, the question texts, the document hooks, the answers, the file helpers, the prompt class, the window wiring); Qwen wrote the `.cpp` files from specs, headers, tests and wiring dictated. STEP 6 was Adam's run on a 52,428,800-character file: a copy holds the main loop 95 to 125 ms, a restore of the whole text takes 976 ms, nothing felt slow; the ceiling stays at 100,000,000 characters and the text is taken in one call (ARCHITECTURE.md 7.11). A recovered document takes over its old copy's id.
+
+\*\* 715 tests. Search as M2.3 built it (ARCHITECTURE.md 7.1 and 7.10): the Find, Replace and Go to Line windows, the Search menu with F3 and Shift+F3, the always-on current-line band, and Replace All as a sliced job (STEPS 13a to 13f) that keeps the window alive, can be cancelled, and is one step of Undo. Adam's hands-on list on the 50 MB file passed. Measured: 289,088 matches replaced in 64.5 s (about 4,500 a second, flat); Undo of a 19,040-match run took 10.6 s with the window frozen; an open copy of the 50 MB file costs about 0.9 GB. Adam accepted the speed and decided only to document the cost of a big Undo (HANDOFF.md decisions; the options not taken are recorded there). A STEP 13f fix: while a job runs the page swallows Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z, because a greyed Undo action does not consume its shortcut and the view's own binding ran. Known limit: highlighting every match on one huge line can freeze the window; it does not come from the job. The manual gained the topic "Find, Replace and Go to Line".
+
+### Old M1.4b row text
+
+| M1.4b | `ServerState` warnings: levels 80% and 95% with hysteresis, the first-update rule, time-to-full alert; `down` resets the warning state; `ServerState::update` is split into helpers (it is 91 lines after M1.4a) | Same, alerts and level in the scripted sequences | Qwen | ☑ 2026/11/08 |
+
+## Part 32: text removed from docs/roadmap.md (2026-11-18)
+
+The roadmap now describes each milestone as if it had always been planned this way. The history texts below were removed from it. They are kept verbatim, each followed by its replacement. The gate details and notes moved to `docs/gate-details.md`.
+
+### Removed text 1
+
+```
+- **History.** Reweighed 2026-11-13 (the agent scope was cut to local first, and parked work left M5, M8 and M9), 2026-11-15 (Adam's proposal) and 2026-11-17 (the diff moved into M2 as gate M2.6 and M5 and M6 swapped, so M2 went from 16 to 19 and M5 from 28 to 25). The earlier weight sets are in the handoff archive.
+```
+
+Now: (nothing)
+
+### Removed text 2
+
+```
+(confirmed 2026-11-13; moved from M5.7 on 2026-11-14, so the first try has the permission engine, tools with staged edits, loop, diff engine, whole-turn revert, chat UI and pending-changes bar).
+```
+
+Now:
+
+```
+(set 2026-11-13). It has the permission engine, tools with staged edits, loop, diff engine, whole-turn revert, chat UI and pending-changes bar to work with.
+```
+
+### Removed text 3
+
+```
+(Adam, 2026-11-11; after the agent core M5 since 2026-11-17)
+```
+
+Now:
+
+```
+(Adam, 2026-11-11)
+```
+
+### Removed text 4
+
+```
+no tab limit (dropped by Adam 2026-11-10, parked in `docs/ideas.md`); the folder items moved to M3.0 (Adam, 2026-11-10)
+```
+
+Now:
+
+```
+no tab limit (Adam, 2026-11-10)
+```
+
+### Removed text 5
+
+```
+(Adam, 2026-11-17, executive decision: the diff is part of the light editor `vermilion` too, so it moves here from the agent milestone, where the engine and the DiffView were two gates)
+```
+
+Now:
+
+```
+(Adam, 2026-11-17: the diff is part of the light editor `vermilion` too)
+```
+
+### Removed text 6
+
+```
+(no `--feather` flag; this replaces the feather mode of 2026-11-10)
+```
+
+Now:
+
+```
+(no `--feather` flag)
+```
+
+### Removed text 7
+
+```
+ (moved from the old M2.6, Adam 2026-11-10)
+```
+
+Now: (nothing)
+
+### Removed text 8
+
+```
+ (this replaces the parked summarising)
+```
+
+Now: (nothing)
+
+### Removed text 9
+
+```
+(Adam, 2026-11-14, un-parked; details below)
+```
+
+Now:
+
+```
+(Adam, 2026-11-14; details below)
+```
+
+### Removed text 10
+
+```
+(Adam, 2026-11-14, un-parked):
+```
+
+Now:
+
+```
+(Adam, 2026-11-14):
+```
+
+### Removed text 11
+
+```
+  - Parked: persisted change sets and one undo step per turn. Per-hunk Accept and Revert came back on 2026-11-14 (M5.6b and M5.11b).
+```
+
+Now:
+
+```
+  - Not included: persisted change sets and one undo step per turn.
+```
+
+### Removed text 12
+
+```
+(Adam, 2026-11-14, un-parked).
+```
+
+Now:
+
+```
+(Adam, 2026-11-14).
+```
+
+### Removed text 13
+
+```
+(confirmed 2026-11-13; moved here from M5.7 on 2026-11-14)
+```
+
+Now:
+
+```
+(set 2026-11-13)
+```
+
+### Removed text 14
+
+```
+(renamed from `vermilion-ctxmon`, Adam 2026-11-11; application ID
+```
+
+Now:
+
+```
+(Adam 2026-11-11; application ID
+```
+
+### Removed text 15
+
+```
+**Status**: ☐ Cut to three gates on 2026-11-13 (Adam): the Anthropic and Gemini adapters and MCP (server and client) are parked in `docs/ideas.md`. Old to new: M8.2 is M8.1; M8.5 is M8.2; M8.6 is M8.3.
+```
+
+Now:
+
+```
+**Status**: ☐
+```
+
+### Removed text 16
+
+```
+ This replaced the v0.1 to v0.4 groups of 2026-11-10.
+```
+
+Now: (nothing)
+
+### Removed text 17
+
+```
+- **Renumbered on 2026-11-17 (Adam).** This milestone was M6 and swapped numbers with the ctxmon UI (now M6).
+  - Its diff engine and DiffView (were M6.5 and M6.11) moved into M2 as gate M2.6, because the diff is part of the light editor too. Those two numbers are not reused, so the milestone has 15 gates.
+  - Older mentions of M6.x in the archive mean M5.x now.
+- **Re-planned on 2026-11-13 (Adam).** The agent is local first, llama.cpp through the OpenAI-compatible API. Other providers, MCP, key storage and context summarising are parked in `docs/ideas.md`. The gates were reordered and renumbered.
+  - Old to new: M5.2 (tools) is M5.3; M5.3 (permissions) is M5.2; M5.5 (chat UI) is M5.7; M5.6 (setup dialog and keyring) is M5.8 without the keyring; M5.7 (`/clear` and archive) is split into M5.9 and M5.10.
+  - Also: M5.8 (diff engine) is M5.5; M5.9 (DiffView) is M5.11; M5.10 (change sets) is M5.6, lean; M5.11 (request log) is M5.12; the old M5.12 (context budget and summarising) is parked.
+- **Extended on 2026-11-14 (Adam, toolset talk; he overrode the no-growth rule of 2026-11-10 for M5).** The agent gets a fuller toolset (thirteen tools), staged edits that stay unsaved until accepted, a pending-changes bar, and per-hunk Accept and Revert back from the parking lot.
+  - By suffix, so no gate was renumbered: M5.3 splits into M5.3a, M5.3b and M5.3c, and M5.6b, M5.7b and M5.11b are new. DOGFOOD 4 moved from M5.7 to M5.7b.
+  - Under the weights rule only M5's own fraction changes. Details and the tool list: ARCHITECTURE.md 7.6.
+```
+
+Now:
+
+```
+- The agent is local first: llama.cpp through the OpenAI-compatible API. The toolset (thirteen tools), staged edits and the pending-changes bar are in ARCHITECTURE.md 7.6. Other providers and MCP are in `docs/ideas.md`.
+```
+
+### Removed text 18
+
+```
+- Its own milestone since 2026-11-11 (Adam). It was placed before the agent core until 2026-11-17, when Adam swapped it with the agent core: it is now M6 and the agent core is M5.
+- It holds the gates that were M2.7 to M2.11 (now M6.1 to M6.4 and M6.6), the ctxmon tab (was M3.6, now M6.5), the conditional terminal tabs (was M4.5, now M6.7) and the version tag gate (was part of M4.6, now M6.8, tagging v0.4.0).
+- The terminal (VTE) is first built with the ctxmon cards, M6.3.
+```
+
+Now:
+
+```
+- The ctxmon UI (Adam, 2026-11-11): settings and server list, I/O, cards and graphs, the terminal (VTE, first built with the cards, M6.3), the standalone `ctxmon`, the ctxmon tab in the IDE, and removal of the Python original.
+```
+
+### Removed text 19
+
+```
+Chat archive, `/clear` and `/copy` (part a of the former M5.7)
+`/history` (part b of the former M5.7)
+```
+
+Now:
+
+```
+Chat archive, `/clear` and `/copy`
+`/history`
+```

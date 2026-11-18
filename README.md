@@ -311,6 +311,7 @@ program, debug and info messages are hidden by default; run with `G_MESSAGES_DEB
 | `reference/ctxmon/` | The Python original of ctxmon (`ctxmon_gtk.py`, frozen; test oracle until M6.6) and its logo (`ctxmon.svg`). Not built. |
 | `docs/manual/` | The user manual, one short topic per file ([index](docs/manual/index.md)). |
 | `docs/roadmap.md` | The milestone and gate plan. |
+| `docs/gate-details.md` | The longer description of each gate and the notes of the roadmap. |
 | `docs/milestones/` | Milestone reviews (what was done, what was learned, what comes next). |
 | `docs/requirements/` | Behaviour specifications, for example the directory sidebar. |
 | `ARCHITECTURE.md` | The decided architecture. |
