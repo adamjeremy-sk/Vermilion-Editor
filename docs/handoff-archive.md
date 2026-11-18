@@ -1003,3 +1003,392 @@ Now:
 Chat archive, `/clear` and `/copy`
 `/history`
 ```
+
+## Part 33: attributions removed from docs/roadmap.md and docs/gate-details.md (2026-11-18)
+
+Decision attributions such as "(Adam, 2026-11-14)" were removed from both files. Each changed line is kept below as it was. The decisions are in the HANDOFF.md decision log and the archive.
+
+### Line 1 (roadmap.md)
+
+```
+**Line rule** (Adam, 2026-11-18): no line of this file has more than 60 words. A gate's table row stays short. Longer detail and the notes go in `docs/gate-details.md`; a row that says "see gate-details" has more there. Check: `awk 'NF > 60' docs/roadmap.md` prints nothing.
+```
+
+### Line 2 (roadmap.md)
+
+```
+- **The Done column** (Adam, 2026-11-10). ☐ means not done. ☑ means done, followed by the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes of that milestone in `docs/gate-details.md`; the marks start again in each milestone. Each milestone also has a Status line.
+```
+
+### Line 3 (roadmap.md)
+
+```
+- **Standing objective: REUSE certification** (Adam, 2026-11-17). The repository is to pass `reuse lint` (https://reuse.software), with the licence texts in `LICENSES/`. Everything created from 2026-11-17 on is compliant when it is made (AGENTS.md rule 5); older files are brought into line at M9. Already done: the vendored xxHash (`third_party/xxhash/`, with a `.license` sidecar) and `LICENSES/`.
+```
+
+### Line 4 (roadmap.md)
+
+```
+- **Counting** (Adam, 2026-11-11). Every milestone has a fixed share of the 100%. A milestone's share is split equally among its own gates, so adding or splitting a gate changes only that milestone's fraction, never the total. M9 counts as one gate.
+```
+
+### Line 5 (roadmap.md)
+
+```
+| 0.3.0 | Agent core, local first (llama.cpp through the OpenAI-compatible API; Adam, 2026-11-13): provider, permission engine, tools, agent loop, change sets with whole-turn and per-hunk revert, staged edits, chat, setup dialog, archive and history, request log, privacy indicator (the diff engine and view are in 0.1.0) | M5 |
+```
+
+### Line 6 (roadmap.md)
+
+```
+- **Tags** (Adam, 2026-11-17). A version is tagged when the last milestone of its row is closed, at that milestone's review (AI_ONBOARDING.md section 2, item 7). The program's version string (`CMakeLists.txt` and `src/core/version.cpp`, still 0.0.1) is raised at each tag.
+```
+
+### Line 7 (roadmap.md)
+
+```
+- **ctxmon logic (M1)** is built early because it is self-contained. The Python original (`ctxmon_gtk.py` in `reference/ctxmon/`, 1,587 lines; logo `reference/ctxmon/ctxmon.svg`) is an executable specification, the best first job to prove the workflow with the local agent. Since 2026-11-07 the port in `src/ctxmon/` is the source of truth and the Python original is frozen as the test oracle (Adam).
+```
+
+### Line 8 (roadmap.md)
+
+```
+- **ctxmon's UI** is its own milestone, M6 (Adam, 2026-11-11): settings, I/O, cards and terminal, the standalone program and the ctxmon tab (which needs the right-hand stack from M3).
+```
+
+### Line 9 (roadmap.md)
+
+```
+| M0.5d1 | Debt clearing (runs before M0.5c; Adam 2026-11-06, no carried debt): `gtkx` internals into `detail`, `SignalConnection` doc comment, `ObjectPtr` assignment tests, disconnect inside a handler test, `main.cpp` on `gtkx::connect`, purpose comments in `src/ui` and the gtkx tests | Tests pass (58); window still opens (Adam) | Qwen | ☑ 2026/11/06 |
+```
+
+### Line 10 (roadmap.md)
+
+```
+| M0.5d3 | One-time `clang-format -i` pass over every `.cpp` and `.h` in `src` and `tests` with the committed `.clang-format` (Adam 2026-11-06); no other change | `clang-format --dry-run --Werror` is clean; tests pass | Qwen | ☑ 2026/11/06 |
+```
+
+### Line 11 (roadmap.md)
+
+```
+**Before any UI gate (Adam, 2026-11-07):** the first gate that builds UI (M2.1, and again before the ctxmon cards M6.3) is preceded by a talk with Adam about his UI specifications; no UI prompt is written before that.
+```
+
+### Line 12 (roadmap.md)
+
+```
+| M2.1c | Application icons (Adam, 2026-11-11): both SVGs rendered to PNG at every build (see gate-details) | Icon above the name in About; small icon in the title bar | Qwen | ☑ 2026/11/11 ‡ |
+```
+
+### Line 13 (roadmap.md)
+
+```
+| M2.1d | Continuous integration on GitHub Actions (Adam, 2026-11-11; see gate-details) | The first run on GitHub is green | Qwen | ☑ 2026/11/11 ¶ |
+```
+
+### Line 14 (roadmap.md)
+
+```
+| M2.2 | Open and save, encodings, line endings (Adam, 2026-11-11; see gate-details) | Core tests for the scanner, formats, document list and messages; Adam's 18-point run of open and save | Qwen | ☑ 2026/11/11 § |
+```
+
+### Line 15 (roadmap.md)
+
+```
+| M2.2b | Help → Index: the manual in a read-only window (Adam, 2026-11-11; see gate-details) | Every topic opens and reads correctly; renderer, history and manual tests | Qwen writes the renderer, the page history and the window from specs; headers, tests and wiring dictated | ☑ 2026/11/11 ‖ |
+```
+
+### Line 16 (roadmap.md)
+
+```
+| M2.2c | Crash recovery (Adam, 2026-11-11; see gate-details) | A killed editor offers the unsaved text at the next start; core tests | Qwen | ☑ 2026/11/12 \# |
+```
+
+### Line 17 (roadmap.md)
+
+```
+| M2.5b | Help window with a contents tree and a search tab (Adam, 2026-11-17; see gate-details) | Manual check: tree, search with each option, Back, Forward, Hide; core tests for the page search and the history | Design talk with Adam, then plan first (rule 10) | ☐ |
+```
+
+### Line 18 (roadmap.md)
+
+```
+| M2.6 | Diff engine and `DiffView` (Adam, 2026-11-17; see gate-details) | Tests incl. edge cases (applying a diff to A gives B); manual check of the view, the banner button and the Compare button | Orchestrator plans, Qwen codes | ☐ |
+```
+
+### Line 19 (roadmap.md)
+
+```
+| M2.7 | Window size restored; start state (a new untitled document by default; or reopen the last document, a single file; or a blank window); no tab limit (Adam, 2026-11-10) | Restored on start | Qwen | ☐ |
+```
+
+### Line 20 (roadmap.md)
+
+```
+| M2.7c | File → Open Recent (Adam, 2026-11-17, proposed at the end of M2.3; design talk first, see gate-details) | Opens a recent file; a missing file is handled as the talk decides | Plan first (rule 10) | ☐ |
+```
+
+### Line 21 (roadmap.md)
+
+```
+| M2.7b | The light program `vermilion` (Adam, 2026-11-11; ARCHITECTURE.md 7.12; see gate-details) | Opens text files from the file manager; the link check passes; Adam measures startup. **◆ DOGFOOD 1: `vermilion` replaces gedit and Mousepad on Adam's system** | Orchestrator plans, Qwen codes | ☐ |
+```
+
+### Line 22 (roadmap.md)
+
+```
+| M3.0 | The `vermilion-ide` executable appears (ARCHITECTURE.md 7.12; Adam, 2026-11-11): a thin `main` over the editor base, application ID `io.github.adamjeremy_sk.VermilionIde`, recovery folder `ide`. Then Open Folder, Recent Folders, Close Folder and restoring the last folder, with their File menu items | Folder restored on start | Qwen | ☐ |
+```
+
+### Line 23 (roadmap.md)
+
+```
+| M4.3 | Run on `GSubprocess`, Output pane; the Build menu with Build (F7), Run (F5) and Stop; no toolbar (Adam, 2026-11-10) | Builds Vermilion itself. **◆ DOGFOOD 2: Vermilion edits and builds its own source** | Qwen | ☐ |
+```
+
+### Line 24 (roadmap.md)
+
+```
+| M4.5 | Review of M4 and the v0.2.0 tag (Adam, 2026-11-17: versions follow the milestones) | Adam signs off. **◆ DOGFOOD 3: Vermilion is Adam's primary editor for this repo; CLion stays only as the host of Qwen (Air plugin / OpenCode)** | Adam | ☐ |
+```
+
+### Line 25 (roadmap.md)
+
+```
+| M5.3a | Tool registry and the read-side tools (Adam, 2026-11-14; see gate-details) | Tests per tool | Qwen | ☐ |
+```
+
+### Line 26 (roadmap.md)
+
+```
+| M5.3b | Edit-side tools and staged edits (Adam, 2026-11-14; see gate-details) | Tests per tool; an agent edit leaves the buffer unsaved and undoable | Plan first | ☐ |
+```
+
+### Line 27 (roadmap.md)
+
+```
+| M5.3c | Build-side tools (Adam, 2026-11-14; see gate-details) | Tests per tool, including the warning cases | Qwen | ☐ |
+```
+
+### Line 28 (roadmap.md)
+
+```
+| M5.6 | Change sets, lean (Adam, 2026-11-13): turn snapshots and whole-turn revert (see gate-details) | Revert a turn restores files | Plan first | ☐ |
+```
+
+### Line 29 (roadmap.md)
+
+```
+| M5.6b | Reverse hunks in core (Adam, 2026-11-14; see gate-details) | Tests on all the edge cases; reverting every hunk of a file gives the snapshot | Plan first | ☐ |
+```
+
+### Line 30 (roadmap.md)
+
+```
+| M5.7 | Chat UI in the Agent tab: Stop, approvals that show the proposed edit as a plain diff, the `ask_user` question card (one multiple-choice question; the agent waits), Copy buttons; status "Processing" while the agent works; the model's reasoning collapsed, expandable to the full text (Adam, 2026-11-10) | Manual check | Qwen | ☐ |
+```
+
+### Line 31 (roadmap.md)
+
+```
+| M5.7b | Pending-changes bar in the Agent tab (Adam, 2026-11-14; see gate-details) | Manual check. **◆ DOGFOOD 4: first try of the built-in agent against local llama.cpp on small tasks, with staged edits (see gate-details)** | Qwen | ☐ |
+```
+
+### Line 32 (roadmap.md)
+
+```
+| M5.11b | Per-hunk Accept and Revert in the DiffView of M2.6 (Adam, 2026-11-14): controls beside each changed block, using the reverse-hunk core of M5.6b; a refused revert shows its plain message; a revert is one undo step in the buffer | Manual check | Orchestrator plans, Qwen codes | ☐ |
+```
+
+### Line 33 (roadmap.md)
+
+```
+- The ctxmon UI (Adam, 2026-11-11): settings and server list, I/O, cards and graphs, the terminal (VTE, first built with the cards, M6.3), the standalone `ctxmon`, the ctxmon tab in the IDE, and removal of the Python original.
+```
+
+### Line 34 (roadmap.md)
+
+```
+| M6.3 | ctxmon cards and graphs in `src/ctxmon/ui` (UI talk with Adam first), VRAM bar, the terminal (VTE; first built here, Adam 2026-11-07), `GNotification` warnings. No "Time until full" tile (Adam, 2026-11-08); `Alert::level` becomes `int`, always set (Adam left it to the Orchestrator, 2026-11-10) | Matches the Python behaviour (Adam checks) | Qwen (split as needed) | ☐ |
+```
+
+### Line 35 (roadmap.md)
+
+```
+| M6.4 | Standalone `ctxmon` executable (Adam 2026-11-11; application ID `io.github.adamjeremy_sk.Ctxmon`; own `GtkApplication` window, same cards, no editor) | Runs without the editor; watches a real llama.cpp server | Qwen | ☐ |
+```
+
+### Line 36 (roadmap.md)
+
+```
+| M6.6 | Remove all Python (Adam, 2026-11-07): the oracle's expected JSON becomes inline C++ case tables in the ctxmon tests (fixture `.log` files stay); delete `ctxmon_gtk.py`, `tools/ctxmon_oracle.py` and the fixtures' `expected/`; `SourceCheck.Repo` fails on any tracked `.py` file | No `.py` file in `git ls-files`; same test count, all passing | Qwen | ☐ |
+```
+
+### Line 37 (roadmap.md)
+
+```
+| M6.7 | Terminal tabs in the editor's bottom panel, reusing the terminal built with ctxmon in M6.3 (Adam, 2026-11-08: the ctxmon terminal serves as the editor's terminal for now; 2026-11-11: not urgent). Built only if that terminal proves burdensome to use | Shell in the opened folder | Qwen | ☐ |
+```
+
+### Line 38 (roadmap.md)
+
+```
+| M6.8 | v0.4.0 review and tag: ctxmon in both forms (standalone and tab), the terminal, all Python removed | Adam signs off; the v0.4.0 tag (Adam, 2026-11-17: versions follow the milestones) | Adam | ☐ |
+```
+
+### Line 39 (roadmap.md)
+
+```
+| M7.4 | Run control (continue, step over, into, out) from the Debug menu and F5, F10, F11, Shift+F11; no toolbar or button strip (Adam, 2026-11-10) | Same | Qwen | ☐ |
+```
+
+### Line 40 (roadmap.md)
+
+```
+- No AppImage (Adam, 2026-11-11 and 2026-11-12). The `.rpm` packages and the Fedora VM are parked in `docs/ideas.md` (2026-11-13).
+```
+
+### Line 41 (roadmap.md)
+
+```
+- **REUSE certification** (Adam, 2026-11-17): every older file gets its header, or a `REUSE.toml` annotation for fixtures, images and other files that cannot hold a comment. `reuse lint` passes and is added to CI. Files made after 2026-11-17 are compliant already.
+```
+
+### Line 42 (roadmap.md)
+
+```
+- A man page `vermilion.1` generated from the manual (the Command-line options topic) when 1.0.0-beta is packaged (Adam, 2026-11-11: no man page before then).
+```
+
+### Line 43 (roadmap.md)
+
+```
+- Then `1.0.0-beta.N` builds run for 8 weeks. The SECURITY.md work (pinned 2026-11-08) happens before the beta starts (Adam, 2026-11-10). `1.0.0-stable` follows, with `-stable` and `-beta` branches.
+```
+
+### Line 44 (roadmap.md)
+
+```
+Agent shell confinement (Bubblewrap); git integration; multi-cursor; theme system; SSH; session restore; indexed search; plugin hook. All were considered and dropped from the first scope on 2026-11-05. New ideas go to `docs/ideas.md`; the roadmap does not grow before 1.0.0-stable (Adam, 2026-11-10).
+```
+
+### Line 45 (gate-details.md)
+
+```
+  - (b) Look spike (Adam, 2026-11-10): one bare window with a menu bar, a notebook with an editor, a status bar and the classic stylesheet in a light and a dark palette (ARCHITECTURE.md 7.10). It also checks how GTK 4.14 reports the system dark mode.
+```
+
+### Line 46 (gate-details.md)
+
+```
+  - Menu bar (File, Edit, View, Help at first), no toolbar (Adam, 2026-11-10), and a status bar with Line/Column, INS, Language and Tab Width panels. Every command is a `GAction` shared by menu and shortcuts.
+```
+
+### Line 47 (gate-details.md)
+
+```
+  - Adam checks the look, including the fused selected tab and the sunken editor well (light palette only; dark and Follow system arrive with M2.5, Adam 2026-11-10).
+```
+
+### Line 48 (gate-details.md)
+
+```
+- **M2.2 Process.** Measured by Adam: a 38.9 MB file saves in 6.5 s with the window usable. First gate of the Qwen-writes-implementations trial (Adam, 2026-11-11): Qwen wrote the core `.cpp` files, `document_saver.cpp` and the status bar; the Orchestrator dictated headers, tests and the rest of the UI.
+```
+
+### Line 49 (gate-details.md)
+
+```
+- **M2.2c** crash recovery (Adam, 2026-11-11: a basic editor function, not a new feature; talk held and decided the same night).
+```
+
+### Line 50 (gate-details.md)
+
+```
+  - Also here (Adam, M2.3 design talks): a check box for the current-line band, a few style presets, and light and dark defaults for the editor scheme file that M2.3 already writes to the cache folder.
+```
+
+### Line 51 (gate-details.md)
+
+```
+- **M2.5b** Help window (Adam, 2026-11-17: "I want to change the help menu", with a Windows 98 Help screenshot as a layout idea only; our own look and branding, ARCHITECTURE.md rules stay).
+```
+
+### Line 52 (gate-details.md)
+
+```
+- **M2.6** diff (Adam, 2026-11-17: the diff is part of the light editor `vermilion` too).
+```
+
+### Line 53 (gate-details.md)
+
+```
+  - The command-line options are documented in a new manual topic, Command-line options (Adam, 2026-11-11), where every later flag goes too.
+```
+
+### Line 54 (gate-details.md)
+
+```
+‡ 132 tests. Two steps (the rename, then rendering and use). Fix 1: GTK focuses the program name when About opens, so the stylesheet now draws selected text in About without a highlight (Adam's option B).
+```
+
+### Line 55 (gate-details.md)
+
+```
+Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10.6 s with the window frozen (Adam accepted it; the manual documents the cost).
+```
+
+### Line 56 (gate-details.md)
+
+```
+  - A per-preset "ask before saving" setting: on in Restricted, off in Balanced and Unrestricted (Adam, 2026-11-14). `run_command` is an always-ask tool that is off in Balanced.
+```
+
+### Line 57 (gate-details.md)
+
+```
+  - It comes before the tools because they call it (Adam deferred the order to the Orchestrator, 2026-11-13).
+```
+
+### Line 58 (gate-details.md)
+
+```
+- **M5.3a** the original eight tools became thirteen, in three gates (Adam, 2026-11-14).
+```
+
+### Line 59 (gate-details.md)
+
+```
+- **M5.3b** edit-side tools and staged edits (Adam, 2026-11-14).
+```
+
+### Line 60 (gate-details.md)
+
+```
+  - The plan settles what happens when the buffer already holds the user's unsaved changes (it asks first), and whether `replace_text` needs whitespace tolerance (OpenCode's `edit` tries several matching strategies; Adam thinks Qwen copes with exact match). Decided from the OpenCode usage log (HANDOFF.md, Backlog) and at DOGFOOD 4; `replace_lines` stays in `docs/ideas.md` until exact-match failures show.
+```
+
+### Line 61 (gate-details.md)
+
+```
+- **M5.3c** build-side tools (Adam, 2026-11-14).
+```
+
+### Line 62 (gate-details.md)
+
+```
+- **M5.6** change sets, lean (Adam, 2026-11-13).
+```
+
+### Line 63 (gate-details.md)
+
+```
+- **M5.6b** reverse hunks in core (Adam, 2026-11-14).
+```
+
+### Line 64 (gate-details.md)
+
+```
+- **M5.7b** pending-changes bar (Adam, 2026-11-14).
+```
+
