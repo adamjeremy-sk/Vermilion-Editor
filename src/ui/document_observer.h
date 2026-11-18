@@ -38,6 +38,11 @@ public:
     // for a document closed meanwhile.
     virtual void document_synced(DocumentId id, std::optional<std::int64_t> file_mtime_us) = 0;
 
+    // The document's file was found missing (deleted or moved) and its record is marked
+    // deleted_on_disk: its text now exists only in the editor, so it needs a recovery copy. chars
+    // is the length of the text in characters.
+    virtual void document_deleted_on_disk(DocumentId id, std::uint64_t chars) = 0;
+
     // The document is about to be closed; its page still exists.
     virtual void document_closing(DocumentId id) = 0;
 };

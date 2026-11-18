@@ -167,6 +167,19 @@ window.vm-main scrolledwindow.vm-editor-well {
         inset 2px 2px @vm_dark_shadow, inset -2px -2px @vm_light;
 }
 
+/* Change banner (M2.4): the strip above the text that says the file changed on disk; the classic
+   tooltip yellow with a thin line below it. Its buttons are the ordinary raised buttons. */
+window.vm-main box.vm-change-banner {
+    background-color: @vm_info_bg;
+    color: @vm_text;
+    padding: 3px 6px;
+    box-shadow: inset 0 -1px @vm_shadow;
+}
+
+window.vm-main box.vm-change-banner label {
+    color: @vm_text;
+}
+
 /* Entries (find bar and dialogs in the window, from M2.3): white field in a sunken bevel. */
 window.vm-main entry {
     background-color: @vm_field_bg;
@@ -308,5 +321,11 @@ window.vm-help .vm-help-page label link {
 window.vm-find .vm-find-problem,
 window.vm-replace .vm-find-problem,
 window.vm-goto .vm-find-problem {
+    font-weight: bold;
+}
+
+/* The question with a check box (M2.4, File > Reload from Disk): the window also has the class
+   vm-main; the message line is bold like the message of a GtkAlertDialog. */
+window.vm-ask .vm-ask-message {
     font-weight: bold;
 }

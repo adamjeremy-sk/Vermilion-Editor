@@ -18,9 +18,9 @@
 - **Upkeep.** The weights are the Orchestrator's estimate, accepted by Adam; they change only when Adam decides. The bar is updated with the Done column at every gate commit, and the same line is in README.md.
 - **Weights** (sum 100): M0 5 · M1 6 · M2 19 · M3 8 · M4 6 · M5 25 · M6 10 · M7 10 · M8 5 · M9 6.
 - **Share of one gate** in its milestone: M0 0.42% (12 gates) · M1 0.55% (11) · M2 1.27% (15) · M3 1.33% (6) · M4 1.20% (5) · M5 1.67% (15) · M6 1.25% (8) · M7 1.67% (6) · M8 1.67% (3) · M9 6.00% (1).
-- **Now**: 5 + 6 + 19 × 8/15 = 21.1, shown as 21%.
+- **Now**: 5 + 6 + 19 × 9/15 = 22.4, shown as 22%.
 
-**Progress**: `████░░░░░░░░░░░░░░░░` 21% (weighted: M0 and M1 done; M2 8 of 15)
+**Progress**: `████░░░░░░░░░░░░░░░░` 22% (weighted: M0 and M1 done; M2 9 of 15)
 
 ## Versions
 | Version | Contents | Milestones |
@@ -96,7 +96,7 @@ The talk for the M2 window was held 2026-11-10; its outcome is ARCHITECTURE.md s
 | M2.2b | Help → Index: the manual in a read-only window (see gate-details) | Every topic opens and reads correctly; renderer, history and manual tests | Qwen writes the renderer, the page history and the window from specs; headers, tests and wiring dictated | ☑ 2026/11/11 ‖ |
 | M2.2c | Crash recovery (see gate-details) | A killed editor offers the unsaved text at the next start; core tests | Qwen | ☑ 2026/11/12 \# |
 | M2.3 | Search, replace (regex), go to line; the Search menu | Manual check plus core tests for the search options and the replacement rules | Qwen | ☑ 2026/11/17 \*\* |
-| M2.4 | File monitor and the external-change policy (the banner's Show diff button joins with the diff view, M2.6) | Edit on disk reloads a clean buffer; dirty buffer shows the banner | Orchestrator plans, Qwen codes | ☐ |
+| M2.4 | File monitor and the external-change policy (the banner's Show diff button joins with the diff view, M2.6) | Edit on disk reloads a clean buffer; dirty buffer shows the banner | Orchestrator plans, Qwen codes | ☑ 2026/11/18 †† |
 | M2.5 | Settings window and key file: colour mode, schemes, editor font, tab width; the Tools menu (see gate-details) | Settings persist; Adam checks light and dark | Plan first (rule 10) | ☐ |
 | M2.5b | Help window with a contents tree and a search tab (see gate-details) | Manual check: tree, search with each option, Back, Forward, Hide; core tests for the page search and the history | Design talk with Adam, then plan first (rule 10) | ☐ |
 | M2.6 | Diff engine and `DiffView` (see gate-details) | Tests incl. edge cases (applying a diff to A gives B); manual check of the view, the banner button and the Compare button | Orchestrator plans, Qwen codes | ☐ |
@@ -192,7 +192,7 @@ The talk for the M2 window was held 2026-11-10; its outcome is ARCHITECTURE.md s
 
 - Three programs (`vermilion`, `vermilion-ide`, `ctxmon`) are released as `.deb` packages, and as one release zip holding all three prebuilt programs with a custom `install.sh`. The script installs, uninstalls and lets the user choose light, IDE, ctxmon or all three, after checking the system's GTK 4, GtkSourceView 5 and glibc (Depends and Suggests as in ARCHITECTURE.md 7.12).
 - No AppImage. The `.rpm` packages and the Fedora VM are parked in `docs/ideas.md` (2026-11-13).
-- README and a NOTICE of third-party material.
+- README and a NOTICE of third-party material (xxHash 0.8.3, BSD-2-Clause, vendored in M2.4, is the first entry).
 - **REUSE certification**: every older file gets its header, or a `REUSE.toml` annotation for fixtures, images and other files that cannot hold a comment. `reuse lint` passes and is added to CI. Files made after 2026-11-17 are compliant already.
 - A man page `vermilion.1` generated from the manual (the Command-line options topic) when 1.0.0-beta is packaged (no man page before then).
 - Version tag and the manual test checklist.

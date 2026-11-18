@@ -12,9 +12,10 @@
 #include <optional>
 #include <string>
 
+#include "core/baseline.h"
 #include "core/held_events.h"
-#include "core/recovered_base.h"
 #include "core/text_format.h"
+#include "ui/change_banner.h"
 #include "ui/document_loader.h"
 #include "ui/document_saver.h"
 #include "ui/gtkx/async_guard.h"
@@ -53,11 +54,24 @@ public:
     EditorPage(const EditorPage&) = delete;
     EditorPage& operator=(const EditorPage&) = delete;
 
-    GtkWidget* widget() const { return scrolled_.get(); } // the notebook page
+    // The notebook page: a vertical box with the change banner (hidden) above the scrolled view.
+    GtkWidget* widget() const { return root_.get(); }
     GtkWidget* tab() const { return label_->widget(); }
     GtkWidget* view() const { return GTK_WIDGET(view_); }
     // The document's text buffer (borrowed); the search runs on it.
     GtkSourceBuffer* buffer() const { return buffer_; }
+
+    // The strip above the text (ui/change_banner.h). show_banner() shows text with two buttons and
+    // replaces a banner that is already shown, together with its two functions. A click runs
+    // on_primary or on_secondary (a copy, so the function may call hide_banner()); the banner stays
+    // until hide_banner(). load() hides it. The functions must not destroy the page.
+    void show_banner(const std::string& text, const std::string& primary_label,
+                     const std::string& secondary_label, std::function<void()> on_primary,
+                     std::function<void()> on_secondary);
+    void hide_banner();
+    bool banner_visible() const;
+    // The text of the banner that is shown; empty when none.
+    const std::string& banner_text() const;
 
     void set_label(const std::string& title, const std::string& tooltip, bool modified);
     bool contains_close_button(GtkWidget* widget) const;
@@ -73,9 +87,11 @@ public:
     void finish_load(const std::string& path, bool read_only);
 
     // Starts saving the text to path (absolute) with format; Save As when path is not where the
-    // page's file is. The page cannot be edited until the save ends. When expect_file_time() was
-    // called for path and overwrite_changes is false, the file's time is read first; if it differs
-    // the save ends with ChangedOnDisk and writes nothing (the caller asks Save Anyway).
+    // page's file is. The page cannot be edited until the save ends. Unless overwrite_changes is
+    // true, a save to the page's own file first compares the file's time and size with the page's
+    // baseline (core/baseline.h); if they differ the save ends with ChangedOnDisk and writes
+    // nothing (the caller asks Save Anyway). GtkSourceView's own check is never used: the saver
+    // always gets its ignore flag.
     void save(const std::string& path, const TextFormat& format, bool overwrite_changes);
 
     // True from the call of save() until its end, also while the file's time is being read.
@@ -110,8 +126,35 @@ public:
     void restore_text(const std::string& text);
 
     // The text is based on the file at path (absolute) as it was at mtime_us (microseconds since
-    // the Unix epoch). See save(). Forgotten after a successful save, and by load().
+    // the Unix epoch): a time-only baseline, which a recovered document has until its first save.
+    // See save(). Replaced by sync_baseline() after a successful save, and dropped by load().
     void expect_file_time(const std::string& path, std::int64_t mtime_us);
+
+    // Where the user is looking: the cursor's place and how far the view is scrolled. A reload
+    // from disk keeps it.
+    struct ViewPosition {
+        int line = 0;        // 0-based line of the cursor
+        int line_offset = 0; // 0-based character offset of the cursor in its line
+        double scroll = 0.0; // the vertical scroll position, in pixels
+    };
+
+    ViewPosition view_position() const;
+
+    // Puts the cursor back at the saved line and column, clamped to the text as it is now, and the
+    // scroll position back: at once and again from an idle callback, because GTK works out the
+    // height of a long text a little at a time. Does nothing while the page loads. Call it after
+    // finish_load().
+    void restore_view_position(const ViewPosition& position);
+
+    // True when the page's text and baseline can be trusted: it does not load, save or read its
+    // baseline, and is not locked. A look at the file waits until this is true.
+    bool quiet() const { return !busy() && !syncing_; }
+
+    // The page's baseline (core/baseline.h), when it has one.
+    const std::optional<Baseline>& baseline() const { return baseline_; }
+
+    // Makes this stamp the baseline; its path stays. Does nothing for a page without a baseline.
+    void set_baseline_stamp(const FileStamp& stamp);
 
     void set_wrap(bool wrap);
     bool wraps() const;
@@ -125,25 +168,32 @@ public:
     // The length of the text in characters (the buffer keeps the count, so this is cheap).
     std::uint64_t char_count() const;
 
-    // Reads the modified time of the page's file as it is now, without blocking. callback gets
-    // microseconds since the Unix epoch, or nothing when the page has no file or the time cannot
-    // be read. It runs from the main loop (at once when the page has no file) and never after the
-    // page is destroyed.
-    void query_file_time(std::function<void(std::optional<std::int64_t>)> callback);
+    // Makes the page's baseline the file's state as it is now. Call it when a load or a save has
+    // just made the text and the file equal. The file's time and size are read and its bytes are
+    // hashed off the main loop, kept as the baseline, and callback gets the file's time
+    // (microseconds since the Unix epoch), or nothing when the page has no local file or its state
+    // cannot be read (the baseline is dropped then). While this runs (syncing_) a save skips the
+    // baseline check. The callback runs from the main loop, never after the page is destroyed.
+    void sync_baseline(std::function<void(std::optional<std::int64_t>)> callback);
 
 private:
     void on_loaded(DocumentLoader::Outcome outcome, const std::string& error);
     void on_saved(DocumentSaver::Outcome outcome, const std::string& error);
-    void begin_save(const std::string& path, const TextFormat& format, bool overwrite_changes);
+    void begin_save(const std::string& path, const TextFormat& format);
     void end_save(DocumentSaver::Outcome outcome, const std::string& error);
-    void query_time(GFile* location, std::function<void(std::optional<std::int64_t>)> callback);
+    void apply_scroll(double value);
+    static gboolean on_restore_scroll(gpointer ticket);
 
     Callbacks callbacks_;
-    gtkx::ObjectPtr<GtkWidget> scrolled_; // the notebook holds its own reference as well
+    gtkx::ObjectPtr<GtkWidget> root_;     // the notebook page; the notebook holds a reference too
+    gtkx::ObjectPtr<GtkWidget> scrolled_; // the text view's scrolled window, a child of root_
     GtkSourceView* view_ = nullptr;       // borrowed; owned by scrolled_
     GtkSourceBuffer* buffer_ = nullptr;   // borrowed; the view holds its reference
     gtkx::ObjectPtr<GtkSourceFile> file_; // files only; also used for saving
     std::unique_ptr<TabLabel> label_;
+    std::unique_ptr<ChangeBanner> banner_;
+    std::function<void()> banner_primary_; // what the banner's buttons do, set by show_banner()
+    std::function<void()> banner_secondary_;
     std::unique_ptr<DocumentLoader> loader_; // set while the file loads
     std::unique_ptr<DocumentSaver> saver_;   // set while the text is saved
     gtkx::SignalConnection modified_changed_;
@@ -153,14 +203,18 @@ private:
     gtkx::SignalConnection lock_keys_; // stops the Undo and Redo keys while the page is locked
     // load() is emptying the buffer, or restore_text() is filling it: that is not an edit.
     bool clearing_ = false;
-    // Set by expect_file_time(), cleared by a successful save and by load().
-    std::optional<RecoveredBase> base_;
+    // The file's path and stamp as they were when the text and the file were last equal; set by
+    // sync_baseline() and expect_file_time(), dropped by load() and by a successful save.
+    std::optional<Baseline> baseline_;
     // save() is reading the file's time before it starts the saver.
     bool checking_ = false;
+    // sync_baseline() is reading the file.
+    bool syncing_ = false;
     // set_locked(): the notifications held back while a job edits the buffer, and whether the
     // view was editable before the lock.
     HeldEvents held_;
     bool editable_before_lock_ = true;
+    double pending_scroll_ = 0.0; // the position restore_view_position() is putting back
     gtkx::AsyncGuard<EditorPage> guard_{this}; // last member: it goes first
 };
 

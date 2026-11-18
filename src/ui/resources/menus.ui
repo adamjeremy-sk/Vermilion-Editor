@@ -15,6 +15,9 @@
         <item><attribute name="label">Save _As&#x2026;</attribute><attribute name="action">win.save-as</attribute></item>
       </section>
       <section>
+        <item><attribute name="label">_Reload from Disk</attribute><attribute name="action">win.reload-from-disk</attribute></item>
+      </section>
+      <section>
         <item><attribute name="label">_Close Tab</attribute><attribute name="action">win.close-tab</attribute></item>
       </section>
       <section>

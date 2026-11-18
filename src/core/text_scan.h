@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "core/file_hash.h"
 #include "core/text_format.h"
 
 namespace vermilion {
@@ -25,6 +26,9 @@ struct ScanResult {
     // A NUL character, or a UTF-16 file with an odd number of bytes: the file looks binary.
     bool binary = false;
     std::uint64_t size = 0; // bytes fed, byte-order mark included
+    // XXH3 (file_hash.h) of every byte fed, byte-order mark included: the file's content hash, from
+    // the same pass that decided the format. It does not depend on where the blocks are split.
+    std::uint64_t hash = 0;
 };
 
 // Feed the whole file in blocks of any size (empty blocks are allowed), then call finish() once.
@@ -66,6 +70,7 @@ private:
     std::uint64_t longest_points_ = 0;
     bool binary_ = false;
     std::uint64_t size_ = 0;
+    StreamHasher hasher_; // every byte fed, for ScanResult::hash
 
     bool utf8_valid_ = true;
     int utf8_needed_ = 0;             // continuation bytes still expected

@@ -12,7 +12,9 @@
 #include <string>
 
 #include "core/document_list.h"
+#include "core/settings_file.h"
 #include "ui/document_tabs.h"
+#include "ui/external_change_controller.h"
 #include "ui/file_opener.h"
 #include "ui/find_window.h"
 #include "ui/format_commands.h"
@@ -26,6 +28,7 @@
 #include "ui/save_controller.h"
 #include "ui/search_controller.h"
 #include "ui/status_bar.h"
+#include "ui/tabs_external_host.h"
 
 namespace vermilion::ui {
 
@@ -55,6 +58,7 @@ public:
     void open_file();
     void save();
     void save_as();
+    void reload_from_disk(); // File > Reload from Disk (Ctrl+R); may ask first (M2.4)
     void close_active();
     void quit();
     void edit(const char* widget_action); // runs e.g. "clipboard.copy" on the active editor
@@ -141,6 +145,14 @@ private:
     std::unique_ptr<RecoveryPrompt> prompt_;
     bool quit_confirmed_ = false;
     gtkx::SignalConnection close_request_;
+    // The user's settings (settings.ini), loaded in the constructor before the host is created.
+    // Declared before the host, which borrows it, so it is destroyed after the host.
+    SettingsFile settings_{SettingsFile::default_path()};
+    // The look at the files of the open documents (M2.4). Created in the constructor after the
+    // tabs, which the host uses; the destructor resets them first (the tabs may still call
+    // refresh() while they are destroyed), and refresh() does nothing once they are gone.
+    std::unique_ptr<TabsExternalHost> external_host_;
+    std::unique_ptr<ExternalChangeController> external_;
     std::unique_ptr<HelpWindow> help_; // created on first use, reset when its window is destroyed
     gtkx::SignalConnection help_destroy_;
     // After search_ and tabs_, which it uses, so it is destroyed first. Created by find() on first

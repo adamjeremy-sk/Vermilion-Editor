@@ -13,6 +13,8 @@
   says so. A read-only document cannot be saved: File → Save is greyed out.
 - When the file is not plain UTF-8 the status bar says how it was read, for example "Opened “name” as Windows-1252". See
   [Encodings and line endings](encodings-and-line-endings.md).
+- File → Reload from Disk (Ctrl+R) reads the active document's file again; see
+  [Files changed on disk](files-changed-on-disk.md).
 - View → Word Wrap switches word wrap on or off for the active document. Every document opens without it.
 
 ## Saving
@@ -25,7 +27,8 @@
   The text goes into a new file beside the original, which is then swapped in, so a failed save leaves the old file as it
   was.
 - If the file changed on disk since you opened it or last saved it, Vermilion asks "Save Anyway" or "Cancel". Save Anyway
-  replaces the version on disk with yours.
+  replaces the version on disk with yours. Vermilion also tells you about such a change as soon as it sees it; see
+  [Files changed on disk](files-changed-on-disk.md).
 - If saving fails (the disk is full, the folder is read-only), the document stays unsaved and a message gives the reason.
 
 ## Closing and quitting

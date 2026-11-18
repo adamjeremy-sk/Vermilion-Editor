@@ -46,7 +46,7 @@ struct RecoveryController::Task {
 
 RecoveryController::RecoveryController(const DocumentList& list, const std::string& root,
                                        RecoveryProgram program, Callbacks callbacks)
-    : callbacks_(std::move(callbacks)), store_(root, program), tracker_(list) {
+    : list_(list), callbacks_(std::move(callbacks)), store_(root, program), tracker_(list) {
     if (store_.folder().empty()) {
         logging::warning("recovery: no usable state folder, crash recovery is off");
         return;
@@ -93,9 +93,16 @@ void RecoveryController::document_edited(DocumentId id, std::uint64_t chars) {
 // The flag turning on says nothing the edit did not already say (the buffer reports the change
 // before the flag); only the flag turning off, a save or an Undo back to the saved text, matters.
 void RecoveryController::document_modified(DocumentId id, bool modified) {
-    if (!modified) {
-        clean(id);
+    if (modified) {
+        return;
     }
+    // A document whose file is gone has no unsaved edits, but its text exists nowhere else: it
+    // keeps its copy until it is saved, reloaded or closed.
+    const DocumentRecord* record = list_.find(id);
+    if (record != nullptr && record->deleted_on_disk) {
+        return;
+    }
+    clean(id);
 }
 
 void RecoveryController::document_saved(DocumentId id) {
@@ -110,6 +117,10 @@ void RecoveryController::document_synced(DocumentId id, std::optional<std::int64
     if (active()) {
         tracker_.set_file_mtime(id, file_mtime_us);
     }
+}
+
+void RecoveryController::document_deleted_on_disk(DocumentId id, std::uint64_t chars) {
+    document_edited(id, chars);
 }
 
 void RecoveryController::document_closing(DocumentId id) {

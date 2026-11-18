@@ -122,7 +122,7 @@ std::optional<RecoveryJob> RecoveryTracker::begin_next(Millis now, std::int64_t 
     while (std::optional<DocumentId> id = schedule_.next_due(now)) {
         const DocumentRecord* record = list_.find(*id);
         auto it = entries_.find(*id);
-        bool needs_copy = record != nullptr && record->modified && !record->read_only &&
+        bool needs_copy = record != nullptr && record->needs_save() && !record->read_only &&
                           it != entries_.end() && !it->second.recovery_id.empty();
         if (!needs_copy) {
             schedule_.forget(*id);

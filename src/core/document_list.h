@@ -25,6 +25,14 @@ struct DocumentRecord {
     TextFormat format; // an untitled document is UTF-8 without a byte-order mark, LF
     bool mixed_line_endings = false; // the file had more than one kind of line ending
     bool read_only = false; // some bytes could not be read as text; the document is never saved
+    // The file was found missing (deleted or moved) while its tab was open; the tab keeps the text.
+    bool deleted_on_disk = false;
+    // The user picked the encoding with Encoding > Reopen as; a reload from disk keeps it instead
+    // of detecting the encoding again.
+    bool encoding_chosen = false;
+
+    // True when closing must ask: the text has unsaved changes, or its file is gone.
+    bool needs_save() const { return modified || deleted_on_disk; }
 };
 
 // Bookkeeping for the editor's document tabs; the UI keeps one tab per record, in the same order.
@@ -49,6 +57,12 @@ public:
     bool set_modified(DocumentId id, bool modified);
 
     bool set_read_only(DocumentId id, bool read_only);
+
+    // Marks the document's file as gone or back. False for an unknown id.
+    bool set_deleted_on_disk(DocumentId id, bool deleted);
+
+    // Marks the document's encoding as chosen by the user (or not). False for an unknown id.
+    bool set_encoding_chosen(DocumentId id, bool chosen);
 
     // After Save As: the document now lives at path (absolute) under title, and is no longer
     // untitled (its number is free again). False for an unknown id, an empty path, or a path that
@@ -75,9 +89,11 @@ public:
 
     bool empty() const { return records_.empty(); }
 
+    // How many documents closing must ask about: unsaved changes, or a file gone from disk (the
+    // records for which needs_save() holds).
     std::size_t modified_count() const;
 
-    // Documents with unsaved changes, in tab order.
+    // Those documents, in tab order.
     std::vector<DocumentId> modified_ids() const;
 
 private:

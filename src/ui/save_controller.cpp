@@ -8,6 +8,7 @@
 #include <memory>
 #include <utility>
 
+#include "core/external_messages.h"
 #include "core/save_messages.h"
 #include "ui/close_dialog.h"
 #include "ui/editor_page.h"
@@ -117,11 +118,31 @@ void SaveController::request_close(DocumentId id) {
         callbacks_.message(busy_message(record->title));
         return;
     }
-    if (!record->modified) {
+    if (!closing_.insert(id).second) {
+        return; // the look for this tab is already under way
+    }
+    look_at(id,
+            [this, id](FileLook look) { defer([this, id, look] { continue_close(id, look); }); });
+}
+
+// The look ended (from the main loop): the question, worded for what the look found.
+void SaveController::continue_close(DocumentId id, FileLook look) {
+    closing_.erase(id);
+    const DocumentRecord* record = list_.find(id);
+    EditorPage* editor = tabs_.editor(id);
+    if (record == nullptr || editor == nullptr) {
+        return;
+    }
+    if (editor->saving()) {
+        callbacks_.message(busy_message(record->title));
+        return;
+    }
+    if (!record->needs_save()) {
         tabs_.close(id);
         return;
     }
-    OpenQuestion question = close_question(record->title);
+    OpenQuestion question = close_question_for(
+        record->title, close_case(record->modified, record->deleted_on_disk, look));
     ask(parent_, question.message, question.detail, {"Save", "Close Without Saving", "Cancel"},
         [this, id](int button) {
             if (button == kSave) {
@@ -142,8 +163,40 @@ void SaveController::ask_before_quit(std::function<void()> quit) {
     }
     quitting_ = true;
     quit_skipped_.clear();
+    quit_looks_.clear();
     quit_ = std::move(quit);
-    next_quit_question();
+    std::vector<DocumentId> ids;
+    for (const DocumentRecord& record : list_.records()) {
+        ids.push_back(record.id);
+    }
+    quit_waiting_ = ids.size();
+    if (ids.empty()) {
+        next_quit_question();
+        return;
+    }
+    for (DocumentId id : ids) {
+        look_at(id, [this, id](FileLook look) { quit_looked(id, look); });
+    }
+}
+
+// One look at quit answered; when every look has, the questions start from the main loop.
+void SaveController::quit_looked(DocumentId id, FileLook look) {
+    quit_looks_[id] = look;
+    if (quit_waiting_ > 0) {
+        --quit_waiting_;
+    }
+    if (quit_waiting_ == 0) {
+        defer([this] { next_quit_question(); });
+    }
+}
+
+// Without a look to ask, the answer is Unknown, so the usual question is asked.
+void SaveController::look_at(DocumentId id, std::function<void(FileLook)> done) {
+    if (callbacks_.look) {
+        callbacks_.look(id, std::move(done));
+    } else {
+        done(FileLook::Unknown);
+    }
 }
 
 // The quit itself is deferred: it destroys the window, and with it this object.
@@ -154,13 +207,18 @@ void SaveController::next_quit_question() {
     });
     if (next == ids.end()) {
         quitting_ = false;
+        quit_looks_.clear();
         defer(std::move(quit_));
         quit_ = nullptr;
         return;
     }
     DocumentId id = *next;
     tabs_.select(id);
-    OpenQuestion question = close_question(list_.find(id)->title);
+    const DocumentRecord* record = list_.find(id);
+    auto looked = quit_looks_.find(id);
+    const FileLook look = looked != quit_looks_.end() ? looked->second : FileLook::Unknown;
+    OpenQuestion question = close_question_for(
+        record->title, close_case(record->modified, record->deleted_on_disk, look));
     ask(parent_, question.message, question.detail, {"Save", "Close Without Saving", "Cancel"},
         [this, id](int button) {
             if (button == kSave) {

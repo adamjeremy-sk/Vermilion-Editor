@@ -192,11 +192,16 @@ void MainWindow::replace_job_started() {
 // refresh(), from the search's change of buffer, which must not be started again.
 void MainWindow::replace_job_ended() {
     if (job_document_) {
-        EditorPage* editor = tabs_.editor(*job_document_); // borrowed; null for a closed tab
+        const DocumentId id = *job_document_;
+        EditorPage* editor = tabs_.editor(id); // borrowed; null for a closed tab
         if (editor != nullptr) {
             editor->set_locked(false);
         }
         job_document_.reset();
+        // A look at the file may have been waiting for the lock to end.
+        if (external_) {
+            external_->settled(id);
+        }
     }
     update_state();
 }

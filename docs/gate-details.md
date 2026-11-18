@@ -67,6 +67,12 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
   - Above a ceiling size there is no copy and the status bar says so. The ceiling is counted in characters (fixed at 100,000,000 from Adam's run on the 39 MB file; the copy logs its hold, nothing is measured outside the repo).
   - Files and folder are private (0700 and 0600) and barred to the agent's file tools. The file format was planned with Adam first (AGENTS.md rule 10).
   - At start-up each leftover copy is offered in turn with the time of the copy and of the file: Recover, Discard or Decide Later (Recover All when more than one waits). The Compare button comes with the diff view (M2.6).
+- **M2.4** file monitor and the external-change policy (design talks decided with Adam; ARCHITECTURE.md 7.1 "External changes as built").
+  - A clean tab whose file changes reloads by itself (10 MiB or less): undo cleared, cursor and scroll kept, the status bar says so. An edited tab, or a clean tab over 10 MiB, gets a banner: Reload, Keep mine (Reload, Ignore when large). Show diff joins at M2.6.
+  - A deleted or moved file keeps its tab and text, is marked as needing a save and keeps its recovery copy; its return reloads a clean tab or shows the banner.
+  - Our own saves, `touch` and a rewrite of identical text show nothing: time and size first, then an xxHash of the bytes (vendored in `third_party/xxhash`).
+  - Only the active tab is watched (300 ms debounce); a background tab is checked when selected, every tab at quit, and a tab when its close button is pressed.
+  - File → Reload from Disk (Ctrl+R) reloads even an unchanged file. An edited tab asks first; a clean file over 10 MiB asks with "Do not ask again", which is saved as `[files] confirm-large-reload` in `settings.ini`. The Settings window offers it from M2.5.
 - **M2.5** settings.
   - A settings window (classic OK, Cancel, Apply) and key file: colour mode Light, Dark or Follow system with the two classic palettes, GtkSourceView schemes (`classic` and a dark one), editor font (default: system monospace), tab width; the Tools menu.
   - Also here (from the M2.3 design talks): a check box for the current-line band, a few style presets, and light and dark defaults for the editor scheme file that M2.3 already writes to the cache folder.
@@ -110,6 +116,9 @@ Adam's run on a 52,428,800-character file: a copy holds the main loop 95 to 125 
 \*\* 715 tests (ARCHITECTURE.md 7.1 and 7.10). The Find, Replace and Go to Line windows, F3 and Shift+F3, the always-on current-line band, and Replace All as a cancellable sliced job that is one Undo step (STEPS 13a to 13f). Adam's hands-on list on the 50 MB file passed.
 Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10.6 s with the window frozen (accepted; the manual documents the cost).
 Known limit: highlighting every match on one huge line can freeze the window. The manual gained the topic "Find, Replace and Go to Line".
+
+†† 970 tests (ARCHITECTURE.md 7.1). Eleven steps, 2 to 11, with the baseline replacing the recovered-document check, the controller and banner, the Reload from Disk command and the settings file; Qwen wrote the `.cpp` files from specifications, and headers, tests and wiring were dictated. The manual gained the topic "Files changed on disk".
+Adam's hands-on lists passed: edits from a terminal (append, identical rewrite, touch, rename over, delete and recreate, move away and back), 12 MB and 50 MB files, two tabs, quit with a changed file, and Reload from Disk with its questions.
 
 ## M5: Agent core (v0.3.0)
 

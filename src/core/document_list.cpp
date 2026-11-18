@@ -85,6 +85,24 @@ bool DocumentList::set_read_only(DocumentId id, bool read_only) {
     return true;
 }
 
+bool DocumentList::set_deleted_on_disk(DocumentId id, bool deleted) {
+    std::optional<std::size_t> index = index_of(id);
+    if (!index) {
+        return false;
+    }
+    records_[*index].deleted_on_disk = deleted;
+    return true;
+}
+
+bool DocumentList::set_encoding_chosen(DocumentId id, bool chosen) {
+    std::optional<std::size_t> index = index_of(id);
+    if (!index) {
+        return false;
+    }
+    records_[*index].encoding_chosen = chosen;
+    return true;
+}
+
 bool DocumentList::set_path(DocumentId id, const std::string& path, const std::string& title) {
     std::optional<std::size_t> index = index_of(id);
     if (!index) {
@@ -154,13 +172,13 @@ std::optional<std::size_t> DocumentList::index_of(DocumentId id) const {
 
 std::size_t DocumentList::modified_count() const {
     return static_cast<std::size_t>(std::count_if(
-        records_.begin(), records_.end(), [](const DocumentRecord& r) { return r.modified; }));
+        records_.begin(), records_.end(), [](const DocumentRecord& r) { return r.needs_save(); }));
 }
 
 std::vector<DocumentId> DocumentList::modified_ids() const {
     std::vector<DocumentId> ids;
     for (const DocumentRecord& record : records_) {
-        if (record.modified) {
+        if (record.needs_save()) {
             ids.push_back(record.id);
         }
     }

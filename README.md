@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 21% (weighted: M0 and M1 done; M2 8 of 15) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 22% (weighted: M0 and M1 done; M2 9 of 15) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ---
 
 ## Status
-M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 8 of 15 gates. 715 tests, all
+M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 9 of 15 gates. 970 tests, all
 passing at the last commit. Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
@@ -80,6 +80,7 @@ Each row is one finished gate; the test count is the total after that gate.
 | M2.2b, manual | Help → Index (F1); every `docs/manual/*.md` is compiled in; a Markdown-subset renderer and a page history | 259 |
 | M2.2c, crash recovery | Edited documents are copied after you stop typing; after a crash the next start offers Recover, Discard or Decide Later | 482 |
 | M2.3, search | Find, Replace and Go to Line windows; regular expressions; match counts; Replace All as one Undo step, sliced and cancellable on huge files (50 MB, 289,000 matches in about a minute); the current line is shaded | 715 |
+| M2.4, external changes | A clean tab reloads by itself when its file changes; an edited or large tab shows a bar (Reload, Keep mine); a deleted file keeps its text; File → Reload from Disk (Ctrl+R); the one setting is kept in `settings.ini`; changes are detected by time, size and an xxHash | 970 |
 
 ---
 
@@ -128,7 +129,7 @@ Rows marked Built exist today; everything else is a plan.
 | Large files | Built (M2.2) | Loaded in the background, highlighting switched on afterwards: a 50 MB C++ file opens in about 4 s instead of 87. A binary file or a line over 350,000 characters asks "Open anyway / Cancel" |
 | Manual inside the program | Built (M2.2b) | Help → Index (F1): the topics of `docs/manual` in a read-only window, with links, Back and Index |
 | Search, replace, go to line | Built (M2.3) | Find (Ctrl+F), Replace (Ctrl+H), Go to Line (Ctrl+G, `line` or `line:column`); match case, whole word, regular expressions; match count; F3 and Shift+F3; Replace All is one Undo step |
-| External changes | Under way (M2.4) | A clean buffer reloads when the file changes on disk; a modified one shows a banner with Reload and Keep mine |
+| External changes | Built (M2.4) | A clean tab reloads by itself when its file changes (up to 10 MB); an edited or large tab shows a bar with Reload and Keep mine. A deleted file keeps its tab and text. File → Reload from Disk (Ctrl+R); "Do not ask again" is kept in `settings.ini` |
 | Help window | Planned (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons |
 | Diff view | Planned (M2.6) | Side by side with folding; opened from the external-change banner and the crash-recovery question |
 | Open Recent | Planned (M2.7c) | File → Open Recent, with a way to clear the list |

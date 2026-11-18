@@ -31,6 +31,9 @@ void on_save(GSimpleAction*, GVariant*, gpointer data) {
 void on_save_as(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->save_as();
 }
+void on_reload_from_disk(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->reload_from_disk();
+}
 void on_close_tab(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->close_active();
 }
@@ -103,6 +106,7 @@ const GActionEntry kActions[] = {
     {"open", on_open, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"save", on_save, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"save-as", on_save_as, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"reload-from-disk", on_reload_from_disk, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"close-tab", on_close_tab, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"quit", on_quit, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"undo", on_undo, nullptr, nullptr, nullptr, {0, 0, 0}},
@@ -136,6 +140,7 @@ const Shortcut kShortcuts[] = {
     {"win.open", {"<Control>o", nullptr, nullptr}},
     {"win.save", {"<Control>s", nullptr, nullptr}},
     {"win.save-as", {"<Control><Shift>s", nullptr, nullptr}},
+    {"win.reload-from-disk", {"<Control>r", nullptr, nullptr}},
     {"win.close-tab", {"<Control>w", nullptr, nullptr}},
     {"win.quit", {"<Control>q", nullptr, nullptr}},
     {"win.undo", {"<Control>z", nullptr, nullptr}},

@@ -5,6 +5,7 @@
 #include "ui/main_window.h"
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -35,7 +36,8 @@ constexpr const char* kEditingActions[] = {"undo", "redo",      "cut",          
                                            "find", "find-next", "find-previous", "word-wrap"};
 
 // Commands that write the document or change its format: also greyed out while it loads or
-// saves, and for a read-only document. Reopen as needs a file and an idle document.
+// saves, and for a read-only document. Reopen as and Reload from Disk are set in update_state():
+// they need a file and an idle document.
 constexpr const char* kWriteActions[] = {"save", "save-as", "save-encoding", "line-ending"};
 
 } // namespace
@@ -62,7 +64,12 @@ MainWindow::MainWindow(GtkApplication* app)
                            show_error(message, detail);
                        },
                        [this](DocumentId id, DocumentSaver::Outcome outcome,
-                              const std::string& error) { saves_.on_saved(id, outcome, error); }}),
+                              const std::string& error) { saves_.on_saved(id, outcome, error); },
+                       [this](DocumentId id) {
+                           if (external_) {
+                               external_->settled(id);
+                           }
+                       }}),
       opener_(window_, FileOpener::Callbacks{
                            [this](const std::string& message) { status_.show_message(message); },
                            [this](const std::string& message, const std::string& detail) {
@@ -84,6 +91,13 @@ MainWindow::MainWindow(GtkApplication* app)
                  [this](const std::string& message) { status_.show_message(message); },
                  [this](const std::string& message, const std::string& detail) {
                      show_error(message, detail);
+                 },
+                 [this](DocumentId id, std::function<void(FileLook)> done) {
+                     if (external_) {
+                         external_->look(id, std::move(done));
+                     } else {
+                         done(FileLook::Unknown);
+                     }
                  }}),
       formats_(window_, list_, tabs_,
                FormatCommands::Callbacks{
@@ -117,9 +131,19 @@ MainWindow::MainWindow(GtkApplication* app)
         window_, "close-request",
         [this](GtkWindow*) -> gboolean { return on_close_request() ? TRUE : FALSE; });
     tabs_.set_observer(&recovery_);
+    const SettingsLoad settings_state = settings_.load();
+    external_host_ = std::make_unique<TabsExternalHost>(
+        window_, tabs_, settings_,
+        [this](const std::string& message) { status_.show_message(message); });
+    external_ = std::make_unique<ExternalChangeController>(list_, *external_host_,
+                                                           std::make_unique<GlibTimer>());
     tabs_.add_untitled();
     blank_id_ = list_.active();
     refresh();
+    // A settings file that cannot be used: the defaults apply, and the status line says so.
+    if (settings_state == SettingsLoad::Damaged || settings_state == SettingsLoad::Unreadable) {
+        status_.show_message(settings_unusable_message(SettingsFile::default_path()));
+    }
 }
 
 // The tabs hold a pointer to recovery_, which is destroyed before them: they stop calling it
@@ -127,6 +151,9 @@ MainWindow::MainWindow(GtkApplication* app)
 // clean end: every unsaved document was saved or given up).
 MainWindow::~MainWindow() {
     tabs_.set_observer(nullptr);
+    // The controller first (it cancels its looks and drops its answers), then its host.
+    external_.reset();
+    external_host_.reset();
 }
 
 void MainWindow::present() {
@@ -215,6 +242,16 @@ void MainWindow::reopen_as(const std::string& encoding_id) {
     }
 }
 
+// File > Reload from Disk (Ctrl+R). The controller asks first when the document has unsaved
+// changes, or when its file is large and the setting asks for it; it does nothing for a document
+// without a file.
+void MainWindow::reload_from_disk() {
+    std::optional<DocumentId> active = list_.active();
+    if (active && external_) {
+        external_->reload_from_disk(*active);
+    }
+}
+
 void MainWindow::save_with_encoding(const std::string& encoding_id) {
     std::optional<DocumentId> active = list_.active();
     if (active) {
@@ -254,11 +291,12 @@ void MainWindow::show_help() {
     help_->present();
 }
 
-// Unsaved documents are asked about one by one (SaveController); when all are answered, the
-// window closes for real.
+// The file of every document is looked at first; then the documents that need a save (unsaved
+// changes, or a file gone from disk) are asked about one by one (SaveController); when all are
+// answered, the window closes for real. A window with no document closes at once.
 bool MainWindow::on_close_request() {
     end_replace_job();
-    if (quit_confirmed_ || list_.modified_count() == 0) {
+    if (quit_confirmed_ || list_.empty()) {
         return false;
     }
     saves_.ask_before_quit([this] {
@@ -271,6 +309,9 @@ bool MainWindow::on_close_request() {
 void MainWindow::refresh() {
     sync_search_buffer();
     update_state();
+    if (external_) {
+        external_->follow_active();
+    }
 }
 
 void MainWindow::update_state() {
@@ -290,6 +331,7 @@ void MainWindow::update_state() {
         set_enabled(action, idle && !record->read_only);
     }
     set_enabled("reopen-encoding", idle && !record->path.empty());
+    set_enabled("reload-from-disk", idle && !record->path.empty());
     // Word wrap belongs to each document, so the menu's check mark follows the active one.
     GAction* wrap = g_action_map_lookup_action(G_ACTION_MAP(window_), "word-wrap"); // borrowed
     if (wrap != nullptr) {

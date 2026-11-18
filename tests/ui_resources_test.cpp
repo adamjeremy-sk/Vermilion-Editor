@@ -56,6 +56,16 @@ TEST(UiResources, StructureHasClassicDetails) {
     EXPECT_NE(css.find("menubutton.vm-status-panel"), std::string::npos);
 }
 
+TEST(UiResources, LightPaletteDefinesInfoBackground) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_light.css");
+    EXPECT_NE(css.find("@define-color vm_info_bg #ffffe1;"), std::string::npos);
+}
+
+TEST(UiResources, StructureHasChangeBannerRule) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-main box.vm-change-banner {"), std::string::npos);
+}
+
 TEST(UiResources, HelpWindowHasItsRules) {
     std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
     EXPECT_NE(css.find("window.vm-help scrolledwindow.vm-help-well"), std::string::npos);
@@ -115,6 +125,32 @@ TEST(UiResources, SearchMenuOrder) {
 TEST(UiResources, SearchMenuHasGotoLine) {
     std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
     EXPECT_NE(ui.find("win.go-to-line"), std::string::npos);
+}
+
+TEST(UiResources, FileMenuHasReloadFromDisk) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    EXPECT_NE(ui.find("_Reload from Disk</attribute>"), std::string::npos);
+    EXPECT_NE(ui.find("win.reload-from-disk</attribute>"), std::string::npos);
+}
+
+// The File menu reads Save As, Reload from Disk, Close Tab (Reload has a section of its own).
+TEST(UiResources, FileMenuOrder) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    const char* order[] = {"win.save-as</attribute>", "win.reload-from-disk</attribute>",
+                           "win.close-tab</attribute>"};
+    std::size_t last = 0;
+    for (const char* action : order) {
+        SCOPED_TRACE(action);
+        std::size_t at = ui.find(action);
+        ASSERT_NE(at, std::string::npos);
+        EXPECT_GT(at, last);
+        last = at;
+    }
+}
+
+TEST(UiResources, QuestionWindowHasItsRule) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-ask .vm-ask-message"), std::string::npos);
 }
 
 TEST(UiResources, MenuBarUsesWindowActions) {

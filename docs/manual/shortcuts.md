@@ -7,6 +7,7 @@
 | Ctrl+O | Open… |
 | Ctrl+S | Save |
 | Ctrl+Shift+S | Save As… |
+| Ctrl+R | Reload from Disk |
 | Ctrl+W | Close Tab |
 | Ctrl+Q | Quit |
 | Ctrl+Z | Undo |

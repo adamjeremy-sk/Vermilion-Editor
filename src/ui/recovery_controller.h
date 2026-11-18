@@ -72,6 +72,7 @@ public:
     void document_saved(DocumentId id) override;
     void document_reloading(DocumentId id) override;
     void document_synced(DocumentId id, std::optional<std::int64_t> file_mtime_us) override;
+    void document_deleted_on_disk(DocumentId id, std::uint64_t chars) override;
     void document_closing(DocumentId id) override;
 
 private:
@@ -95,6 +96,7 @@ private:
     static void run_task(gpointer data, gpointer store);
     static void on_task_done(gpointer data);
 
+    const DocumentList& list_; // borrowed: a document whose file is gone is never cleaned
     Callbacks callbacks_;
     RecoveryStore store_;
     RecoveryTracker tracker_;

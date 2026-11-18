@@ -96,7 +96,8 @@ public:
 
     // The next copy to write at time now, or nothing: nothing is due, another copy is under way,
     // or the back-off after the last copy lasts. A document that turned out not to need a copy
-    // (not modified, or read-only, by the record) is dropped and the next one is looked at. The
+    // (it needs no save, that is not modified and not deleted on disk, or is read-only, by the
+    // record) is dropped and the next one is looked at. The
     // header is made from the document's record as it is now: a "file:///" uri of the path
     // (percent-encoded), or, for an untitled document or when the path cannot be made a uri,
     // the title (a CR, LF or NUL in it becomes a space; an empty one "Untitled"); file-mtime only

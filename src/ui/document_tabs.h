@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -39,6 +40,10 @@ public:
         // A save of document id ended (the error text when Failed). Runs inside the save's own
         // callback: the receiver must not close the tab from there.
         std::function<void(DocumentId, DocumentSaver::Outcome, const std::string&)> saved;
+        // A load, or the reading of a document's baseline after a load or a save, has ended, or a
+        // save ended without a new baseline: the page may be quiet now, and a look at its file may
+        // have been waiting for that. Runs from the main loop.
+        std::function<void(DocumentId)> settled;
     };
 
     // list must outlive this object.
@@ -85,6 +90,22 @@ public:
     // Reloads the document from its file with exactly this encoding (Encoding > Reopen as). The
     // text is replaced; a failed load closes the tab like a failed open.
     void reopen(DocumentId id, TextEncoding encoding);
+
+    // Reloads the document from its file because the file changed on disk. scan is the scan of the
+    // new content. The text is replaced (the undo history is cleared by the load), the cursor and
+    // the scroll position are kept, and message replaces the usual "loaded" line on the status bar
+    // when the load has ended. The encoding stays as it is when the user chose it with Reopen as
+    // (core/reload_format.h). The document stops counting as deleted on disk. False, and nothing
+    // changes, for an unknown document, an untitled one or a page that loads, saves or is locked.
+    bool reload(DocumentId id, const ScanResult& scan, const std::string& message);
+
+    // The document's text now counts as edited: its modified flag turns on (the tab shows the
+    // unsaved mark, and crash recovery is told of an edit). Nothing for an unknown id.
+    void mark_modified(DocumentId id);
+
+    // The document was just marked deleted_on_disk in the list: shows the mark on its tab, tells
+    // the observer (a recovery copy of the text) and the window. Nothing for an unknown id.
+    void note_deleted_on_disk(DocumentId id);
 
     // Closes the tab without asking; an unknown id is ignored.
     void close(DocumentId id);
@@ -139,6 +160,12 @@ private:
 
     DocumentList& list_;
     Callbacks callbacks_;
+    // What a reload from disk remembers until its load has ended: the status line and the view.
+    struct PendingReload {
+        std::string message;
+        EditorPage::ViewPosition view;
+    };
+    std::map<DocumentId, PendingReload> reloads_;
     DocumentObserver* observer_ = nullptr;
     gtkx::ObjectPtr<GtkWidget> box_; // holds the notebook; sees presses before the notebook
     gtkx::ObjectPtr<GtkWidget> notebook_;

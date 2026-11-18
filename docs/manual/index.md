@@ -5,6 +5,7 @@ Help → Index, or with F1.
 ## Topics
 - [The window and tabs](window-and-tabs.md)
 - [Opening and saving files](open-and-save.md)
+- [Files changed on disk](files-changed-on-disk.md)
 - [Crash recovery](crash-recovery.md)
 - [Encodings and line endings](encodings-and-line-endings.md)
 - [Edit commands](edit-commands.md)

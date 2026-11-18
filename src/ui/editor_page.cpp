@@ -4,12 +4,14 @@
 
 #include "ui/editor_page.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <utility>
 
 #include "ui/editor_scheme.h"
+#include "ui/file_inspector.h"
 #include "ui/gtkx/string.h"
 
 namespace vermilion::ui {
@@ -18,8 +20,6 @@ namespace {
 
 constexpr unsigned kTabWidth = 4; // per document; the settings value arrives with M2.5
 constexpr gunichar kByteOrderMark = 0xFEFF;
-constexpr const char* kFileTimeAttributes =
-    G_FILE_ATTRIBUTE_TIME_MODIFIED "," G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC;
 
 // The keys that run Undo or Redo in the text view: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z.
 bool is_undo_or_redo_key(guint keyval, GdkModifierType state) {
@@ -29,41 +29,16 @@ bool is_undo_or_redo_key(guint keyval, GdkModifierType state) {
     return keyval == GDK_KEY_z || keyval == GDK_KEY_Z || keyval == GDK_KEY_y || keyval == GDK_KEY_Y;
 }
 
-// A file time query on its way: what to call with the answer, and the ticket that says whether
-// the page is still there.
-struct FileTimeQuery {
-    std::function<void(std::optional<std::int64_t>)> callback;
-    gpointer ticket = nullptr;
-};
-
-// The end of a query started by query_file_time(); data is the FileTimeQuery it released.
-void on_file_time(GObject* source, GAsyncResult* result, gpointer data) {
-    std::unique_ptr<FileTimeQuery> query(static_cast<FileTimeQuery*>(data));
-    GError* raw = nullptr;
-    auto info =
-        gtkx::ObjectPtr<GFileInfo>::adopt(g_file_query_info_finish(G_FILE(source), result, &raw));
-    std::unique_ptr<GError, decltype(&g_error_free)> error(raw, &g_error_free);
-    if (gtkx::AsyncGuard<EditorPage>::take(query->ticket) == nullptr) {
-        return;
-    }
-    std::optional<std::int64_t> mtime_us;
-    if (info) {
-        std::unique_ptr<GDateTime, decltype(&g_date_time_unref)> time(
-            g_file_info_get_modification_date_time(info.get()), &g_date_time_unref);
-        if (time) {
-            mtime_us = g_date_time_to_unix_usec(time.get());
-        }
-    }
-    query->callback(mtime_us);
-}
-
 } // namespace
 
 // The scrolled window is floating from _new; adopt_floating sinks it into scrolled_, and it sinks
 // the (floating) view. The buffer's full reference from _new drops at the end of the constructor,
-// after the view has taken its own.
+// after the view has taken its own. The box is floating from _new too, and adopt_floating sinks it
+// into root_; gtk_box_append below makes the box take its own reference to scrolled_ and to the
+// banner.
 EditorPage::EditorPage(Callbacks callbacks)
     : callbacks_(std::move(callbacks)),
+      root_(gtkx::ObjectPtr<GtkWidget>::adopt_floating(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0))),
       scrolled_(gtkx::ObjectPtr<GtkWidget>::adopt_floating(gtk_scrolled_window_new())) {
     auto buffer = gtkx::ObjectPtr<GtkSourceBuffer>::adopt(gtk_source_buffer_new(nullptr));
     gtk_source_buffer_set_implicit_trailing_newline(buffer.get(), FALSE);
@@ -80,6 +55,22 @@ EditorPage::EditorPage(Callbacks callbacks)
     gtk_widget_add_css_class(scrolled_.get(), "vm-editor-well");
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_.get()), view);
     view_ = GTK_SOURCE_VIEW(view);
+    auto run_primary = [this] {
+        std::function<void()> run = banner_primary_;
+        if (run) {
+            run();
+        }
+    };
+    auto run_secondary = [this] {
+        std::function<void()> run = banner_secondary_;
+        if (run) {
+            run();
+        }
+    };
+    banner_ = std::make_unique<ChangeBanner>(ChangeBanner::Callbacks{run_primary, run_secondary});
+    gtk_widget_set_vexpand(scrolled_.get(), TRUE);
+    gtk_box_append(GTK_BOX(root_.get()), banner_->widget());
+    gtk_box_append(GTK_BOX(root_.get()), scrolled_.get());
     buffer_ = buffer.get();
     label_ = std::make_unique<TabLabel>(TabLabel::Callbacks{
         [this] { callbacks_.close(); }, [this](int step) { callbacks_.scroll_tabs(step); }});
@@ -121,6 +112,28 @@ EditorPage::EditorPage(Callbacks callbacks)
     gtk_widget_add_controller(view, lock_keys);
 }
 
+void EditorPage::show_banner(const std::string& text, const std::string& primary_label,
+                             const std::string& secondary_label, std::function<void()> on_primary,
+                             std::function<void()> on_secondary) {
+    banner_primary_ = std::move(on_primary);
+    banner_secondary_ = std::move(on_secondary);
+    banner_->show(text, primary_label, secondary_label);
+}
+
+void EditorPage::hide_banner() {
+    banner_->hide();
+    banner_primary_ = nullptr;
+    banner_secondary_ = nullptr;
+}
+
+bool EditorPage::banner_visible() const {
+    return banner_->visible();
+}
+
+const std::string& EditorPage::banner_text() const {
+    return banner_->text();
+}
+
 void EditorPage::set_label(const std::string& title, const std::string& tooltip, bool modified) {
     label_->set(title, tooltip, modified);
 }
@@ -131,11 +144,12 @@ bool EditorPage::contains_close_button(GtkWidget* widget) const {
 
 // Full references from _new (not floating); the source file stays with the page for saving.
 void EditorPage::load(const std::string& path, TextEncoding encoding) {
+    hide_banner();
     file_ = gtkx::ObjectPtr<GtkSourceFile>::adopt(gtk_source_file_new());
     auto location = gtkx::ObjectPtr<GFile>::adopt(g_file_new_for_path(path.c_str()));
     gtk_source_file_set_location(file_.get(), location.get());
-    // The file is read again, so GtkSourceView knows its time now: nothing to check at a save.
-    base_.reset();
+    // The file is read again; the baseline is recorded after the load (sync_baseline).
+    baseline_.reset();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(view_), FALSE);
     gtk_text_buffer_begin_irreversible_action(GTK_TEXT_BUFFER(buffer_));
     clearing_ = true;
@@ -160,37 +174,42 @@ void EditorPage::finish_load(const std::string& path, bool read_only) {
     gtk_text_buffer_set_modified(text, FALSE);
 }
 
-// A page rebuilt from a recovery copy has no base time for GtkSourceView's own check, so its first
-// save to the copy's file reads the file's time itself and ends like the saver does, with
-// ChangedOnDisk and nothing written, when the time is not the recorded one. A file that is gone
-// is not a change: the save writes it again.
+// A page with a baseline checks the file itself, because the saver is always told to ignore
+// GtkSourceView's own check: the file's time and size are read off the main loop and compared
+// with the baseline, and the save ends with ChangedOnDisk and nothing written when they differ.
+// A file that is gone is not a change (the save writes it again), and an unreadable file state
+// is not a change either (the save then fails or succeeds on its own terms).
 void EditorPage::save(const std::string& path, const TextFormat& format, bool overwrite_changes) {
     gtk_text_view_set_editable(GTK_TEXT_VIEW(view_), FALSE);
-    if (!needs_base_check(base_, path, overwrite_changes)) {
-        begin_save(path, format, overwrite_changes);
+    if (syncing_ || !needs_baseline_check(baseline_, path, overwrite_changes)) {
+        begin_save(path, format);
         return;
     }
     checking_ = true;
-    auto location = gtkx::ObjectPtr<GFile>::adopt(g_file_new_for_path(path.c_str()));
-    query_time(location.get(), [this, path, format](std::optional<std::int64_t> current_us) {
-        checking_ = false;
-        if (base_ && file_changed_since_base(*base_, current_us)) {
-            end_save(DocumentSaver::Outcome::ChangedOnDisk, std::string());
-            return;
-        }
-        begin_save(path, format, false);
-    });
+    inspect_file(path, false,
+                 [this, ticket = guard_.ticket(), path, format](const FileInspection& inspection) {
+                     if (gtkx::AsyncGuard<EditorPage>::take(ticket) == nullptr) {
+                         return;
+                     }
+                     checking_ = false;
+                     if (baseline_ && inspection.readable &&
+                         changed_since_baseline(*baseline_, inspection.disk)) {
+                         end_save(DocumentSaver::Outcome::ChangedOnDisk, std::string());
+                         return;
+                     }
+                     begin_save(path, format);
+                 });
 }
 
 // An untitled page gets its source file here; the saver gives it the location after the save.
-void EditorPage::begin_save(const std::string& path, const TextFormat& format,
-                            bool overwrite_changes) {
+void EditorPage::begin_save(const std::string& path, const TextFormat& format) {
     if (!file_) {
         file_ = gtkx::ObjectPtr<GtkSourceFile>::adopt(gtk_source_file_new());
     }
     auto target = gtkx::ObjectPtr<GFile>::adopt(g_file_new_for_path(path.c_str()));
+    // GtkSourceView's own changed-on-disk check is never used: the page checks the baseline.
     saver_ = std::make_unique<DocumentSaver>(
-        buffer_, file_.get(), target.get(), format, overwrite_changes,
+        buffer_, file_.get(), target.get(), format, true,
         DocumentSaver::Callbacks{[this](int percent) { callbacks_.save_progress(percent); },
                                  [this](DocumentSaver::Outcome outcome, const std::string& error) {
                                      on_saved(outcome, error);
@@ -251,7 +270,10 @@ void EditorPage::restore_text(const std::string& text) {
 }
 
 void EditorPage::expect_file_time(const std::string& path, std::int64_t mtime_us) {
-    base_ = RecoveredBase{path, mtime_us};
+    FileStamp stamp;
+    stamp.mtime_us = mtime_us;
+    stamp.time_only = true;
+    baseline_ = Baseline{path, stamp};
 }
 
 // The lock reuses the view's own editable flag, as save() does. The job edits the buffer through
@@ -279,6 +301,63 @@ void EditorPage::set_locked(bool locked) {
     if (pending.cursor && !loading()) {
         callbacks_.cursor();
     }
+}
+
+void EditorPage::set_baseline_stamp(const FileStamp& stamp) {
+    if (baseline_) {
+        baseline_->stamp = stamp;
+    }
+}
+
+// The cursor's line and column and the scroll position as they are now.
+EditorPage::ViewPosition EditorPage::view_position() const {
+    GtkTextBuffer* text = GTK_TEXT_BUFFER(buffer_);
+    GtkTextIter iter;
+    gtk_text_buffer_get_iter_at_mark(text, &iter, gtk_text_buffer_get_insert(text));
+    ViewPosition position;
+    position.line = gtk_text_iter_get_line(&iter);
+    position.line_offset = gtk_text_iter_get_line_offset(&iter);
+    GtkAdjustment* adjustment =
+        gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scrolled_.get())); // borrowed
+    position.scroll = gtk_adjustment_get_value(adjustment);
+    return position;
+}
+
+// After gtk_text_iter_forward_to_line_end `end` holds the end of the line (before its line
+// ending), so its line offset is the longest column the cursor can have on that line.
+void EditorPage::restore_view_position(const ViewPosition& position) {
+    if (loading()) {
+        return;
+    }
+    GtkTextBuffer* text = GTK_TEXT_BUFFER(buffer_);
+    const int last_line = gtk_text_buffer_get_line_count(text) - 1;
+    GtkTextIter iter;
+    gtk_text_buffer_get_iter_at_line(text, &iter, std::clamp(position.line, 0, last_line));
+    GtkTextIter end = iter;
+    if (!gtk_text_iter_ends_line(&end)) {
+        gtk_text_iter_forward_to_line_end(&end);
+    }
+    const int longest = gtk_text_iter_get_line_offset(&end);
+    gtk_text_iter_set_line_offset(&iter, std::clamp(position.line_offset, 0, longest));
+    gtk_text_buffer_place_cursor(text, &iter);
+    pending_scroll_ = position.scroll;
+    apply_scroll(position.scroll);
+    g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, &EditorPage::on_restore_scroll, guard_.ticket(),
+                    &gtkx::AsyncGuard<EditorPage>::free_ticket);
+}
+
+void EditorPage::apply_scroll(double value) {
+    GtkAdjustment* adjustment =
+        gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scrolled_.get())); // borrowed
+    gtk_adjustment_set_value(adjustment, value);
+}
+
+gboolean EditorPage::on_restore_scroll(gpointer ticket) {
+    EditorPage* self = gtkx::AsyncGuard<EditorPage>::peek(ticket);
+    if (self != nullptr) {
+        self->apply_scroll(self->pending_scroll_);
+    }
+    return G_SOURCE_REMOVE;
 }
 
 void EditorPage::set_wrap(bool wrap) {
@@ -319,24 +398,38 @@ std::uint64_t EditorPage::char_count() const {
     return count > 0 ? static_cast<std::uint64_t>(count) : 0;
 }
 
-void EditorPage::query_file_time(std::function<void(std::optional<std::int64_t>)> callback) {
-    GFile* location = file_ ? gtk_source_file_get_location(file_.get()) : nullptr;
-    if (location == nullptr) {
+// The location is borrowed; the inspector keeps what it needs while it runs. The inspection is
+// not cancelled when the page goes: the guard ticket makes its answer do nothing then.
+void EditorPage::sync_baseline(std::function<void(std::optional<std::int64_t>)> callback) {
+    GFile* location = file_ ? gtk_source_file_get_location(file_.get()) : nullptr; // borrowed
+    char* raw = location != nullptr ? g_file_get_path(location) : nullptr;
+    if (raw == nullptr) {
+        baseline_.reset();
         callback(std::nullopt);
         return;
     }
-    query_time(location, std::move(callback));
-}
-
-// The location is borrowed; GIO keeps its own reference while the query runs. The query is not
-// cancelled when the page goes: the guard ticket makes its answer do nothing then.
-void EditorPage::query_time(GFile* location,
-                            std::function<void(std::optional<std::int64_t>)> callback) {
-    auto query = std::make_unique<FileTimeQuery>();
-    query->callback = std::move(callback);
-    query->ticket = guard_.ticket();
-    g_file_query_info_async(location, kFileTimeAttributes, G_FILE_QUERY_INFO_NONE,
-                            G_PRIORITY_DEFAULT, nullptr, &on_file_time, query.release());
+    std::string path(raw);
+    g_free(raw);
+    syncing_ = true;
+    inspect_file(path, true,
+                 [this, ticket = guard_.ticket(), path,
+                  callback = std::move(callback)](const FileInspection& inspection) {
+                     if (gtkx::AsyncGuard<EditorPage>::take(ticket) == nullptr) {
+                         return;
+                     }
+                     syncing_ = false;
+                     if (!inspection.readable || !inspection.disk.exists) {
+                         baseline_.reset();
+                         callback(std::nullopt);
+                         return;
+                     }
+                     FileStamp stamp;
+                     stamp.mtime_us = inspection.disk.mtime_us;
+                     stamp.size = inspection.disk.size;
+                     stamp.hash = inspection.hash;
+                     baseline_ = Baseline{path, stamp};
+                     callback(stamp.mtime_us);
+                 });
 }
 
 // Runs from the loader's own callback, which allows destroying the loader here. The page's
@@ -352,7 +445,7 @@ void EditorPage::on_loaded(DocumentLoader::Outcome outcome, const std::string& e
 void EditorPage::on_saved(DocumentSaver::Outcome outcome, const std::string& error) {
     saver_.reset();
     if (outcome == DocumentSaver::Outcome::Saved) {
-        base_.reset();
+        baseline_.reset();
     }
     end_save(outcome, error);
 }

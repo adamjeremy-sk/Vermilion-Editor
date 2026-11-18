@@ -116,6 +116,7 @@ void DocumentTabs::reopen(DocumentId id, TextEncoding encoding) {
     }
     // Read-only again only if this encoding also leaves bytes that cannot be shown (on_loaded).
     list_.set_read_only(id, false);
+    list_.set_encoding_chosen(id, true);
     if (observer_ != nullptr) {
         observer_->document_reloading(id);
     }
@@ -138,6 +139,7 @@ void DocumentTabs::close(DocumentId id) {
         restore = close_press_->active_before;
     }
     close_press_.reset();
+    reloads_.erase(id);
     // The page's load, connections and label go first, then the notebook page itself.
     pages_.erase(it);
     list_.close(id);
@@ -299,7 +301,14 @@ void DocumentTabs::on_loaded(DocumentId id, DocumentLoader::Outcome outcome,
     list_.set_modified(id, false);
     refresh_label(*page);
     sync_file_time(id);
-    callbacks_.message(loaded_message(*record));
+    std::string line = loaded_message(*record);
+    auto pending = reloads_.find(id);
+    if (pending != reloads_.end()) {
+        page->editor.restore_view_position(pending->second.view);
+        line = pending->second.message;
+        reloads_.erase(pending);
+    }
+    callbacks_.message(line);
     callbacks_.changed();
 }
 
@@ -323,24 +332,33 @@ void DocumentTabs::on_edited(DocumentId id) {
 void DocumentTabs::on_saved(DocumentId id, DocumentSaver::Outcome outcome,
                             const std::string& error) {
     if (outcome == DocumentSaver::Outcome::Saved) {
+        // The file is written again, so it is no longer gone.
+        list_.set_deleted_on_disk(id, false);
         if (observer_ != nullptr) {
             observer_->document_saved(id);
         }
         sync_file_time(id);
     }
     callbacks_.saved(id, outcome, error);
+    if (outcome != DocumentSaver::Outcome::Saved && callbacks_.settled) {
+        callbacks_.settled(id); // no new baseline is coming: the page is quiet again
+    }
 }
 
-// Asks the page for its file's modified time (a load or a save has just made the file and the
-// text equal); the answer goes to the observer when it arrives, unless the page is gone by then.
+// The page records its baseline (a load or a save has just made the file and the text equal) and
+// then reports the file's time; the answer goes to the observer when it arrives, unless the page
+// is gone by then.
 void DocumentTabs::sync_file_time(DocumentId id) {
     Page* page = find_page(id);
     if (page == nullptr) {
         return;
     }
-    page->editor.query_file_time([this, id](std::optional<std::int64_t> mtime_us) {
+    page->editor.sync_baseline([this, id](std::optional<std::int64_t> mtime_us) {
         if (observer_ != nullptr) {
             observer_->document_synced(id, mtime_us);
+        }
+        if (callbacks_.settled) {
+            callbacks_.settled(id);
         }
     });
 }
@@ -368,7 +386,7 @@ void DocumentTabs::refresh_label(Page& page) {
     std::string tooltip = record->path.empty()
                               ? record->title
                               : gtkx::take_string(g_filename_display_name(record->path.c_str()));
-    page.editor.set_label(record->title, tooltip, record->modified);
+    page.editor.set_label(record->title, tooltip, record->needs_save());
 }
 
 void DocumentTabs::notify_if_active(DocumentId id) {

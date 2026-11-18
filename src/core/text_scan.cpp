@@ -29,6 +29,7 @@ bool mark_prefix(const unsigned char* head, std::size_t n) {
 } // namespace
 
 void TextScanner::feed(const char* data, std::size_t size) {
+    hasher_.update(data, size);
     for (std::size_t i = 0; i < size; ++i) {
         unsigned char byte = static_cast<unsigned char>(data[i]);
         ++size_;
@@ -205,6 +206,7 @@ ScanResult TextScanner::finish() {
     result.longest_line = format_.encoding == TextEncoding::Utf8 ? longest_points_ : longest_units_;
     result.binary = binary_;
     result.size = size_;
+    result.hash = hasher_.digest();
     return result;
 }
 
