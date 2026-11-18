@@ -713,3 +713,10 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. A new instance reads th
 
 ### 2026-11-17 (22:50, local, twelfth chat, handoff) — M2.4 steps 4 to 7 PASS
 - Steps 4 (settings file, one fix round), 5 (core policy), 6 (baseline for every file document; `RecoveredBase` removed; Adam's hands-on passed 22:29) and 7 (file watcher, change banner, page box; 844 tests, 0 warnings) audited PASS against the disk (dictated hashes, the Qwen-written `.cpp` files, the evidence, the test counts, no `~/.config/vermilion`). The watcher header and its 19 tests were run in the cloud against a reference implementation before the prompt went out; every prompt stayed under 65 KB (step 6: 39 KB, step 7: 38 KB). Adam asked for `./vbuild` (done, tested with a stub `cmake`, then run once on the device: `--ide` prints that the IDE does not exist yet). Nothing committed; **step 8 is next** (the controller). The “Keep mine on a returned file” point is recorded in the decisions.
+
+## Part 29 — rotated out of HANDOFF.md at the evening handoff of 2026-11-18 (M2.4 step 9a issued)
+
+### Session log entry rotated out
+
+### 2026-11-17 (23:40, thirteenth chat) — M2.4 step 8a PASS WITH NOTES
+- Step 8 was split: 8a is the controller behind an abstract `ExternalChangeHost` (34 tests, no display), 8b the wiring. 885 tests, all dictated hashes matched.
