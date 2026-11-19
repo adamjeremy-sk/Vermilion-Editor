@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "core/document_list.h"
 #include "core/settings_file.h"
@@ -83,6 +84,13 @@ public:
     // present(); a second call does nothing. The code is in main_window_recovery.cpp.
     void offer_recovery();
 
+    // Opens the files named on the command line and shows what was refused (the messages, joined
+    // with "; ") on the status bar once the files are done. The files are opened one after the
+    // other; the first that opens replaces the blank document of the start while it is still
+    // untouched. The code is in main_window_command_line.cpp.
+    void open_command_line(const std::vector<std::string>& paths,
+                           const std::vector<std::string>& messages);
+
 private:
     bool on_close_request(); // true stops the window from closing
     // The search follows the active document, then the actions and the status bar are brought up
@@ -103,6 +111,10 @@ private:
     void show_error(const std::string& message, const std::string& detail);
     // The window's parts of the recovery prompt's Host (main_window_recovery.cpp).
     void close_blank_document();
+    // The FileOpener's callbacks for the command line: a file is about to open; the queue is empty.
+    // The code is in main_window_command_line.cpp.
+    void before_file_opens();
+    void on_open_queue_idle();
     RecoveryPrompt::Added add_recovered_document(RecoveryPrompt::Document document);
     // The search follows the active document (main_window_search.cpp).
     void sync_search_buffer();
@@ -138,6 +150,10 @@ private:
     RecoveryController recovery_;
     // The blank document the window made at start; none once it was closed by the recovery.
     std::optional<DocumentId> blank_id_;
+    // Set by open_command_line(), cleared by the first file that opens or when the queue is empty.
+    bool close_blank_on_open_ = false;
+    // What the command line refused, shown when the queue is empty.
+    std::string pending_messages_;
     // The document that a running Replace All job has locked; none without a job.
     std::optional<DocumentId> job_document_;
     // After recovery_ and tabs_, which its Host uses, so it is destroyed before them: a question

@@ -4,6 +4,7 @@
 
 #include "ui/file_opener.h"
 
+#include <optional>
 #include <utility>
 
 #include "core/open_messages.h"
@@ -54,9 +55,33 @@ void FileOpener::on_chosen(GObject* source, GAsyncResult* result, gpointer ticke
     self->open_path(path);
 }
 
+void FileOpener::open_paths(const std::vector<std::string>& paths) {
+    queue_.push(paths);
+    pump();
+}
+
 void FileOpener::open_path(const std::string& path) {
-    if (callbacks_.select_if_open(path)) {
+    open_paths({path});
+}
+
+void FileOpener::pump() {
+    if (queue_.busy()) {
         return;
+    }
+    while (std::optional<std::string> path = queue_.next()) {
+        if (start(*path)) {
+            return;
+        }
+        queue_.finished();
+    }
+    if (callbacks_.idle) {
+        callbacks_.idle();
+    }
+}
+
+bool FileOpener::start(const std::string& path) {
+    if (callbacks_.select_if_open(path)) {
+        return false;
     }
     std::string title = gtkx::take_string(g_filename_display_basename(path.c_str()));
     probe_ = std::make_unique<FileProbe>(
@@ -66,6 +91,12 @@ void FileOpener::open_path(const std::string& path) {
                                    [this, path, title](const FileProbe::Result& result) {
                                        on_checked(path, title, result);
                                    }});
+    return true;
+}
+
+void FileOpener::file_done() {
+    queue_.finished();
+    pump();
 }
 
 // Runs from the probe's own callback; resetting probe_ destroys it, which is allowed there, so the
@@ -79,19 +110,24 @@ void FileOpener::on_checked(const std::string& path, const std::string& title,
     if (!checked.ok) {
         callbacks_.message("Could not open " + quoted(file_title) + ".");
         callbacks_.error("Could not open " + quoted(file_title), checked.error);
+        file_done();
         return;
     }
     OpenWarning warning = open_warning(checked.scan, kDefaultLongLineLimit);
     if (warning == OpenWarning::None) {
         callbacks_.open(file_path, file_title, checked.scan);
+        file_done();
         return;
     }
     OpenQuestion question = open_question(file_title, warning, checked.scan.longest_line);
     callbacks_.message(question.message);
-    ask_discard(parent_, question.message, question.detail, "Open Anyway",
-                [this, file_path, file_title, scan = checked.scan] {
-                    callbacks_.open(file_path, file_title, scan);
-                });
+    ask(parent_, question.message, question.detail, {"Open Anyway", "Cancel"},
+        [this, file_path, file_title, scan = checked.scan](int answer) {
+            if (answer == 0) {
+                callbacks_.open(file_path, file_title, scan);
+            }
+            file_done();
+        });
 }
 
 } // namespace vermilion::ui

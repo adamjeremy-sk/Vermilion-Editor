@@ -84,7 +84,11 @@ MainWindow::MainWindow(GtkApplication* app)
                                return true;
                            },
                            [this](const std::string& path, const std::string& title,
-                                  const ScanResult& scan) { tabs_.add_file(path, title, scan); }}),
+                                  const ScanResult& scan) {
+                               before_file_opens();
+                               tabs_.add_file(path, title, scan);
+                           },
+                           [this] { on_open_queue_idle(); }}),
       saves_(window_, list_, tabs_,
              SaveController::Callbacks{
                  [this] { refresh(); },
