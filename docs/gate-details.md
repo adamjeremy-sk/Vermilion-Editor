@@ -73,6 +73,11 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
   - Our own saves, `touch` and a rewrite of identical text show nothing: time and size first, then an xxHash of the bytes (vendored in `third_party/xxhash`).
   - Only the active tab is watched (300 ms debounce); a background tab is checked when selected, every tab at quit, and a tab when its close button is pressed.
   - File → Reload from Disk (Ctrl+R) reloads even an unchanged file. An edited tab asks first; a clean file over 10 MiB asks with "Do not ask again", which is saved as `[files] confirm-large-reload` in `settings.ini`. The Settings window offers it from M2.5.
+- **M2.4b** files from the command line (split off from M2.7b; the program takes files before it is the light program).
+  - `vermilion file1 file2 ...` opens every file, in order, one after the other (a queue in `FileOpener`); a second launch while the editor runs opens its files in the running window. Relative names are taken from the launching folder. The program has `G_APPLICATION_HANDLES_COMMAND_LINE`; a launch without files is an activation; `--help` and `-h` are answered by the program.
+  - A name that does not exist is asked about on the launching terminal, `'name' does not exist. Create it? (Y/n)`, and an empty file is created on a yes (a terminal question, not a dialog; Adam, 2026-11-19). The lines are read asynchronously, so the editor stays usable while a question waits. Without a terminal nothing is asked or created and the status bar says "does not exist".
+  - Folders and other entries that are not files are refused on the terminal and in the status bar. The same name twice opens once. An untouched blank start document is replaced by the first file that opens.
+  - New manual topic "Command-line options"; M2.7b keeps the rest (the single-instance rule, desktop entry, application ID).
 - **M2.5** settings.
   - A settings window (classic OK, Cancel, Apply) and key file: colour mode Light, Dark or Follow system with the two classic palettes, GtkSourceView schemes (`classic` and a dark one), editor font (default: system monospace), tab width; the Tools menu.
   - Also here (from the M2.3 design talks): a check box for the current-line band, a few style presets, and light and dark defaults for the editor scheme file that M2.3 already writes to the cache folder.
@@ -89,9 +94,9 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
 - **M2.7c** Open Recent: a menu of the files opened last, with a way to clear it. A design talk with Adam comes first: how many entries, where the list is kept, what happens to a file that no longer exists, and whether it follows the start state of M2.7.
 - **M2.7b** the light program.
   - The M2 code moves into a static library and `vermilion` becomes a thin `main` over it (no `--feather` flag).
-  - `vermilion [file...]`: files from the command line and from "Open with", its own application ID, a desktop entry for text files, the single-instance rule, quits when the last document closes. It shows only File, Edit, Search, View and Help, treats the "blank window" start state as untitled, and uses recovery folder `light`.
+  - `vermilion [file...]`: files from the command line (done in M2.4b) and from "Open with", its own application ID, a desktop entry for text files, the single-instance rule, quits when the last document closes. It shows only File, Edit, Search, View and Help, treats the "blank window" start state as untitled, and uses recovery folder `light`.
   - A ctest checks that the executable links no VTE, libsoup, libsecret, agent or ctxmon code. Startup time is measured.
-  - The command-line options are documented in a new manual topic, Command-line options, where every later flag goes too.
+  - Later command-line options go into the manual topic Command-line options (created in M2.4b).
 
 ### Notes
 
@@ -120,7 +125,11 @@ Known limit: highlighting every match on one huge line can freeze the window. Th
 †† 970 tests (ARCHITECTURE.md 7.1). Eleven steps, 2 to 11, with the baseline replacing the recovered-document check, the controller and banner, the Reload from Disk command and the settings file; Qwen wrote the `.cpp` files from specifications, and headers, tests and wiring were dictated. The manual gained the topic "Files changed on disk".
 Adam's hands-on lists passed: edits from a terminal (append, identical rewrite, touch, rename over, delete and recreate, move away and back), 12 MB and 50 MB files, two tabs, quit with a changed file, and Reload from Disk with its questions.
 
+‡‡ 1016 tests (ARCHITECTURE.md 7.1 "Command line as built"). Five steps (1 core sorting and queue, 2 the question machine, 3 the handler, 4 the open queue in the window, 5 documents); Qwen wrote the `.cpp` files of steps 1 to 3 from specifications, headers, tests and wiring were dictated. Fix 1 of step 3: with `G_APPLICATION_HANDLES_COMMAND_LINE` GApplication does not parse options, so `--help` tried to create a file; the program now answers `--help` and `-h` itself.
+Adam's hands-on lists passed: one and several files, a relative path, the same file twice, a missing file answered y, n and Enter, a folder, no arguments, `--help`, a second launch while the editor runs, Ctrl+C during a question, no terminal, a binary file with Cancel and Open Anyway.
+
 ## M5: Agent core (v0.3.0)
+
 
 ### Gate details
 

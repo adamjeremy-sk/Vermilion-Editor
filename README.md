@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 22% (weighted: M0 and M1 done; M2 9 of 15) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 22% (weighted: M0 and M1 done; M2 10 of 16) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ---
 
 ## Status
-M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 9 of 15 gates. 970 tests, all
+M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 10 of 16 gates. 1016 tests, all
 passing at the last commit. Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
@@ -81,6 +81,7 @@ Each row is one finished gate; the test count is the total after that gate.
 | M2.2c, crash recovery | Edited documents are copied after you stop typing; after a crash the next start offers Recover, Discard or Decide Later | 482 |
 | M2.3, search | Find, Replace and Go to Line windows; regular expressions; match counts; Replace All as one Undo step, sliced and cancellable on huge files (50 MB, 289,000 matches in about a minute); the current line is shaded | 715 |
 | M2.4, external changes | A clean tab reloads by itself when its file changes; an edited or large tab shows a bar (Reload, Keep mine); a deleted file keeps its text; File → Reload from Disk (Ctrl+R); the one setting is kept in `settings.ini`; changes are detected by time, size and an xxHash | 970 |
+| M2.4b, command line | `vermilion file1 file2 ...` opens every file in its own tab, also in a running window; a missing file is asked about on the terminal and created on a yes; folders are refused; `--help` | 1016 |
 
 ---
 

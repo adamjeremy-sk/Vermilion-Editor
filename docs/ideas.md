@@ -25,3 +25,4 @@ Features that were decided against earlier are listed under "Dropped" in ARCHITE
 | Read-only plan mode (a permission preset with edits and shell off) | 2026-11-14 | OpenCode has a read-only planning agent. Cheap to add once the preset table exists. |
 | Problems reported automatically after each agent edit | 2026-11-14 | OpenCode runs its language-server diagnostics after each write (from a third-party guide). Vermilion has no language server, so it would mean running the problem matchers on a build; today the agent gets problems from `run_build`. |
 | Symbol outline and go-to-definition tools for the agent | 2026-11-14 | Needs a language server or ctags, a separate decision and probably a new dependency. |
+| `vermilion folder`: open every document in the folder, with a question first (Y/n) | 2026-11-19 | Adam's idea during M2.4b. Today a folder on the command line is refused. Needs a decision about hidden files, binary files, subfolders and a limit on the count. |
