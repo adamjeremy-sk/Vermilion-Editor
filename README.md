@@ -22,7 +22,7 @@
 > It is not ready for daily use, and everything marked "Planned" is a plan. See [Status](#status).
 
 <p align="center">
-  <img src="res/github/vermilion-m2.5.png" width="800" alt="Vermilion Editor: the editor window with a C++ file open and the Replace window, the Help window showing the terminal commands, and the About dialog">
+  <img src="res/github/vermilion-m2.5a-finished.png" width="800" alt="Vermilion Editor: the main window with an empty document, the Help window showing the Settings topic, and the About dialog">
   <br><em>The current build (during M2.5): tabs, syntax colours, the status bar and the Replace window; Help → Index; Help → About.</em>
 </p>
 

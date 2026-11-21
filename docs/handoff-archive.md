@@ -1454,3 +1454,6 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 
 ### 2026-11-21 (after 5c, seventeenth chat) - M2.5 step 5c passed, step 5d issued
 - Step 5c audited PASS (1219; shas match, 0 warnings; Qwen's `.cpp` files follow the spec; the Appearance file went from 179 to 158 lines on the shared layout header). Step 5d was built in the cloud and checked by running the real program under Xvfb (Ctrl+Comma, Dark and Apply, 8 spaces and OK, an outside edit of the file, Esc); the shortcut table moved into its own file so the new key is tested. Two prompt corrections before sending: edit numbers (3 to 7) and one-line OLD anchors. Adam: put scratch-file deletions into the terminal commands I send him.
+
+### 2026-11-21 (after 5d, seventeenth chat) - M2.5 step 5d passed, hands-on next
+- Step 5d audited PASS (1234; shas match, 0 warnings, status 91; `settings_io.cpp` 19 lines and `main_window_settings.cpp` 49 lines follow the spec; proof diffs show only the 17 dictated edits; Prompt doubts: none; mtimes match the headers). The Settings window is now reachable. Next: Adam's hands-on, then step 6.
