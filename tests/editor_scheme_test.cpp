@@ -23,7 +23,7 @@ namespace {
 namespace fs = std::filesystem;
 using vermilion::ui::editor_scheme;
 using vermilion::ui::scheme_folder;
-using vermilion::ui::write_scheme_file;
+using vermilion::ui::write_scheme_files;
 
 constexpr char kSchemeResource[] =
     "/io/github/adamjeremy_sk/Vermilion/styles/vermilion-classic.xml";
@@ -95,7 +95,7 @@ TEST_F(EditorSchemeTest, TheFolderIsUnderTheUserCacheFolder) {
 
 TEST_F(EditorSchemeTest, WritesTheSchemeFileFromTheResources) {
     const std::string folder = cache_root() + "/fresh/deeper";
-    ASSERT_TRUE(write_scheme_file(folder));
+    ASSERT_TRUE(write_scheme_files(folder));
     const std::string text = read_file(folder + "/" + kSchemeFile);
     EXPECT_FALSE(text.empty());
     EXPECT_EQ(text, resource_text());
@@ -104,13 +104,13 @@ TEST_F(EditorSchemeTest, WritesTheSchemeFileFromTheResources) {
 
 TEST_F(EditorSchemeTest, AnUpToDateFileIsNotWrittenAgain) {
     const std::string folder = cache_root() + "/current";
-    ASSERT_TRUE(write_scheme_file(folder));
+    ASSERT_TRUE(write_scheme_files(folder));
     const fs::path file = fs::path(folder) / kSchemeFile;
     const fs::file_time_type now = fs::file_time_type::clock::now();
     std::error_code error;
     fs::last_write_time(file, now - std::chrono::hours(48), error);
     ASSERT_FALSE(error);
-    EXPECT_TRUE(write_scheme_file(folder));
+    EXPECT_TRUE(write_scheme_files(folder));
     // A rewrite would have made the file's time recent again.
     EXPECT_LT(fs::last_write_time(file, error), now - std::chrono::hours(24));
     EXPECT_FALSE(error);
@@ -118,52 +118,52 @@ TEST_F(EditorSchemeTest, AnUpToDateFileIsNotWrittenAgain) {
 
 TEST_F(EditorSchemeTest, AStaleFileIsReplaced) {
     const std::string folder = cache_root() + "/stale";
-    ASSERT_TRUE(write_scheme_file(folder));
+    ASSERT_TRUE(write_scheme_files(folder));
     const std::string file = folder + "/" + kSchemeFile;
     ASSERT_TRUE(g_file_set_contents(file.c_str(), "old text", -1, nullptr));
     EXPECT_EQ(read_file(file), "old text");
-    EXPECT_TRUE(write_scheme_file(folder));
+    EXPECT_TRUE(write_scheme_files(folder));
     EXPECT_EQ(read_file(file), resource_text());
 }
 
 TEST_F(EditorSchemeTest, AFolderThatCannotBeMadeGivesFalse) {
     const std::string blocker = cache_root() + "/blocker";
     ASSERT_TRUE(g_file_set_contents(blocker.c_str(), "x", -1, nullptr));
-    EXPECT_FALSE(write_scheme_file(blocker + "/sub"));
+    EXPECT_FALSE(write_scheme_files(blocker + "/sub"));
 }
 
 TEST_F(EditorSchemeTest, FindsTheVermilionScheme) {
-    GtkSourceStyleScheme* scheme = editor_scheme();
+    GtkSourceStyleScheme* scheme = editor_scheme(false);
     ASSERT_NE(scheme, nullptr);
     EXPECT_STREQ(gtk_source_style_scheme_get_id(scheme), "vermilion-classic");
 }
 
 TEST_F(EditorSchemeTest, TheSchemeFileIsInTheCacheFolder) {
-    ASSERT_NE(editor_scheme(), nullptr);
+    ASSERT_NE(editor_scheme(false), nullptr);
     EXPECT_EQ(read_file(scheme_folder() + "/" + kSchemeFile), resource_text());
 }
 
 TEST_F(EditorSchemeTest, TheCurrentLineIsLightBlue) {
-    GtkSourceStyleScheme* scheme = editor_scheme();
+    GtkSourceStyleScheme* scheme = editor_scheme(false);
     ASSERT_NE(scheme, nullptr);
     EXPECT_EQ(background_of(scheme, "current-line"), "#DCE6F5");
 }
 
 TEST_F(EditorSchemeTest, TheCurrentLineNumberHasTheSameBackground) {
-    GtkSourceStyleScheme* scheme = editor_scheme();
+    GtkSourceStyleScheme* scheme = editor_scheme(false);
     ASSERT_NE(scheme, nullptr);
     EXPECT_EQ(background_of(scheme, "current-line-number"), "#DCE6F5");
 }
 
 TEST_F(EditorSchemeTest, EveryOtherStyleComesFromTheClassicParent) {
-    GtkSourceStyleScheme* scheme = editor_scheme();
+    GtkSourceStyleScheme* scheme = editor_scheme(false);
     ASSERT_NE(scheme, nullptr);
     EXPECT_NE(gtk_source_style_scheme_get_style(scheme, "text"), nullptr);
     EXPECT_NE(gtk_source_style_scheme_get_style(scheme, "def:comment"), nullptr);
 }
 
 TEST_F(EditorSchemeTest, EveryCallGivesTheSameScheme) {
-    EXPECT_EQ(editor_scheme(), editor_scheme());
+    EXPECT_EQ(editor_scheme(false), editor_scheme(false));
 }
 
 } // namespace

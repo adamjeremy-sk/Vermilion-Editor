@@ -13,6 +13,7 @@
 #include <string>
 
 #include "core/baseline.h"
+#include "core/editor_look.h"
 #include "core/held_events.h"
 #include "core/text_format.h"
 #include "ui/change_banner.h"
@@ -158,6 +159,14 @@ public:
 
     void set_wrap(bool wrap);
     bool wraps() const;
+
+    // Brings the page to this look (core/editor_look.h): the editor scheme (light or dark), the
+    // highlight of the cursor's line, the tab width, and the class vm-editor on the text view, so
+    // that the font rule of ui/font_style.h reaches it. The Tab key inserts spaces (as many as the
+    // tab width, which also is how wide a tab character is drawn). A page made new has the default
+    // look until its tabs give it the wanted one. Nothing else of the page changes: the text, the
+    // cursor and the undo history stay. The code is in editor_page_look.cpp.
+    void apply_look(const EditorLook& look);
 
     // Line, column, mode, tab width and language; the format fields are left to the caller.
     CursorStatus status() const;

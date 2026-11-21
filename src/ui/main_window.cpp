@@ -18,6 +18,7 @@
 #include "ui/glib_timer.h"
 #include "ui/gtkx/object_ptr.h"
 #include "ui/window_actions.h"
+#include "ui/window_shortcuts.h"
 
 namespace vermilion::ui {
 
@@ -54,7 +55,7 @@ void MainWindow::install_menus_and_shortcuts(GtkApplication* app) {
 
 // The window from _new is owned by GTK (its toplevel list and the application), so it is
 // borrowed here, not adopted.
-MainWindow::MainWindow(GtkApplication* app)
+MainWindow::MainWindow(GtkApplication* app, Style* style, FontStyle* font_style)
     : window_(GTK_WINDOW(gtk_application_window_new(app))), search_(std::make_unique<GlibTimer>()),
       replace_(search_, std::make_unique<GlibTimer>()),
       tabs_(list_, DocumentTabs::Callbacks{
@@ -141,6 +142,7 @@ MainWindow::MainWindow(GtkApplication* app)
         [this](const std::string& message) { status_.show_message(message); });
     external_ = std::make_unique<ExternalChangeController>(list_, *external_host_,
                                                            std::make_unique<GlibTimer>());
+    start_appearance(style, font_style);
     tabs_.add_untitled();
     blank_id_ = list_.active();
     refresh();
@@ -155,6 +157,12 @@ MainWindow::MainWindow(GtkApplication* app)
 // clean end: every unsaved document was saved or given up).
 MainWindow::~MainWindow() {
     tabs_.set_observer(nullptr);
+    // The Settings window first: its functions reach the look and the file.
+    settings_window_.reset();
+    // The look next: its controller waits for a timer and its host reaches the parts below.
+    system_theme_.reset();
+    appearance_.reset();
+    appearance_host_.reset();
     // The controller first (it cancels its looks and drops its answers), then its host.
     external_.reset();
     external_host_.reset();

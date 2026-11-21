@@ -6,6 +6,7 @@
 
 #include <gtk/gtk.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -51,6 +52,11 @@ public:
     // The same for one file.
     void open_path(const std::string& path);
 
+    // The longest line, in characters, that opens without a question (open_warning in
+    // core/text_scan.h). Files that are checked after the call use it; until the first call it is
+    // kDefaultLongLineLimit. The settings give it (ui/appearance_host.h).
+    void set_long_line_limit(std::uint64_t limit) { long_line_limit_ = limit; }
+
 private:
     static void on_chosen(GObject* source, GAsyncResult* result, gpointer ticket);
     void on_checked(const std::string& path, const std::string& title,
@@ -67,6 +73,7 @@ private:
     gtkx::ObjectPtr<GCancellable> cancellable_; // cancels an open file dialog
     OpenQueue queue_;
     std::unique_ptr<FileProbe> probe_;
+    std::uint64_t long_line_limit_ = kDefaultLongLineLimit;
     gtkx::AsyncGuard<FileOpener> guard_{this}; // last member: it goes first
 };
 

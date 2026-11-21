@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) */
-/* Light palette of the classic stylesheet (chassis #CECECE); the dark palette arrives at M2.5. */
+/* Light palette of the classic stylesheet (chassis #CECECE); the dark one is classic_dark.css. */
 
 @define-color vm_chassis #cecece;
 @define-color vm_tab_inactive #c4c4c4;

@@ -132,6 +132,16 @@ window.vm-main notebook > header > tabs > tab:checked {
         inset -2px 0 @vm_shadow;
 }
 
+/* Settings window: its tabs have no close button, so they get the same room on both sides of the
+   label (the document tabs keep a narrow right side for their close button). */
+window.vm-settings notebook > header > tabs > tab {
+    padding: 1px 10px 1px 10px;
+}
+
+window.vm-settings notebook > header > tabs > tab:checked {
+    padding: 3px 10px 1px 10px;
+}
+
 window.vm-main notebook > stack {
     background-color: @vm_chassis;
     padding: 2px;
@@ -249,6 +259,13 @@ window.vm-main menubutton.vm-status-panel > button:checked {
 window.aboutdialog label > selection {
     background-color: transparent;
     color: inherit;
+}
+
+/* Help > About: the logo has the same size under every GTK theme. Greybird (GTK 4) shrinks
+   .large-icons to 32 pixels; Greybird-dark has no GTK 4 folder, so GTK shows the logo at its own
+   size there, and the two looks differed. */
+window.aboutdialog image.large-icons {
+    -gtk-icon-size: 128px;
 }
 
 /* Help > Index (M2.2b): the window also has the class vm-main, so its buttons and chassis come from

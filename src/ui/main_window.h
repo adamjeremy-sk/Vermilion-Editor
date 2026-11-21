@@ -14,6 +14,8 @@
 
 #include "core/document_list.h"
 #include "core/settings_file.h"
+#include "ui/appearance_controller.h"
+#include "ui/appearance_host.h"
 #include "ui/document_tabs.h"
 #include "ui/external_change_controller.h"
 #include "ui/file_opener.h"
@@ -28,7 +30,9 @@
 #include "ui/replace_window.h"
 #include "ui/save_controller.h"
 #include "ui/search_controller.h"
+#include "ui/settings_window.h"
 #include "ui/status_bar.h"
+#include "ui/system_theme.h"
 #include "ui/tabs_external_host.h"
 
 namespace vermilion::ui {
@@ -40,8 +44,10 @@ public:
     static void install_menus_and_shortcuts(GtkApplication* app);
 
     // Creates the window with one untitled document. GTK owns the window; this object must be
-    // destroyed when the window emits "destroy".
-    explicit MainWindow(GtkApplication* app);
+    // destroyed when the window emits "destroy". `style` and `font_style` are borrowed, may be null
+    // (then that part of the look is not changed) and must outlive the window: the settings give
+    // them the palette and the editor font (start_appearance, M2.5).
+    MainWindow(GtkApplication* app, Style* style, FontStyle* font_style);
 
     // Detaches the recovery controller from the document tabs first (see the .cpp).
     ~MainWindow();
@@ -80,6 +86,10 @@ public:
     void find_next();
     void find_previous();
 
+    // Tools > Settings (Ctrl+Comma): shows the Settings window, which is made on first use and kept
+    // (hidden) after it closes. What Apply does is in main_window_settings.cpp.
+    void open_settings();
+
     // Starts the start-up question about the recovery copies an earlier run left. Call once, after
     // present(); a second call does nothing. The code is in main_window_recovery.cpp.
     void offer_recovery();
@@ -116,6 +126,10 @@ private:
     void before_file_opens();
     void on_open_queue_idle();
     RecoveryPrompt::Added add_recovered_document(RecoveryPrompt::Document document);
+    // Makes the host and the controller of the look and applies the settings once, before the first
+    // document is made, so the first page already has its look. The code is in
+    // main_window_appearance.cpp.
+    void start_appearance(Style* style, FontStyle* font_style);
     // The search follows the active document (main_window_search.cpp).
     void sync_search_buffer();
     // The selected text when it is on one line and short enough to be a search text.
@@ -169,6 +183,14 @@ private:
     // refresh() while they are destroyed), and refresh() does nothing once they are gone.
     std::unique_ptr<TabsExternalHost> external_host_;
     std::unique_ptr<ExternalChangeController> external_;
+    // The look that follows the settings: the host gives the palette, the editor look and the
+    // limit of the long line to the parts that show them; the controller waits 100 ms after a
+    // change. After the tabs, the opener and external_, which the host reaches, so they are
+    // destroyed first; the destructor resets them before everything else.
+    std::unique_ptr<AppearanceHost> appearance_host_;
+    std::unique_ptr<AppearanceController> appearance_;
+    // What the desktop says about light and dark; it calls appearance_, so it is destroyed first.
+    std::unique_ptr<SystemTheme> system_theme_;
     std::unique_ptr<HelpWindow> help_; // created on first use, reset when its window is destroyed
     gtkx::SignalConnection help_destroy_;
     // After search_ and tabs_, which it uses, so it is destroyed first. Created by find() on first
@@ -183,6 +205,10 @@ private:
     // status_.
     std::unique_ptr<GotoLineWindow> goto_;
     gtkx::SignalConnection goto_destroy_;
+    // Made by open_settings() on first use and reset when its window is destroyed. Its functions
+    // reach settings_, appearance_ and tabs_, which are declared before it.
+    std::unique_ptr<SettingsWindow> settings_window_;
+    gtkx::SignalConnection settings_window_destroy_;
 };
 
 } // namespace vermilion::ui

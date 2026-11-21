@@ -10,7 +10,6 @@
 #include <optional>
 #include <utility>
 
-#include "ui/editor_scheme.h"
 #include "ui/file_inspector.h"
 #include "ui/gtkx/string.h"
 
@@ -18,7 +17,6 @@ namespace vermilion::ui {
 
 namespace {
 
-constexpr unsigned kTabWidth = 4; // per document; the settings value arrives with M2.5
 constexpr gunichar kByteOrderMark = 0xFEFF;
 
 // The keys that run Undo or Redo in the text view: Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z.
@@ -42,15 +40,8 @@ EditorPage::EditorPage(Callbacks callbacks)
       scrolled_(gtkx::ObjectPtr<GtkWidget>::adopt_floating(gtk_scrolled_window_new())) {
     auto buffer = gtkx::ObjectPtr<GtkSourceBuffer>::adopt(gtk_source_buffer_new(nullptr));
     gtk_source_buffer_set_implicit_trailing_newline(buffer.get(), FALSE);
-    GtkSourceStyleScheme* scheme = editor_scheme(); // borrowed
-    if (scheme != nullptr) {
-        gtk_source_buffer_set_style_scheme(buffer.get(), scheme);
-    }
     GtkWidget* view = gtk_source_view_new_with_buffer(buffer.get());
     gtk_source_view_set_show_line_numbers(GTK_SOURCE_VIEW(view), TRUE);
-    // Faint band on the cursor's line, in every tab (Adam, 2026-11-16); a setting comes with M2.5.
-    gtk_source_view_set_highlight_current_line(GTK_SOURCE_VIEW(view), TRUE);
-    gtk_source_view_set_tab_width(GTK_SOURCE_VIEW(view), kTabWidth);
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
     gtk_widget_add_css_class(scrolled_.get(), "vm-editor-well");
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_.get()), view);
@@ -110,6 +101,9 @@ EditorPage::EditorPage(Callbacks callbacks)
             return (held_.holding() && is_undo_or_redo_key(keyval, state)) ? TRUE : FALSE;
         });
     gtk_widget_add_controller(view, lock_keys);
+    // The scheme, the band under the cursor's line, the tab and the font class: the default look,
+    // until the tabs give this page the wanted one.
+    apply_look(EditorLook{});
 }
 
 void EditorPage::show_banner(const std::string& text, const std::string& primary_label,

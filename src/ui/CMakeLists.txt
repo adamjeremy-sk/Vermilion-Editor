@@ -52,9 +52,11 @@ add_custom_command(
             ${VERMILION_RESOURCE_XML}
     DEPENDS ${VERMILION_RESOURCE_XML}
             ${VERMILION_RESOURCE_DIR}/classic_light.css
+            ${VERMILION_RESOURCE_DIR}/classic_dark.css
             ${VERMILION_RESOURCE_DIR}/classic_structure.css
             ${VERMILION_RESOURCE_DIR}/menus.ui
             ${VERMILION_RESOURCE_DIR}/styles/vermilion-classic.xml
+            ${VERMILION_RESOURCE_DIR}/styles/vermilion-classic-dark.xml
             ${VERMILION_ICON_PNGS}
     VERBATIM)
 # The user manual (Adam, 2026-11-11): every docs/manual/*.md is compiled into the program as a
@@ -94,7 +96,7 @@ target_link_libraries(vermilion_resources
     PUBLIC PkgConfig::GTK4
     PRIVATE vermilion_warnings vermilion_noexc)
 
-add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp check_question.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp recovery_controller.cpp recovery_io.cpp recovery_prompt.cpp main_window_recovery.cpp find_window.cpp search_controller.cpp search_session.cpp glib_timer.cpp main_window_search.cpp replace_controller.cpp replace_controller_job.cpp replace_window.cpp line_jump.cpp goto_line_window.cpp editor_scheme.cpp file_inspector.cpp file_watcher.cpp change_banner.cpp document_tabs_reload.cpp tabs_external_host.cpp external_change_controller.cpp external_change_look.cpp external_change_reload.cpp command_line.cpp main_window_command_line.cpp)
+add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp check_question.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp recovery_controller.cpp recovery_io.cpp recovery_prompt.cpp main_window_recovery.cpp find_window.cpp search_controller.cpp search_session.cpp glib_timer.cpp main_window_search.cpp replace_controller.cpp replace_controller_job.cpp replace_window.cpp line_jump.cpp goto_line_window.cpp editor_scheme.cpp file_inspector.cpp file_watcher.cpp change_banner.cpp document_tabs_reload.cpp tabs_external_host.cpp external_change_controller.cpp external_change_look.cpp external_change_reload.cpp command_line.cpp main_window_command_line.cpp appearance_controller.cpp font_css.cpp font_style.cpp editor_page_look.cpp document_tabs_look.cpp appearance_host.cpp main_window_appearance.cpp system_theme.cpp settings_window.cpp settings_page_appearance.cpp settings_page_editor.cpp settings_page_files.cpp window_shortcuts.cpp main_window_settings.cpp)
 target_include_directories(vermilion PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(vermilion PRIVATE
     PkgConfig::GTK4

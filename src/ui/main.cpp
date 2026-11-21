@@ -8,7 +8,11 @@
 #include <cstring>
 #include <memory>
 
+#include "core/colour_mode.h"
+#include "core/editor_settings.h"
+#include "core/settings_file.h"
 #include "ui/command_line.h"
+#include "ui/font_style.h"
 #include "ui/gtkx/object_ptr.h"
 #include "ui/gtkx/signal.h"
 #include "ui/main_window.h"
@@ -19,10 +23,24 @@
 namespace {
 
 struct AppState {
+    // Declared first, so it is destroyed last, after the window.
+    std::unique_ptr<vermilion::ui::Style> style;
+    // After the style (its rule wins a tie), so it is destroyed before it.
+    std::unique_ptr<vermilion::ui::FontStyle> font_style;
     std::unique_ptr<vermilion::ui::MainWindow> window;
     vermilion::gtkx::SignalConnection window_destroy;
     std::unique_ptr<vermilion::ui::CommandLineHandler> command_line;
 };
+
+// Whether the program starts dark: the colour mode of settings.ini. Follow system counts as light
+// here; MainWindow gives the desktop's answer (SystemTheme) before the first window is shown. A
+// missing or damaged file gives the defaults; the window reports a damaged file.
+bool start_dark() {
+    vermilion::SettingsFile file(vermilion::SettingsFile::default_path());
+    file.load();
+    const vermilion::EditorSettings settings = vermilion::load_settings(file);
+    return vermilion::resolve_dark(settings.colour_mode, vermilion::SystemHints{});
+}
 
 // Brings the window forward; the first call creates it.
 vermilion::ui::MainWindow& show_window(GtkApplication* app, AppState& state) {
@@ -30,11 +48,15 @@ vermilion::ui::MainWindow& show_window(GtkApplication* app, AppState& state) {
         state.window->present();
         return *state.window;
     }
-    vermilion::ui::install_classic_style();
+    // Null when a stylesheet is missing (logged): the program then runs with the desktop's look.
+    state.style = vermilion::ui::Style::install(start_dark());
+    // Null without a display (logged): the text then keeps the system monospace font.
+    state.font_style = vermilion::ui::FontStyle::install();
     // The icon is named after the application ID; GTK picks the size (badge in the title bar).
     gtk_window_set_default_icon_name(g_application_get_application_id(G_APPLICATION(app)));
     vermilion::ui::MainWindow::install_menus_and_shortcuts(app);
-    state.window = std::make_unique<vermilion::ui::MainWindow>(app);
+    state.window =
+        std::make_unique<vermilion::ui::MainWindow>(app, state.style.get(), state.font_style.get());
     // The C++ side of the window goes when GTK destroys the window.
     state.window_destroy = vermilion::gtkx::connect<void(GtkWidget*)>(
         state.window->window(), "destroy", [&state](GtkWidget*) { state.window.reset(); });

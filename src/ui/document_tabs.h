@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "core/document_list.h"
+#include "core/editor_look.h"
 #include "core/text_scan.h"
 #include "ui/document_loader.h"
 #include "ui/document_observer.h"
@@ -128,6 +129,13 @@ public:
     // The editor page of id, or nullptr (borrowed).
     EditorPage* editor(DocumentId id) const;
 
+    // The look of the editor pages (core/editor_look.h): kept, given to every page that is open
+    // now and to every page made later, and the window is told (the status bar shows the tab
+    // width). Until the first call the pages have the default look. The code is in
+    // document_tabs_look.cpp.
+    void set_look(const EditorLook& look);
+    const EditorLook& look() const { return look_; }
+
 private:
     struct Page;
 
@@ -167,6 +175,8 @@ private:
     };
     std::map<DocumentId, PendingReload> reloads_;
     DocumentObserver* observer_ = nullptr;
+    // The look that every new page gets (set_look).
+    EditorLook look_;
     gtkx::ObjectPtr<GtkWidget> box_; // holds the notebook; sees presses before the notebook
     gtkx::ObjectPtr<GtkWidget> notebook_;
     std::vector<std::unique_ptr<Page>> pages_;

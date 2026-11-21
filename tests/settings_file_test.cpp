@@ -78,7 +78,7 @@ protected:
 TEST(SettingsKeys, TheApprovedNames) {
     EXPECT_EQ(std::string(vermilion::settings::kFilesGroup), std::string("files"));
     EXPECT_EQ(std::string(vermilion::settings::kConfirmLargeReload),
-              std::string("confirm-large-reload"));
+              std::string("confirm_large_reload"));
     EXPECT_TRUE(vermilion::settings::kConfirmLargeReloadDefault);
 }
 
@@ -94,8 +94,8 @@ TEST_F(SettingsFileTest, MissingFileGivesTheDefaultsAndCreatesNothing) {
     SettingsFile settings(path_);
     EXPECT_EQ(settings.load(), SettingsLoad::Missing);
     EXPECT_EQ(settings.state(), SettingsLoad::Missing);
-    EXPECT_TRUE(settings.get_bool("files", "confirm-large-reload", true));
-    EXPECT_FALSE(settings.get_bool("files", "confirm-large-reload", false));
+    EXPECT_TRUE(settings.get_bool("files", "confirm_large_reload", true));
+    EXPECT_FALSE(settings.get_bool("files", "confirm_large_reload", false));
     EXPECT_FALSE(fs::exists(root_ + "/vermilion"));
 }
 
@@ -109,45 +109,45 @@ TEST_F(SettingsFileTest, SaveWithNothingChangedWritesNothing) {
 TEST_F(SettingsFileTest, SetIsVisibleBeforeSave) {
     SettingsFile settings(path_);
     settings.load();
-    settings.set_bool("files", "confirm-large-reload", false);
-    EXPECT_FALSE(settings.get_bool("files", "confirm-large-reload", true));
+    settings.set_bool("files", "confirm_large_reload", false);
+    EXPECT_FALSE(settings.get_bool("files", "confirm_large_reload", true));
     EXPECT_FALSE(fs::exists(path_));
 }
 
 TEST_F(SettingsFileTest, SaveCreatesTheFolderAndTheFileAndItReadsBack) {
     SettingsFile writer(path_);
     writer.load();
-    writer.set_bool("files", "confirm-large-reload", false);
+    writer.set_bool("files", "confirm_large_reload", false);
     ASSERT_TRUE(writer.save().is_ok());
     EXPECT_EQ(writer.state(), SettingsLoad::Loaded);
     EXPECT_TRUE(fs::exists(path_));
 
     SettingsFile reader(path_);
     EXPECT_EQ(reader.load(), SettingsLoad::Loaded);
-    EXPECT_FALSE(reader.get_bool("files", "confirm-large-reload", true));
+    EXPECT_FALSE(reader.get_bool("files", "confirm_large_reload", true));
 }
 
 TEST_F(SettingsFileTest, TheFileHoldsTheGroupAndTheKey) {
     SettingsFile settings(path_);
     settings.load();
-    settings.set_bool("files", "confirm-large-reload", true);
+    settings.set_bool("files", "confirm_large_reload", true);
     ASSERT_TRUE(settings.save().is_ok());
     const std::string text = slurp(path_);
     EXPECT_TRUE(contains(text, "[files]"));
-    EXPECT_TRUE(contains(text, "confirm-large-reload=true"));
+    EXPECT_TRUE(contains(text, "confirm_large_reload=true"));
 }
 
 TEST_F(SettingsFileTest, SaveLeavesOnlyTheSettingsFile) {
     SettingsFile settings(path_);
     settings.load();
-    settings.set_bool("files", "confirm-large-reload", false);
+    settings.set_bool("files", "confirm_large_reload", false);
     ASSERT_TRUE(settings.save().is_ok());
-    settings.set_bool("files", "confirm-large-reload", true);
+    settings.set_bool("files", "confirm_large_reload", true);
     ASSERT_TRUE(settings.save().is_ok());
     EXPECT_EQ(names_in(folder_), std::vector<std::string>{"settings.ini"});
     SettingsFile reader(path_);
     reader.load();
-    EXPECT_TRUE(reader.get_bool("files", "confirm-large-reload", false));
+    EXPECT_TRUE(reader.get_bool("files", "confirm_large_reload", false));
 }
 
 TEST_F(SettingsFileTest, EmptyFileIsLoadedWithTheDefaults) {
@@ -155,17 +155,17 @@ TEST_F(SettingsFileTest, EmptyFileIsLoadedWithTheDefaults) {
     put(path_, "");
     SettingsFile settings(path_);
     EXPECT_EQ(settings.load(), SettingsLoad::Loaded);
-    EXPECT_TRUE(settings.get_bool("files", "confirm-large-reload", true));
-    EXPECT_FALSE(settings.get_bool("files", "confirm-large-reload", false));
+    EXPECT_TRUE(settings.get_bool("files", "confirm_large_reload", true));
+    EXPECT_FALSE(settings.get_bool("files", "confirm_large_reload", false));
 }
 
 TEST_F(SettingsFileTest, UnknownGroupsKeysAndCommentsAreKept) {
     make_folder();
     put(path_, "# written by hand\n[window]\nwidth=800\n# the height\nheight=600\n\n[files]\n"
-               "confirm-large-reload=false\nfuture-key=abc\n");
+               "confirm_large_reload=false\nfuture-key=abc\n");
     SettingsFile settings(path_);
     ASSERT_EQ(settings.load(), SettingsLoad::Loaded);
-    settings.set_bool("files", "confirm-large-reload", true);
+    settings.set_bool("files", "confirm_large_reload", true);
     ASSERT_TRUE(settings.save().is_ok());
     const std::string text = slurp(path_);
     EXPECT_TRUE(contains(text, "# written by hand"));
@@ -174,17 +174,17 @@ TEST_F(SettingsFileTest, UnknownGroupsKeysAndCommentsAreKept) {
     EXPECT_TRUE(contains(text, "# the height"));
     EXPECT_TRUE(contains(text, "height=600"));
     EXPECT_TRUE(contains(text, "future-key=abc"));
-    EXPECT_TRUE(contains(text, "confirm-large-reload=true"));
-    EXPECT_FALSE(contains(text, "confirm-large-reload=false"));
+    EXPECT_TRUE(contains(text, "confirm_large_reload=true"));
+    EXPECT_FALSE(contains(text, "confirm_large_reload=false"));
 }
 
 TEST_F(SettingsFileTest, WrongValueTypeGivesTheFallback) {
     make_folder();
-    put(path_, "[files]\nconfirm-large-reload=maybe\n");
+    put(path_, "[files]\nconfirm_large_reload=maybe\n");
     SettingsFile settings(path_);
     ASSERT_EQ(settings.load(), SettingsLoad::Loaded);
-    EXPECT_TRUE(settings.get_bool("files", "confirm-large-reload", true));
-    EXPECT_FALSE(settings.get_bool("files", "confirm-large-reload", false));
+    EXPECT_TRUE(settings.get_bool("files", "confirm_large_reload", true));
+    EXPECT_FALSE(settings.get_bool("files", "confirm_large_reload", false));
 }
 
 TEST_F(SettingsFileTest, ZeroAndOneAreBooleans) {
@@ -202,8 +202,8 @@ TEST_F(SettingsFileTest, DamagedFileGivesTheDefaultsAndIsLeftAlone) {
     put(path_, junk);
     SettingsFile settings(path_);
     EXPECT_EQ(settings.load(), SettingsLoad::Damaged);
-    EXPECT_TRUE(settings.get_bool("files", "confirm-large-reload", true));
-    EXPECT_FALSE(settings.get_bool("files", "confirm-large-reload", false));
+    EXPECT_TRUE(settings.get_bool("files", "confirm_large_reload", true));
+    EXPECT_FALSE(settings.get_bool("files", "confirm_large_reload", false));
     EXPECT_TRUE(settings.save().is_ok()); // nothing changed: nothing written
     EXPECT_EQ(slurp(path_), junk);
     EXPECT_EQ(names_in(folder_), std::vector<std::string>{"settings.ini"});
@@ -216,14 +216,14 @@ TEST_F(SettingsFileTest, DamagedFileIsMovedAsideWhenASettingIsSaved) {
     put(path_ + ".bad", "an older bad file");
     SettingsFile settings(path_);
     ASSERT_EQ(settings.load(), SettingsLoad::Damaged);
-    settings.set_bool("files", "confirm-large-reload", false);
+    settings.set_bool("files", "confirm_large_reload", false);
     ASSERT_TRUE(settings.save().is_ok());
     EXPECT_EQ(settings.state(), SettingsLoad::Loaded);
     EXPECT_EQ(slurp(path_ + ".bad"), junk);
     EXPECT_EQ(names_in(folder_), (std::vector<std::string>{"settings.ini", "settings.ini.bad"}));
     SettingsFile reader(path_);
     EXPECT_EQ(reader.load(), SettingsLoad::Loaded);
-    EXPECT_FALSE(reader.get_bool("files", "confirm-large-reload", true));
+    EXPECT_FALSE(reader.get_bool("files", "confirm_large_reload", true));
 }
 
 TEST_F(SettingsFileTest, TwoWritersKeepEachOthersKeys) {
@@ -250,24 +250,24 @@ TEST_F(SettingsFileTest, SaveFailsWhenThePathRunsThroughAFile) {
     put(root_ + "/blocker", "a plain file where a folder is needed");
     SettingsFile settings(root_ + "/blocker/vermilion/settings.ini");
     settings.load();
-    settings.set_bool("files", "confirm-large-reload", false);
+    settings.set_bool("files", "confirm_large_reload", false);
     Status status = settings.save();
     ASSERT_FALSE(status.is_ok());
     EXPECT_FALSE(status.error().message.empty());
     // The change is still held in memory, and a later save can be tried again.
-    EXPECT_FALSE(settings.get_bool("files", "confirm-large-reload", true));
+    EXPECT_FALSE(settings.get_bool("files", "confirm_large_reload", true));
 }
 
 TEST_F(SettingsFileTest, LoadAgainDropsPendingChanges) {
     make_folder();
-    put(path_, "[files]\nconfirm-large-reload=true\n");
+    put(path_, "[files]\nconfirm_large_reload=true\n");
     SettingsFile settings(path_);
     ASSERT_EQ(settings.load(), SettingsLoad::Loaded);
-    settings.set_bool("files", "confirm-large-reload", false);
+    settings.set_bool("files", "confirm_large_reload", false);
     ASSERT_EQ(settings.load(), SettingsLoad::Loaded);
-    EXPECT_TRUE(settings.get_bool("files", "confirm-large-reload", false));
+    EXPECT_TRUE(settings.get_bool("files", "confirm_large_reload", false));
     EXPECT_TRUE(settings.save().is_ok()); // nothing remembered any more
-    EXPECT_TRUE(contains(slurp(path_), "confirm-large-reload=true"));
+    EXPECT_TRUE(contains(slurp(path_), "confirm_large_reload=true"));
 }
 
 TEST(SettingsFileMessages, UnusableMessageNamesThePath) {

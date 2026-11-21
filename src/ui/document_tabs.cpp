@@ -245,6 +245,7 @@ DocumentTabs::Page& DocumentTabs::create_page(DocumentId id) {
             },
             [this, id] { on_edited(id); }});
     Page& added = *page;
+    added.editor.apply_look(look_);
     refresh_label(added);
     // In the list before it is appended: appending the first page announces it as current.
     pages_.push_back(std::move(page));

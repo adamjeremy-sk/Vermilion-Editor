@@ -82,7 +82,7 @@ public:
                             const std::string& /*go_label*/, bool /*offer_dont_ask*/,
                             std::function<void(bool)> /*go*/) {}
 
-    // The setting "ask before reloading a large file" ([files] confirm-large-reload). The default
+    // The setting "ask before reloading a large file" ([files] confirm_large_reload). The default
     // is true.
     virtual bool confirm_large_reload() const { return true; }
 
@@ -161,6 +161,11 @@ public:
     // True while any check or reload scan is under way.
     bool busy() const { return !running_.empty(); }
 
+    // The longest line, in characters, that a file may have to be reloaded without a question or a
+    // banner (open_warning in core/text_scan.h). Scans that finish after the call use it; until the
+    // first call it is kDefaultLongLineLimit. The settings give it (ui/appearance_host.h).
+    void set_long_line_limit(std::uint64_t limit) { long_line_limit_ = limit; }
+
 private:
     void on_look();
     void on_stat(DocumentId id, const std::string& path, const FileInspection& seen);
@@ -182,7 +187,8 @@ private:
     DocumentList& list_;
     ExternalChangeHost& host_;
     FileWatcher watcher_;
-    DocumentId watched_ = 0;       // the document the watcher follows, 0 for none
+    DocumentId watched_ = 0; // the document the watcher follows, 0 for none
+    std::uint64_t long_line_limit_ = kDefaultLongLineLimit;
     std::set<DocumentId> wanted_;  // checks that wait for a quiet page
     std::set<DocumentId> running_; // documents with a check, scan or answer under way
     std::set<DocumentId> by_hand_; // documents whose scan under way is a File > Reload from Disk

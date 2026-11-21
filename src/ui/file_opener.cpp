@@ -113,7 +113,7 @@ void FileOpener::on_checked(const std::string& path, const std::string& title,
         file_done();
         return;
     }
-    OpenWarning warning = open_warning(checked.scan, kDefaultLongLineLimit);
+    OpenWarning warning = open_warning(checked.scan, long_line_limit_);
     if (warning == OpenWarning::None) {
         callbacks_.open(file_path, file_title, checked.scan);
         file_done();

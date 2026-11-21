@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk) */
+/* Dark palette of the classic stylesheet (chassis #3B3E3F), same names as classic_light.css. */
+
+@define-color vm_chassis #3b3e3f;
+@define-color vm_tab_inactive #353839;
+@define-color vm_text #eeeeec;
+@define-color vm_disabled_text #959696;
+@define-color vm_highlight #6b6f70;
+@define-color vm_light #4c5152;
+@define-color vm_shadow #2a2c2d;
+@define-color vm_dark_shadow #1d1f1f;
+@define-color vm_field_bg #2d2e30;
+@define-color vm_field_text #eeeeec;
+@define-color vm_select_bg #145ba6;
+@define-color vm_select_text #ffffff;
+@define-color vm_info_bg #4a4730;

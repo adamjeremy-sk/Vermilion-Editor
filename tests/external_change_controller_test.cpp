@@ -453,6 +453,34 @@ TEST_F(ExternalChangeControllerTest, TheBannersReloadAsksBeforeReloadingAFileWit
     EXPECT_TRUE(host_.reloads[0].scan.binary);
 }
 
+TEST_F(ExternalChangeControllerTest, ALineLongerThanTheLimitIsNotReloadedSilently) {
+    controller_.set_long_line_limit(10000);
+    DocumentId id = open("a.txt", "one\n");
+    write_file(path_of(id), std::string(20000, 'a') + "\n");
+    check(id);
+    EXPECT_TRUE(host_.reloads.empty());
+    ASSERT_EQ(host_.banners.count(id), 1u);
+    EXPECT_EQ(host_.banners[id].text, vermilion::banner_text(BannerKind::Changed, "a.txt"));
+}
+
+TEST_F(ExternalChangeControllerTest, ALineWithinTheLimitIsReloadedSilently) {
+    controller_.set_long_line_limit(30000);
+    DocumentId id = open("a.txt", "one\n");
+    write_file(path_of(id), std::string(20000, 'a') + "\n");
+    check(id);
+    EXPECT_TRUE(host_.banners.empty());
+    ASSERT_EQ(host_.reloads.size(), 1u);
+    EXPECT_EQ(host_.reloads[0].scan.longest_line, 20000u);
+}
+
+TEST_F(ExternalChangeControllerTest, TheDefaultLimitStaysUntilItIsChanged) {
+    DocumentId id = open("a.txt", "one\n");
+    write_file(path_of(id), std::string(20000, 'a') + "\n");
+    check(id);
+    EXPECT_TRUE(host_.banners.empty());
+    EXPECT_EQ(host_.reloads.size(), 1u);
+}
+
 TEST_F(ExternalChangeControllerTest, AnOtherEncodingIsAnnounced) {
     DocumentId id = open("a.txt", "one\n");
     write_file(path_of(id), "caf\xE9\n"); // not UTF-8

@@ -100,6 +100,9 @@ void on_about(GSimpleAction*, GVariant*, gpointer data) {
 void on_help_index(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->show_help();
 }
+void on_settings(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->open_settings();
+}
 
 const GActionEntry kActions[] = {
     {"new-file", on_new_file, nullptr, nullptr, nullptr, {0, 0, 0}},
@@ -126,49 +129,15 @@ const GActionEntry kActions[] = {
     {"reopen-encoding", on_reopen_encoding, "s", nullptr, nullptr, {0, 0, 0}},
     {"save-encoding", on_save_encoding, "s", nullptr, nullptr, {0, 0, 0}},
     {"line-ending", on_line_ending, "s", nullptr, nullptr, {0, 0, 0}},
+    {"settings", on_settings, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"help-index", on_help_index, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"about", on_about, nullptr, nullptr, nullptr, {0, 0, 0}},
-};
-
-struct Shortcut {
-    const char* action;
-    const char* accels[3];
-};
-
-const Shortcut kShortcuts[] = {
-    {"win.new-file", {"<Control>n", nullptr, nullptr}},
-    {"win.open", {"<Control>o", nullptr, nullptr}},
-    {"win.save", {"<Control>s", nullptr, nullptr}},
-    {"win.save-as", {"<Control><Shift>s", nullptr, nullptr}},
-    {"win.reload-from-disk", {"<Control>r", nullptr, nullptr}},
-    {"win.close-tab", {"<Control>w", nullptr, nullptr}},
-    {"win.quit", {"<Control>q", nullptr, nullptr}},
-    {"win.undo", {"<Control>z", nullptr, nullptr}},
-    {"win.redo", {"<Control>y", "<Control><Shift>z", nullptr}},
-    {"win.cut", {"<Control>x", nullptr, nullptr}},
-    {"win.copy", {"<Control>c", nullptr, nullptr}},
-    {"win.paste", {"<Control>v", nullptr, nullptr}},
-    {"win.select-all", {"<Control>a", nullptr, nullptr}},
-    {"win.find", {"<Control>f", nullptr, nullptr}},
-    {"win.find-next", {"F3", nullptr, nullptr}},
-    {"win.find-previous", {"<Shift>F3", nullptr, nullptr}},
-    {"win.replace", {"<Control>h", nullptr, nullptr}},
-    {"win.go-to-line", {"<Control>g", nullptr, nullptr}},
-    {"win.next-tab", {"<Control>Page_Down", nullptr, nullptr}},
-    {"win.previous-tab", {"<Control>Page_Up", nullptr, nullptr}},
-    {"win.help-index", {"F1", nullptr, nullptr}},
 };
 
 } // namespace
 
 void add_window_actions(GActionMap* map, MainWindow* window) {
     g_action_map_add_action_entries(map, kActions, G_N_ELEMENTS(kActions), window);
-}
-
-void set_shortcuts(GtkApplication* app) {
-    for (const Shortcut& shortcut : kShortcuts) {
-        gtk_application_set_accels_for_action(app, shortcut.action, shortcut.accels);
-    }
 }
 
 } // namespace vermilion::ui

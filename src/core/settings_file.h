@@ -28,11 +28,12 @@ std::string settings_unusable_message(const std::string& path);
 
 // One settings.ini through GKeyFile ([group] key=value lines; comments and unknown groups and
 // keys are kept). Reads fall back to the caller's default for a missing key or a value of the wrong
-// type. Changes are made in memory (set_bool) and written by save(), which reads the file again
-// first and applies only the keys changed here, so two programs (the light editor and the IDE) can
-// write the same file without undoing each other's keys. save() writes through a temporary file and
-// a rename in the same folder (g_file_set_contents), so a reader never sees half a file and a
-// failed save leaves nothing behind. Main thread only; nothing here touches GTK.
+// type. Changes are made in memory (set_bool, set_int, set_string) and written by save(), which
+// reads the file again first and applies only the keys changed here, so two programs (the light
+// editor and the IDE) can write the same file without undoing each other's keys. save() writes
+// through a temporary file and a rename in the same folder (g_file_set_contents), so a reader never
+// sees half a file and a failed save leaves nothing behind. Main thread only; nothing here touches
+// GTK.
 class SettingsFile {
 public:
     // `path` is the full path of the file; the folder is created by save() when it is missing.
@@ -56,7 +57,23 @@ public:
     // Sets a boolean in memory (visible to get_bool at once) and remembers it for save().
     void set_bool(const char* group, const char* key, bool value);
 
-    // With nothing remembered (no set_bool since the last load() or save()) it does nothing and
+    // The integer at group/key, or `fallback` when the key is missing or its value is not a whole
+    // number that fits an int (for example "abc", "1.5", "" or "99999999999").
+    int get_int(const char* group, const char* key, int fallback) const;
+
+    // As set_bool, for an integer (written in decimal).
+    void set_int(const char* group, const char* key, int value);
+
+    // The text at group/key with the key-file escapes decoded (backslash-n is a line feed, and so
+    // on), or `fallback` when the key is missing or the value has an invalid escape. An empty value
+    // is returned as the empty string, not as the fallback.
+    std::string get_string(const char* group, const char* key, const std::string& fallback) const;
+
+    // As set_bool, for text. Control characters and backslashes are escaped when the text is
+    // written, so get_string returns exactly `value` after a save() and a load().
+    void set_string(const char* group, const char* key, const std::string& value);
+
+    // With nothing remembered (no set_ call since the last load() or save()) it does nothing and
     // returns ok: the file is neither created nor touched. Otherwise it writes the file: reads it
     // again from disk, applies the remembered changes, writes the result through a temporary file
     // and a rename, and keeps the written text as the current settings. If the file on disk is
@@ -68,6 +85,10 @@ public:
     Status save();
 
 private:
+    // Remembers the text written after the "=" for save(): replaces an earlier change of the same
+    // group and key, otherwise appends one. It does not touch the in-memory key file.
+    void remember(const char* group, const char* key, const char* text);
+
     struct Change {
         std::string group;
         std::string key;

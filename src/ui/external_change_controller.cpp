@@ -240,7 +240,7 @@ void ExternalChangeController::on_scanned(DocumentId id, bool silent,
         host_.message(reload_failed_message(record->title));
         return;
     }
-    const OpenWarning warning = open_warning(scanned.scan, kDefaultLongLineLimit);
+    const OpenWarning warning = open_warning(scanned.scan, long_line_limit_);
     if (silent) {
         if (!state->quiet) {
             running_.erase(id);

@@ -56,6 +56,28 @@ TEST(UiResources, StructureHasClassicDetails) {
     EXPECT_NE(css.find("menubutton.vm-status-panel"), std::string::npos);
 }
 
+TEST(UiResources, AboutLogoKeepsItsSizeUnderEveryTheme) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    const std::size_t rule = css.find("window.aboutdialog image.large-icons");
+    ASSERT_NE(rule, std::string::npos);
+    EXPECT_NE(css.find("-gtk-icon-size: 128px;", rule), std::string::npos);
+}
+
+// The Settings tabs have no close button, so both sides of the label get the same room.
+TEST(UiResources, SettingsTabsHaveTheSameRoomOnBothSides) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    auto body = [&css](const char* selector) {
+        const std::size_t at = css.find(selector);
+        return at == std::string::npos ? std::string() : css.substr(at, css.find('}', at) - at);
+    };
+    EXPECT_NE(body("window.vm-settings notebook > header > tabs > tab {")
+                  .find("padding: 1px 10px 1px 10px;"),
+              std::string::npos);
+    EXPECT_NE(body("window.vm-settings notebook > header > tabs > tab:checked {")
+                  .find("padding: 3px 10px 1px 10px;"),
+              std::string::npos);
+}
+
 TEST(UiResources, LightPaletteDefinesInfoBackground) {
     std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_light.css");
     EXPECT_NE(css.find("@define-color vm_info_bg #ffffe1;"), std::string::npos);
@@ -142,6 +164,29 @@ TEST(UiResources, FileMenuOrder) {
     for (const char* action : order) {
         SCOPED_TRACE(action);
         std::size_t at = ui.find(action);
+        ASSERT_NE(at, std::string::npos);
+        EXPECT_GT(at, last);
+        last = at;
+    }
+}
+
+TEST(UiResources, ToolsMenuHasSettings) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    EXPECT_NE(ui.find("_Tools</attribute>"), std::string::npos);
+    EXPECT_NE(ui.find("_Settings&#x2026;</attribute>"), std::string::npos);
+    EXPECT_NE(ui.find("win.settings</attribute>"), std::string::npos);
+}
+
+// ARCHITECTURE.md 7.10: the menu bar reads File, Edit, Search, View, Tools, Help.
+TEST(UiResources, ToolsMenuSitsBetweenViewAndHelp) {
+    std::string ui = resource_text("/io/github/adamjeremy_sk/Vermilion/menus.ui");
+    const char* order[] = {"label\">_View</attribute>", "win.previous-tab</attribute>",
+                           "label\">_Tools</attribute>", "win.settings</attribute>",
+                           "label\">_Help</attribute>"};
+    std::size_t last = 0;
+    for (const char* text : order) {
+        SCOPED_TRACE(text);
+        std::size_t at = ui.find(text);
         ASSERT_NE(at, std::string::npos);
         EXPECT_GT(at, last);
         last = at;
