@@ -72,15 +72,17 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
   - A deleted or moved file keeps its tab and text, is marked as needing a save and keeps its recovery copy; its return reloads a clean tab or shows the banner.
   - Our own saves, `touch` and a rewrite of identical text show nothing: time and size first, then an xxHash of the bytes (vendored in `third_party/xxhash`).
   - Only the active tab is watched (300 ms debounce); a background tab is checked when selected, every tab at quit, and a tab when its close button is pressed.
-  - File → Reload from Disk (Ctrl+R) reloads even an unchanged file. An edited tab asks first; a clean file over 10 MiB asks with "Do not ask again", which is saved as `[files] confirm-large-reload` in `settings.ini`. The Settings window offers it from M2.5.
+  - File → Reload from Disk (Ctrl+R) reloads even an unchanged file. An edited tab asks first; a clean file over 10 MiB asks with "Do not ask again", which is saved as `[files] confirm_large_reload` in `settings.ini`. The Settings window offers it from M2.5.
 - **M2.4b** files from the command line (split off from M2.7b; the program takes files before it is the light program).
   - `vermilion file1 file2 ...` opens every file, in order, one after the other (a queue in `FileOpener`); a second launch while the editor runs opens its files in the running window. Relative names are taken from the launching folder. The program has `G_APPLICATION_HANDLES_COMMAND_LINE`; a launch without files is an activation; `--help` and `-h` are answered by the program.
   - A name that does not exist is asked about on the launching terminal, `'name' does not exist. Create it? (Y/n)`, and an empty file is created on a yes (a terminal question, not a dialog; Adam, 2026-11-19). The lines are read asynchronously, so the editor stays usable while a question waits. Without a terminal nothing is asked or created and the status bar says "does not exist".
   - Folders and other entries that are not files are refused on the terminal and in the status bar. The same name twice opens once. An untouched blank start document is replaced by the first file that opens.
   - New manual topic "Command-line options"; M2.7b keeps the rest (the single-instance rule, desktop entry, application ID).
-- **M2.5** settings.
-  - A settings window (classic OK, Cancel, Apply) and key file: colour mode Light, Dark or Follow system with the two classic palettes, GtkSourceView schemes (`classic` and a dark one), editor font (default: system monospace), tab width; the Tools menu.
-  - Also here (from the M2.3 design talks): a check box for the current-line band, a few style presets, and light and dark defaults for the editor scheme file that M2.3 already writes to the cache folder.
+- **M2.5** settings (built; ARCHITECTURE.md 7.1 "Settings as built").
+  - A modal Settings window (OK, Cancel, Apply) with the tabs Appearance, Editor and Files, opened from Tools → Settings… and Ctrl+Comma, and the key file `settings.ini`.
+  - Settings: colour mode Light, Dark or Follow system (two classic palettes; the schemes `vermilion-classic` and `vermilion-classic-dark`), the current-line band, the editor font (default: the system monospace), tab width 4 or 8 (the Tab key inserts spaces), the large-reload question and the long-line limit.
+  - Changes show 100 ms after Apply, with no restart and no preview.
+  - Left out on purpose (Adam, 2026-11-19): style presets, a Colour Mode menu item and Zoom (parked in `docs/ideas.md`).
 - **M2.5b** Help window (a Windows 98 Help screenshot is a layout idea only; our own look and branding, ARCHITECTURE.md rules stay).
   - The Help → Index window (M2.2b) gets two panes. Left: a **Contents** tab (a tree of manual topics and their sections) and a **Search** tab (a text box with Match case, Whole word and Regex, and a list of matching pages with a snippet). Right: the page view.
   - Text-only buttons **Hide** (collapses the left pane), **Back** and **Forward**. No Index tab (Search covers it; it would need a hand-made keyword list). The page text becomes selectable.
@@ -127,6 +129,10 @@ Adam's hands-on lists passed: edits from a terminal (append, identical rewrite, 
 
 ‡‡ 1016 tests (ARCHITECTURE.md 7.1 "Command line as built"). Five steps (1 core sorting and queue, 2 the question machine, 3 the handler, 4 the open queue in the window, 5 documents); Qwen wrote the `.cpp` files of steps 1 to 3 from specifications, headers, tests and wiring were dictated. Fix 1 of step 3: with `G_APPLICATION_HANDLES_COMMAND_LINE` GApplication does not parse options, so `--help` tried to create a file; the program now answers `--help` and `-h` itself.
 Adam's hands-on lists passed: one and several files, a relative path, the same file twice, a missing file answered y, n and Enter, a folder, no arguments, `--help`, a second launch while the editor runs, Ctrl+C during a question, no terminal, a binary file with Cancel and Open Anyway.
+
+¶¶ 1235 tests (ARCHITECTURE.md 7.1 "Settings as built"). Steps 1a to 6: the core values and the colour mode, the dark palette and scheme, `Style`, the appearance controller and its wiring, the editor font, the page look, `SystemTheme` (Follow system), the Settings window shell, its three pages and the wiring.
+Qwen wrote the `.cpp` files from specifications; headers, tests and wiring were dictated. Fixes followed steps 3a, 4 (the About logo size under Greybird and Greybird-dark), 5a (a wrong comment in the window test) and 5d (the room around the Settings tab labels, found in Adam's hands-on). The manual gained the topic "Settings".
+Adam's hands-on lists passed: Follow system on XFCE in light and dark, Tools → Settings… and Ctrl+Comma, Apply, OK, Cancel and Esc, the colour mode, the font, tab width 4 and 8, the large-file settings, and a hand edit of `settings.ini` that shows at the next open.
 
 ## M5: Agent core (v0.3.0)
 

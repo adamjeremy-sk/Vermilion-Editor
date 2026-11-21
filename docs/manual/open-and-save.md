@@ -6,8 +6,8 @@
 - Before a file loads, Vermilion reads it once from start to end ("Checking “name”… 40%" in the status bar) to find its
   encoding, its line endings and whether it looks like a text file. Then it loads ("Loading “name”… 40%"). The tab cannot be
   edited until the load ends, and the syntax colouring is switched on after it, which keeps big files fast.
-- A file that contains NUL characters looks like a binary file. A file with a line longer than 350,000 characters can make
-  any text editor slow or stop responding. For both, Vermilion asks "Open Anyway" or "Cancel" first. A binary file opened
+- A file that contains NUL characters looks like a binary file. A file with a line longer than 350,000 characters (a setting; see
+  [Settings](settings.md)) can make any text editor slow or stop responding. For both, Vermilion asks "Open Anyway" or "Cancel" first. A binary file opened
   anyway is read-only.
 - A file with bytes that cannot be shown as text in the encoding it was read in also opens read-only, and the status bar
   says so. A read-only document cannot be saved: File → Save is greyed out.

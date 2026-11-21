@@ -52,6 +52,6 @@ Reloads the active document from its file by hand, also when the file did not ch
 
 ## The setting
 The "Do not ask again" box is stored in the settings file, `~/.config/vermilion/settings.ini` (or under
-`$XDG_CONFIG_HOME`), as `confirm-large-reload` in the group `[files]`. Set it to `true` to be asked again. The
-Settings window of a later version will offer it. A settings file that cannot be read is ignored for that run:
+`$XDG_CONFIG_HOME`), as `confirm_large_reload` in the group `[files]`. Set it to `true` to be asked again. The
+Settings window offers it too, in the Files tab (see [Settings](settings.md)). A settings file that cannot be read is ignored for that run:
 Vermilion uses the default (ask) and says so in the status bar.

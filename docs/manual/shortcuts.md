@@ -23,9 +23,10 @@
 | Ctrl+G | Go to Line… |
 | Ctrl+Page Down | Next tab (after the last tab comes the first) |
 | Ctrl+Page Up | Previous tab (before the first tab comes the last) |
+| Ctrl+Comma | Tools → Settings… |
 | Insert | Switch between inserting (INS) and overwriting (OVR) |
 | Alt | Show the access letters in the menu bar |
-| Escape | In a question: Cancel |
+| Escape | In a question or in the Settings window: Cancel |
 | F1 | Help → Index: open the manual, or bring it forward |
 | Alt+Left | In the manual window: Back to the previous page |
 

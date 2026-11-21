@@ -1,9 +1,9 @@
 # The window and tabs
 
 ## The window
-From top to bottom: the menu bar (File, Edit, Search, View, Help), the document tabs with the editor, and the status
+From top to bottom: the menu bar (File, Edit, Search, View, Tools, Help), the document tabs with the editor, and the status
 bar. There is no toolbar: every command is in a menu, and the menu shows its shortcut. Hold Alt to see the underlined
-access letters in the menu bar. Help → Index (F1) opens this manual; Help → About shows the program's icon, version
+access letters in the menu bar. Tools → Settings… (Ctrl+Comma) opens the Settings window (see [Settings](settings.md)). Help → Index (F1) opens this manual; Help → About shows the program's icon, version
 and licence.
 
 ## Documents and tabs
@@ -26,7 +26,7 @@ When the last tab closes, the window stays open and empty, and the commands that
 open a new one.
 
 ## The status bar
-On the left, messages. On the right, for the active document: the language, the tab width (4), the encoding and the line
+On the left, messages. On the right, for the active document: the language, the tab width (4 or 8, a setting), the encoding and the line
 ending (click either one for its menu; see [Encodings and line endings](encodings-and-line-endings.md)), the line and
 column of the cursor (a tab counts as the columns it covers), and INS or OVR (the Insert key switches between inserting and
 overwriting).

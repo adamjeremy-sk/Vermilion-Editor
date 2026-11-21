@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 22% (weighted: M0 and M1 done; M2 10 of 16) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 24% (weighted: M0 and M1 done; M2 11 of 16) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ---
 
 ## Status
-M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 10 of 16 gates. 1016 tests, all
+M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates. 1235 tests, all
 passing at the last commit. Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
@@ -82,6 +82,7 @@ Each row is one finished gate; the test count is the total after that gate.
 | M2.3, search | Find, Replace and Go to Line windows; regular expressions; match counts; Replace All as one Undo step, sliced and cancellable on huge files (50 MB, 289,000 matches in about a minute); the current line is shaded | 715 |
 | M2.4, external changes | A clean tab reloads by itself when its file changes; an edited or large tab shows a bar (Reload, Keep mine); a deleted file keeps its text; File → Reload from Disk (Ctrl+R); the one setting is kept in `settings.ini`; changes are detected by time, size and an xxHash | 970 |
 | M2.4b, command line | `vermilion file1 file2 ...` opens every file in its own tab, also in a running window; a missing file is asked about on the terminal and created on a yes; folders are refused; `--help` | 1016 |
+| M2.5, settings | Tools → Settings… (Ctrl+Comma): colour mode Light, Dark or Follow system (the whole window and the editor colours follow it, also when the desktop changes), highlight the current line, editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; saved in `settings.ini` | 1235 |
 
 ---
 
@@ -123,14 +124,15 @@ Rows marked Built exist today; everything else is a plan.
 | Encodings | Built (M2.2) | UTF-8, else UTF-16 (with its mark), Windows-1252 or Latin-1; the Encoding button offers "Reopen as…" and "Save as…" |
 | Safe saving | Built (M2.2) | Written beside the original, flushed, then swapped in, so a crash or a full disk never leaves half a file. Closing or quitting with edited documents asks Save, Close Without Saving or Cancel |
 | Crash recovery | Built (M2.2c) | Edited documents are copied to recovery files; the next start offers Recover, Discard or Decide Later, with the time of the copy and whether the file changed |
-| Syntax highlighting | Built (M2.2) | GtkSourceView; the language is guessed from the file name; classic scheme. Other schemes and choosing the language come with settings (M2.5) |
-| Classic Windows 2000 look | Light palette built (M2.1) | One stylesheet over the GTK theme, system fonts, square bevelled controls. The dark palette and the colour mode setting come with M2.5 |
+| Syntax highlighting | Built (M2.2, M2.5) | GtkSourceView; the language is guessed from the file name; the classic scheme in light mode and a dark scheme in dark mode. Choosing the language by hand is not built |
+| Classic Windows 2000 look | Built (M2.1, M2.5) | One stylesheet over the GTK theme, system fonts, square bevelled controls, in a light and a dark palette; the colour mode is a setting (Light, Dark, Follow system) |
 | Keyboard first | Built (M2.1 to M2.3) | Gedit-style status bar, no toolbar, every command a menu item with its shortcut. Build and debug keys come with their features |
 | Fixed-width tabs | Built (M2.1) | Close button at the right edge, an unsaved marker, drag to reorder; a tab is never closed on its own |
 | Large files | Built (M2.2) | Loaded in the background, highlighting switched on afterwards: a 50 MB C++ file opens in about 4 s instead of 87. A binary file or a line over 350,000 characters asks "Open anyway / Cancel" |
 | Manual inside the program | Built (M2.2b) | Help → Index (F1): the topics of `docs/manual` in a read-only window, with links, Back and Index |
 | Search, replace, go to line | Built (M2.3) | Find (Ctrl+F), Replace (Ctrl+H), Go to Line (Ctrl+G, `line` or `line:column`); match case, whole word, regular expressions; match count; F3 and Shift+F3; Replace All is one Undo step |
 | External changes | Built (M2.4) | A clean tab reloads by itself when its file changes (up to 10 MB); an edited or large tab shows a bar with Reload and Keep mine. A deleted file keeps its tab and text. File → Reload from Disk (Ctrl+R); "Do not ask again" is kept in `settings.ini` |
+| Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
 | Help window | Planned (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons |
 | Diff view | Planned (M2.6) | Side by side with folding; opened from the external-change banner and the crash-recovery question |
 | Open Recent | Planned (M2.7c) | File → Open Recent, with a way to clear the list |

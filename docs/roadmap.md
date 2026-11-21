@@ -18,9 +18,9 @@
 - **Upkeep.** The weights are the Orchestrator's estimate, accepted by Adam; they change only when Adam decides. The bar is updated with the Done column at every gate commit, and the same line is in README.md.
 - **Weights** (sum 100): M0 5 · M1 6 · M2 19 · M3 8 · M4 6 · M5 25 · M6 10 · M7 10 · M8 5 · M9 6.
 - **Share of one gate** in its milestone: M0 0.42% (12 gates) · M1 0.55% (11) · M2 1.19% (16) · M3 1.33% (6) · M4 1.20% (5) · M5 1.67% (15) · M6 1.25% (8) · M7 1.67% (6) · M8 1.67% (3) · M9 6.00% (1).
-- **Now**: 5 + 6 + 19 × 10/16 = 22.9, shown as 22%.
+- **Now**: 5 + 6 + 19 × 11/16 = 24.1, shown as 24%.
 
-**Progress**: `████░░░░░░░░░░░░░░░░` 22% (weighted: M0 and M1 done; M2 10 of 16)
+**Progress**: `████░░░░░░░░░░░░░░░░` 24% (weighted: M0 and M1 done; M2 11 of 16)
 
 ## Versions
 | Version | Contents | Milestones |
@@ -98,7 +98,7 @@ The talk for the M2 window was held 2026-11-10; its outcome is ARCHITECTURE.md s
 | M2.3 | Search, replace (regex), go to line; the Search menu | Manual check plus core tests for the search options and the replacement rules | Qwen | ☑ 2026/11/17 \*\* |
 | M2.4 | File monitor and the external-change policy (the banner's Show diff button joins with the diff view, M2.6) | Edit on disk reloads a clean buffer; dirty buffer shows the banner | Orchestrator plans, Qwen codes | ☑ 2026/11/18 †† |
 | M2.4b | Files from the command line: `vermilion file1 file2 ...`, a terminal question for missing files (create them), the open queue, the manual topic Command-line options (see gate-details) | Core tests for the argument sorting, the queue and the question machine; Adam's hands-on run from a terminal | Orchestrator plans, Qwen codes | ☑ 2026/11/19 ‡‡ |
-| M2.5 | Settings window and key file: colour mode, schemes, editor font, tab width; the Tools menu (see gate-details) | Settings persist; Adam checks light and dark | Plan first (rule 10) | ☐ |
+| M2.5 | Settings window and key file: colour mode, schemes, editor font, tab width; the Tools menu (see gate-details) | Settings persist; Adam checks light and dark | Orchestrator plans, Qwen codes | ☑ 2026/11/21 ¶¶ |
 | M2.5b | Help window with a contents tree and a search tab (see gate-details) | Manual check: tree, search with each option, Back, Forward, Hide; core tests for the page search and the history | Design talk with Adam, then plan first (rule 10) | ☐ |
 | M2.6 | Diff engine and `DiffView` (see gate-details) | Tests incl. edge cases (applying a diff to A gives B); manual check of the view, the banner button and the Compare button | Orchestrator plans, Qwen codes | ☐ |
 | M2.7 | Window size restored; start state (a new untitled document by default; or reopen the last document, a single file; or a blank window); no tab limit | Restored on start | Qwen | ☐ |

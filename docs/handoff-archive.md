@@ -1437,3 +1437,20 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 
 ### 2026-11-19 (11:40, fifteenth chat) - M2.5 design talk; M2.4b added; plans written
 - Adam: M2.4 pushed as `4a029e6`. Design talk topics 1 to 4 decided; `./vermilion file` gave "This application can not open files" (`G_APPLICATION_DEFAULT_FLAGS`; `FileOpener::open_path` replaces a running check, so a queue is needed). New gate M2.4b before M2.5. The 13:45 entry is in the archive, Part 35.
+
+## Part 38 — rotated out of HANDOFF.md on 2026-11-21 (seventeenth chat, M2.5 step 5c issued)
+
+### 2026-11-19 (18:40, sixteenth chat, evening handoff) - M2.5 steps 1 to 3d
+- M2.4b was committed and pushed (HEAD `45f1b1a`). M2.5: 1a/1b/2a/2b/3a audited PASS. Adam saw the dark look and kept it unchanged ("the dark black colour... it stays"). Header trial: Qwen wrote a header in a trial; Adam decided to keep my headers until Qwen 4 (37b) is set up. 3a failed once through my CMake block (missing `PkgConfig::GLIB2`, continuation 1 fixed it). I then found the cloud can install real GTK/Pango with `apt-get update` (see Next action (1)); 3b was verified that way and found a wrong Pango assumption and a missing include directory before Qwen saw them. 3b: `font_css` (17 tests) and `FontStyle` (9 tests, display). 3c audited PASS (1143): `apply_look`, `set_look`, the Tab key inserts spaces. 3d verified in the cloud, issued, and Qwen reported (1152 of 1152, not yet audited); the real program under Xvfb with a dark `settings.ini` showed the dark window and editor, Tab Width 8 and the larger font.
+
+### 2026-11-21 (10:30, seventeenth chat) - M2.5 step 4 passed, step 5a issued
+- Step 4 (`SystemTheme`, 1162) audited PASS. Adam's hands-on found the About logo drawn at different sizes under Greybird and Greybird-dark; fix 1 (one CSS rule and a test, 1163) audited PASS, light confirmed. Step 5a split off the Settings window shell from the pages and the wiring so the shell is tested with a fake page; the reference was built in the cloud (18 tests, 8 mutants). My two prompt wording mistakes in fix 1 are recorded in Next action (2).
+
+### 2026-11-21 (after 5b, seventeenth chat) - M2.5 step 5b passed, step 5c issued
+- Step 5b audited PASS (1201: shas match, 0 warnings, status 73; Qwen's `.cpp` follows the spec, with local layout constants and extra comments). Step 5c was built in the cloud: the shared layout header, the Editor and Files tabs (18 tests, 12 mutants); its OLD/NEW edits for the Appearance file were applied to Qwen's real file (staged from the device) and the full suite passed (1219).
+
+### 2026-11-21 (11:30, seventeenth chat) - M2.5 step 5a passed, step 5b issued
+- Step 5a audited PASS WITH NOTES (1181; the note was my wrong comment above `FakePage`), fixed by a continuation, PASS. Adam asked what our rule on deferring fixes is: AGENTS.md rule 17 (no carried debt) and the debt definition in AI_ONBOARDING; I had meant to fold the fix into a later prompt, which the rule only allows when Qwen's context is low. Step 5b built in the cloud (Appearance tab, 20 tests, 14 mutants, screenshot); the font tests use real families because GTK logs a critical for an uninstalled one. The Editor and Files tabs are 5c, the wiring 5d.
+
+### 2026-11-21 (after 5c, seventeenth chat) - M2.5 step 5c passed, step 5d issued
+- Step 5c audited PASS (1219; shas match, 0 warnings; Qwen's `.cpp` files follow the spec; the Appearance file went from 179 to 158 lines on the shared layout header). Step 5d was built in the cloud and checked by running the real program under Xvfb (Ctrl+Comma, Dark and Apply, 8 spaces and OK, an outside edit of the file, Esc); the shortcut table moved into its own file so the new key is tested. Two prompt corrections before sending: edit numbers (3 to 7) and one-line OLD anchors. Adam: put scratch-file deletions into the terminal commands I send him.
