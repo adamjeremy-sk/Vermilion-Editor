@@ -18,7 +18,6 @@ pkg_check_modules(GTKSOURCEVIEW5 REQUIRED IMPORTED_TARGET gtksourceview-5)
 pkg_check_modules(JSONGLIB REQUIRED IMPORTED_TARGET json-glib-1.0)
 pkg_check_modules(GLIB2 REQUIRED IMPORTED_TARGET glib-2.0)
 pkg_check_modules(LIBSOUP3 REQUIRED IMPORTED_TARGET libsoup-3.0)
-pkg_check_modules(LIBSECRET REQUIRED IMPORTED_TARGET libsecret-1)
 pkg_check_modules(VTE REQUIRED IMPORTED_TARGET vte-2.91-gtk4)
 
 find_package(GTest REQUIRED)
