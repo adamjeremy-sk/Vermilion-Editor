@@ -191,6 +191,16 @@ TEST(ManualTextPage, ATableAfterAParagraphMovesItsRanges) {
     EXPECT_TRUE(same(built.code[0], 26, 27));
 }
 
+TEST(ManualTextPage, ATableIsLaidOutToThePageWidth) {
+    std::string cell;
+    for (int i = 0; i < 40; ++i) {
+        cell += "word ";
+    }
+    const ManualText built = build("| A | B |\n|---|---|\n| a | " + cell + "|");
+    const std::string first = built.text.substr(0, built.text.find('\n'));
+    EXPECT_EQ(vermilion::character_count(first), vermilion::kManualColumns);
+}
+
 TEST(ManualTextPage, EveryRangeInAMixedPageIsInOrder) {
     const ManualText built = build("# A\n\n**x** `y` [z](a-topic.md)\n\n| P | Q |\n|---|---|\n| "
                                    "**b** | `c` |\n\n- **d**\n- `e`");

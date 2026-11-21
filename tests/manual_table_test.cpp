@@ -17,12 +17,16 @@ namespace {
 using vermilion::TableLayout;
 using vermilion::TextRange;
 
-// The layout of the first table in `markdown`, with the page width of the Help window.
+// The page width these tests lay out for. It is fixed here, so they do not follow a change of
+// the width of the Help page (kManualColumns).
+constexpr std::size_t kColumns = 80;
+
+// The layout of the first table in `markdown`, in lines of kColumns characters.
 TableLayout lay(const std::string& markdown) {
     const vermilion::ManualPage page = vermilion::parse_manual(markdown);
     for (const vermilion::ManualBlock& block : page.blocks) {
         if (block.kind == vermilion::ManualBlockKind::Table) {
-            return vermilion::layout_table(block, vermilion::kManualColumns);
+            return vermilion::layout_table(block, kColumns);
         }
     }
     return TableLayout{};
