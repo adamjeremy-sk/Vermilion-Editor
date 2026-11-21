@@ -142,7 +142,6 @@ Adam's hands-on lists passed: Follow system on XFCE in light and dark, Tools →
 - **M5.1** provider.
   - Fixes the schema of `agent.json`: endpoint, model, key reference `env:NAME`; a plaintext key is rejected. Plan first (AGENTS.md rule 10). Until M5.8 the endpoint is written by hand.
   - A spike inside the gate: does llama.cpp send `usage` on the last stream chunk, and does tool calling work with Qwen when the server runs with `--jinja`.
-  - Also removes the unused `libsecret` requirement from `CMakeLists.txt`, the CI install line and the README package list.
 - **M5.2** permission engine.
   - Presets Restricted, Balanced, Unrestricted and Custom; rules (a glob per tool, the last match wins); hard guards (the agent cannot change its own preset or read keys); the never-send list.
   - A per-preset "ask before saving" setting: on in Restricted, off in Balanced and Unrestricted. `run_command` is an always-ask tool that is off in Balanced.

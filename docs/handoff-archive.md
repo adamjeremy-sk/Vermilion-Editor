@@ -1457,3 +1457,8 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 
 ### 2026-11-21 (after 5d, seventeenth chat) - M2.5 step 5d passed, hands-on next
 - Step 5d audited PASS (1234; shas match, 0 warnings, status 91; `settings_io.cpp` 19 lines and `main_window_settings.cpp` 49 lines follow the spec; proof diffs show only the 17 dictated edits; Prompt doubts: none; mtimes match the headers). The Settings window is now reachable. Next: Adam's hands-on, then step 6.
+
+## Part 39 — rotated out of HANDOFF.md on 2026-11-21 (eighteenth chat, docs cleanup)
+
+### 2026-11-21 (11:10, seventeenth chat) - M2.5 hands-on of 5d passed, fix 1 for the tabs issued
+- Adam's hands-on: everything passes; the Settings tab labels looked cut off (a screenshot). Reproduced in the cloud, fixed with two rules on `vm-settings`, verified (screenshots, suite, mutants), sent as a prompt to Qwen. Lesson: the look of a control that is shared by two windows (the notebook tab) must be checked in both; a change for one window goes under that window's class.

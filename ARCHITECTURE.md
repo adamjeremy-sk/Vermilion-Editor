@@ -67,7 +67,6 @@ Repository checks live in `tools/` and run as ctest tests with every test run: `
 | Editor widget | GtkSourceView 5 | `libgtksourceview-5-dev` |
 | JSON | json-glib | `libjson-glib-dev` |
 | HTTP, SSE | libsoup 3 | `libsoup-3.0-dev` |
-| Key storage (parked, 2026-11-13) | libsecret | `libsecret-1-dev`; still required by `CMakeLists.txt` and the CI install line until gate M5.1 removes it |
 | Terminal | VTE (GTK 4) | `libvte-2.91-gtk4-dev` |
 | File hashing (vendored in `third_party/xxhash`, M2.4) | xxHash 0.8.3, BSD-2-Clause | none (one header, kept byte-exact) |
 | Tests | GoogleTest | `libgtest-dev` |

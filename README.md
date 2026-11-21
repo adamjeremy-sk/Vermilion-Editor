@@ -18,12 +18,14 @@
   C++17 &middot; GTK 4 &middot; GtkSourceView 5 &middot; GPL-3.0-or-later
 </p>
 
-> **Status: pre-alpha.** It opens, edits and saves files, finds and replaces text, and recovers documents after a crash.
+> **Status: pre-alpha.** It opens, edits and saves files, finds and replaces text, recovers documents after a crash,
+> reloads files that change on disk, opens files given on the command line, and has a Settings window with Light, Dark and
+> Follow system colours.
 > It is not ready for daily use, and everything marked "Planned" is a plan. See [Status](#status).
 
 <p align="center">
   <img src="res/github/vermilion-m2.5a-finished.png" width="800" alt="Vermilion Editor: the main window with an empty document, the Help window showing the Settings topic, and the About dialog">
-  <br><em>The current build (during M2.5): tabs, syntax colours, the status bar and the Replace window; Help → Index; Help → About.</em>
+  <br><em>The current build (M2.5): the main window with an empty document; Help showing the Settings topic; the About dialog.</em>
 </p>
 
 ---
@@ -244,7 +246,7 @@ Reference system: Ubuntu 24.04. Install the development packages:
 
 ```bash
 sudo apt install build-essential cmake pkg-config libgtk-4-dev libgtksourceview-5-dev libjson-glib-dev \
-  libsoup-3.0-dev libsecret-1-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format clang-tidy
+  libsoup-3.0-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format clang-tidy
 ```
 
 Then:
