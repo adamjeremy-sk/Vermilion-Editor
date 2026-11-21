@@ -18,7 +18,9 @@ inline constexpr const char* kEditorFontClass = "vm-editor";
 // normal):
 //   font-family: every name of the (comma separated) family list, in double quotes,
 //                with a backslash or a double quote escaped by a backslash and every character
-//                below U+0020 turned into a space; empty names are left out
+//                below U+0020 turned into a space; empty names are left out; when no name is
+//                "monospace" (any case), the unquoted generic family monospace comes last, so a
+//                family that is not installed falls back to a monospace font
 //   font-size:   the size in points ("11pt", "10.5pt": at most two decimals, no trailing zeros,
 //                always a dot), or in pixels ("12px") when the description gives an absolute size;
 //                a size of zero is left out

@@ -1,4 +1,4 @@
-add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp manual_spans_test.cpp manual_page_test.cpp page_history_test.cpp manual_files_test.cpp recovery_file_test.cpp recovery_file_reject_test.cpp recovery_schedule_test.cpp recovery_store_test.cpp recovery_store_files_test.cpp recovery_tracker_test.cpp recovery_tracker_rules_test.cpp recovery_tracker_events_test.cpp recovery_tracker_adopt_test.cpp recovery_offer_test.cpp recovery_question_test.cpp baseline_test.cpp document_list_deleted_test.cpp recovery_answers_test.cpp recovery_blank_test.cpp search_options_test.cpp search_replacement_test.cpp count_text_test.cpp goto_line_test.cpp goto_column_test.cpp search_messages_test.cpp held_events_test.cpp file_hash_test.cpp text_scan_hash_test.cpp settings_file_test.cpp external_change_test.cpp external_messages_test.cpp document_list_encoding_test.cpp recovery_tracker_deleted_test.cpp reload_format_test.cpp external_look_test.cpp external_reload_test.cpp open_arguments_test.cpp open_request_test.cpp open_queue_test.cpp create_questions_test.cpp settings_values_test.cpp colour_mode_test.cpp editor_settings_test.cpp editor_look_test.cpp settings_io_test.cpp)
+add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp manual_spans_test.cpp manual_page_test.cpp page_history_test.cpp manual_files_test.cpp recovery_file_test.cpp recovery_file_reject_test.cpp recovery_schedule_test.cpp recovery_store_test.cpp recovery_store_files_test.cpp recovery_tracker_test.cpp recovery_tracker_rules_test.cpp recovery_tracker_events_test.cpp recovery_tracker_adopt_test.cpp recovery_offer_test.cpp recovery_question_test.cpp baseline_test.cpp document_list_deleted_test.cpp recovery_answers_test.cpp recovery_blank_test.cpp search_options_test.cpp search_replacement_test.cpp count_text_test.cpp goto_line_test.cpp goto_column_test.cpp search_messages_test.cpp held_events_test.cpp file_hash_test.cpp text_scan_hash_test.cpp settings_file_test.cpp external_change_test.cpp external_messages_test.cpp document_list_encoding_test.cpp recovery_tracker_deleted_test.cpp reload_format_test.cpp external_look_test.cpp external_reload_test.cpp open_arguments_test.cpp open_request_test.cpp open_queue_test.cpp create_questions_test.cpp settings_values_test.cpp colour_mode_test.cpp editor_settings_test.cpp editor_look_test.cpp settings_io_test.cpp cache_file_test.cpp manual_table_test.cpp)
 target_link_libraries(vermilion_tests PRIVATE
     GTest::gtest_main
     vermilion_core
@@ -378,4 +378,21 @@ gtest_discover_tests(vermilion_ui_tests)
 add_test(NAME SourceCheck.Repo COMMAND ${CMAKE_SOURCE_DIR}/tools/check_sources.sh)
 add_test(NAME Format.Check COMMAND ${CMAKE_SOURCE_DIR}/tools/check_format.sh)
 set_tests_properties(Format.Check PROPERTIES SKIP_RETURN_CODE 77)
+# The bundled font: the files in the resources, the cache folder and the registration with
+# fontconfig and Pango (GTK4 is linked for the Pango headers only; no widget, no display).
+add_executable(vermilion_bundled_font_tests bundled_font_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/bundled_font.cpp)
+target_link_libraries(vermilion_bundled_font_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_resources
+    vermilion_warnings
+    PkgConfig::GTK4
+    PkgConfig::FONTCONFIG
+    PkgConfig::PANGOFT2)
+target_compile_definitions(vermilion_bundled_font_tests PRIVATE
+    VERMILION_FONT_DIR="${CMAKE_SOURCE_DIR}/third_party/fantasque-sans")
+gtest_discover_tests(vermilion_bundled_font_tests)
+
 add_subdirectory(ctxmon)

@@ -18,7 +18,7 @@ struct EditorSettings {
     ColourMode colour_mode = ColourMode::System;
     bool highlight_current_line = settings::kHighlightCurrentLineDefault;
     // A Pango font description; empty text means the system monospace font.
-    std::string font;
+    std::string font = settings::kFontDefault;
     // 4 or 8.
     int tab_width = settings::kTabWidthDefault;
     bool confirm_large_reload = settings::kConfirmLargeReloadDefault;

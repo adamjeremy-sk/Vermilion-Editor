@@ -12,8 +12,6 @@
 namespace vermilion::ui {
 namespace {
 
-constexpr char kDefaultFont[] = "Monospace 11";
-
 // The text of `raw` (an empty string for null), then `g_free(raw)`. Used for the result of
 // pango_font_description_to_string, which the caller owns.
 std::string take_text(char* raw) {
@@ -68,7 +66,7 @@ bool AppearancePage::is_monospace_item(gpointer item) {
 }
 
 const char* AppearancePage::default_font_text() {
-    return kDefaultFont;
+    return settings::kFontDefault;
 }
 
 AppearancePage::AppearancePage() {
@@ -122,7 +120,7 @@ std::string AppearancePage::font_text() const {
     const PangoFontDescription* description =
         gtk_font_dialog_button_get_font_desc(GTK_FONT_DIALOG_BUTTON(font_button_)); // borrowed
     if (description == nullptr) {
-        return kDefaultFont;
+        return settings::kFontDefault;
     }
     return take_text(pango_font_description_to_string(description));
 }
@@ -138,7 +136,7 @@ void AppearancePage::show_settings(const EditorSettings& settings) {
     const bool system = settings.font.empty();
     gtk_check_button_set_active(GTK_CHECK_BUTTON(system_font_), system);
     shown_text_ = system ? std::string() : settings.font;
-    show_font(system ? std::string(kDefaultFont) : settings.font);
+    show_font(system ? std::string(settings::kFontDefault) : settings.font);
     shown_canonical_ = system ? std::string() : font_text();
     update_font_sensitivity();
 }

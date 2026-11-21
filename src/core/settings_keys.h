@@ -21,9 +21,9 @@ inline constexpr bool kHighlightCurrentLineDefault = true;
 inline constexpr const char* kEditorGroup = "editor";
 
 // The editor font as a Pango font description, for example "DejaVu Sans Mono 11". Empty text means
-// the system monospace font.
+// the system monospace font. The default is the font the program bundles, Fantasque Sans Mono.
 inline constexpr const char* kFont = "font";
-inline constexpr const char* kFontDefault = "";
+inline constexpr const char* kFontDefault = "Fantasque Sans Mono 12";
 
 // How wide a tab is, and how many spaces the Tab key inserts: 4 or 8. Integer.
 inline constexpr const char* kTabWidth = "tab_width";

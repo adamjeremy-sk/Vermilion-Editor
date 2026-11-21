@@ -85,7 +85,7 @@ TEST_F(FontStyleTest, TheFamilyReachesAWidgetWithTheClass) {
     std::unique_ptr<FontStyle> style = FontStyle::install();
     ASSERT_NE(style, nullptr);
     style->set_font(std::string(kFace) + " 12");
-    EXPECT_EQ(family(true), std::string(kFace));
+    EXPECT_EQ(family(true), std::string(kFace) + ",monospace");
 }
 
 TEST_F(FontStyleTest, AWidgetWithoutTheClassKeepsItsFont) {
@@ -108,25 +108,25 @@ TEST_F(FontStyleTest, TheLastFontWins) {
     ASSERT_NE(style, nullptr);
     style->set_font("Vermilion First Face 12");
     style->set_font("Vermilion Second Face 12");
-    EXPECT_EQ(family(true), std::string("Vermilion Second Face"));
+    EXPECT_EQ(family(true), std::string("Vermilion Second Face") + ",monospace");
 }
 
 TEST_F(FontStyleTest, AnEmptyFontRemovesTheRule) {
     std::unique_ptr<FontStyle> style = FontStyle::install();
     ASSERT_NE(style, nullptr);
     style->set_font(std::string(kFace) + " 12");
-    ASSERT_EQ(family(true), std::string(kFace));
+    ASSERT_EQ(family(true), std::string(kFace) + ",monospace");
     style->set_font("");
-    EXPECT_NE(family(true), std::string(kFace));
+    EXPECT_NE(family(true), std::string(kFace) + ",monospace");
 }
 
 TEST_F(FontStyleTest, DestroyingTheStyleRemovesTheRule) {
     std::unique_ptr<FontStyle> style = FontStyle::install();
     ASSERT_NE(style, nullptr);
     style->set_font(std::string(kFace) + " 12");
-    ASSERT_EQ(family(true), std::string(kFace));
+    ASSERT_EQ(family(true), std::string(kFace) + ",monospace");
     style.reset();
-    EXPECT_NE(family(true), std::string(kFace));
+    EXPECT_NE(family(true), std::string(kFace) + ",monospace");
 }
 
 TEST_F(FontStyleTest, ItBeatsAnEarlierRuleOfTheSamePriority) {
@@ -142,7 +142,7 @@ TEST_F(FontStyleTest, ItBeatsAnEarlierRuleOfTheSamePriority) {
     const std::string seen = family(true);
     gtk_style_context_remove_provider_for_display(gdk_display_get_default(),
                                                   GTK_STYLE_PROVIDER(earlier.get()));
-    EXPECT_EQ(seen, std::string(kFace));
+    EXPECT_EQ(seen, std::string(kFace) + ",monospace");
 }
 
 } // namespace

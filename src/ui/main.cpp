@@ -11,6 +11,7 @@
 #include "core/colour_mode.h"
 #include "core/editor_settings.h"
 #include "core/settings_file.h"
+#include "ui/bundled_font.h"
 #include "ui/command_line.h"
 #include "ui/font_style.h"
 #include "ui/gtkx/object_ptr.h"
@@ -101,6 +102,8 @@ int on_command_line(GApplication* app, GApplicationCommandLine* cmdline, AppStat
 int main(int argc, char** argv) {
     vermilion_register_resource();
     vermilion_manual_register_resource();
+    // The bundled font must be known before the first window and the font dialog exist.
+    vermilion::ui::install_bundled_font();
     AppState state;
     vermilion::gtkx::ObjectPtr<GtkApplication> app =
         vermilion::gtkx::ObjectPtr<GtkApplication>::adopt(gtk_application_new(

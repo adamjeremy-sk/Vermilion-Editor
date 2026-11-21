@@ -39,7 +39,7 @@ TEST(EditorSettingsDefaults, TheDocumentedDefaults) {
     const EditorSettings settings = default_settings();
     EXPECT_EQ(settings.colour_mode, ColourMode::System);
     EXPECT_TRUE(settings.highlight_current_line);
-    EXPECT_EQ(settings.font, std::string(""));
+    EXPECT_EQ(settings.font, std::string("Fantasque Sans Mono 12"));
     EXPECT_EQ(settings.tab_width, 4);
     EXPECT_TRUE(settings.confirm_large_reload);
     EXPECT_EQ(settings.long_line_limit, std::uint64_t{350000});
@@ -158,6 +158,27 @@ TEST_F(EditorSettingsFileTest, EveryKeyIsRead) {
     EXPECT_EQ(settings.tab_width, 8);
     EXPECT_FALSE(settings.confirm_large_reload);
     EXPECT_EQ(settings.long_line_limit, std::uint64_t{20000});
+}
+
+TEST_F(EditorSettingsFileTest, AMissingFontLineGivesTheBundledFont) {
+    put("[editor]\ntab_width=8\n");
+    EXPECT_EQ(read_back().font, std::string("Fantasque Sans Mono 12"));
+}
+
+TEST_F(EditorSettingsFileTest, AnEmptyFontLineStaysTheSystemFont) {
+    put("[editor]\nfont=\n");
+    EXPECT_EQ(read_back().font, std::string(""));
+}
+
+TEST_F(EditorSettingsFileTest, ChoosingTheSystemFontIsWrittenAndKept) {
+    SettingsFile file(path_);
+    file.load();
+    EditorSettings settings = default_settings();
+    settings.font.clear();
+    store_settings(settings, file);
+    ASSERT_TRUE(file.save().is_ok());
+    EXPECT_TRUE(contains(text(), "font="));
+    EXPECT_EQ(read_back().font, std::string(""));
 }
 
 TEST_F(EditorSettingsFileTest, ValuesOutsideTheRulesAreMovedIntoThem) {

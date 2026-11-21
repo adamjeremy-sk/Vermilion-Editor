@@ -100,7 +100,7 @@ TEST_F(AppearanceControllerTest, StartGivesTheHostAllThreePartsAtOnce) {
     controller_.start(default_settings());
     ASSERT_EQ(host_.calls.size(), std::size_t{3});
     EXPECT_EQ(host_.calls[0], "palette:light");
-    EXPECT_EQ(host_.calls[1], "look:light,line,4,");
+    EXPECT_EQ(host_.calls[1], "look:light,line,4,Fantasque Sans Mono 12");
     EXPECT_EQ(host_.calls[2], "limit:350000");
     EXPECT_FALSE(controller_.pending());
 }
@@ -117,7 +117,7 @@ TEST_F(AppearanceControllerTest, ApplyWaitsOneHundredMilliseconds) {
     EXPECT_EQ(AppearanceController::kDelayMs, 100u);
     timer_.expire();
     ASSERT_EQ(host_.calls.size(), std::size_t{1});
-    EXPECT_EQ(host_.calls[0], "look:light,line,8,");
+    EXPECT_EQ(host_.calls[0], "look:light,line,8,Fantasque Sans Mono 12");
     EXPECT_FALSE(controller_.pending());
 }
 
@@ -166,7 +166,7 @@ TEST_F(AppearanceControllerTest, ChangingTheColourModeChangesThePaletteAndTheLoo
     timer_.expire();
     ASSERT_EQ(host_.calls.size(), std::size_t{2});
     EXPECT_EQ(host_.calls[0], "palette:dark");
-    EXPECT_EQ(host_.calls[1], "look:dark,line,4,");
+    EXPECT_EQ(host_.calls[1], "look:dark,line,4,Fantasque Sans Mono 12");
 }
 
 TEST_F(AppearanceControllerTest, StartInDarkAppliesTheDarkPaletteFirst) {
@@ -175,7 +175,7 @@ TEST_F(AppearanceControllerTest, StartInDarkAppliesTheDarkPaletteFirst) {
     controller_.start(dark);
     ASSERT_EQ(host_.calls.size(), std::size_t{3});
     EXPECT_EQ(host_.calls[0], "palette:dark");
-    EXPECT_EQ(host_.calls[1], "look:dark,line,4,");
+    EXPECT_EQ(host_.calls[1], "look:dark,line,4,Fantasque Sans Mono 12");
 }
 
 TEST_F(AppearanceControllerTest, FollowSystemWithoutHintsIsLight) {
@@ -195,7 +195,7 @@ TEST_F(AppearanceControllerTest, FollowSystemUsesTheHints) {
     timer_.expire();
     ASSERT_EQ(host_.calls.size(), std::size_t{2});
     EXPECT_EQ(host_.calls[0], "palette:dark");
-    EXPECT_EQ(host_.calls[1], "look:dark,line,4,");
+    EXPECT_EQ(host_.calls[1], "look:dark,line,4,Fantasque Sans Mono 12");
 }
 
 TEST_F(AppearanceControllerTest, HintsBeforeStartAreKeptAndUsed) {
@@ -230,7 +230,7 @@ TEST_F(AppearanceControllerTest, ApplyBeforeStartOnlyKeepsTheValues) {
     EXPECT_EQ(timer_.starts, 0);
     EXPECT_TRUE(host_.calls.empty());
     controller_.start(next);
-    EXPECT_EQ(host_.calls[1], "look:light,line,8,");
+    EXPECT_EQ(host_.calls[1], "look:light,line,8,Fantasque Sans Mono 12");
 }
 
 TEST_F(AppearanceControllerTest, StartDropsAChangeThatIsWaiting) {

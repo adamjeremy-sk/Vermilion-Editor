@@ -19,6 +19,8 @@ pkg_check_modules(JSONGLIB REQUIRED IMPORTED_TARGET json-glib-1.0)
 pkg_check_modules(GLIB2 REQUIRED IMPORTED_TARGET glib-2.0)
 pkg_check_modules(LIBSOUP3 REQUIRED IMPORTED_TARGET libsoup-3.0)
 pkg_check_modules(VTE REQUIRED IMPORTED_TARGET vte-2.91-gtk4)
+pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
+pkg_check_modules(PANGOFT2 REQUIRED IMPORTED_TARGET pangoft2)
 
 find_package(GTest REQUIRED)
 enable_testing()
