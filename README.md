@@ -64,7 +64,7 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ---
 
 ## Status
-M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates. 1235 tests, all
+M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates; the Help window (M2.5b) is being built on the branch `gate/m2.5b`. 1301 tests, all
 passing at the last commit. Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
@@ -136,7 +136,7 @@ Rows marked Built exist today; everything else is a plan.
 | Search, replace, go to line | Built (M2.3) | Find (Ctrl+F), Replace (Ctrl+H), Go to Line (Ctrl+G, `line` or `line:column`); match case, whole word, regular expressions; match count; F3 and Shift+F3; Replace All is one Undo step |
 | External changes | Built (M2.4) | A clean tab reloads by itself when its file changes (up to 10 MB); an edited or large tab shows a bar with Reload and Keep mine. A deleted file keeps its tab and text. File → Reload from Disk (Ctrl+R); "Do not ask again" is kept in `settings.ini` |
 | Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
-| Help window | Planned (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons |
+| Help window | Under way (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons, on one fixed page of 100 characters in a monospace font. Done so far: the bundled Fantasque Sans Mono font (also the new default editor font) and the page text model in core; the window itself is not built yet |
 | Diff view | Planned (M2.6) | Side by side with folding; opened from the external-change banner and the crash-recovery question |
 | Open Recent | Planned (M2.7c) | File → Open Recent, with a way to clear the list |
 | The light program | Planned (M2.7b) | `vermilion` as a plain editor for quick edits, a replacement for gedit or Mousepad; both programs are built from the same editor code |
@@ -263,7 +263,7 @@ ctest --test-dir build --output-on-failure
 
 - The test run includes two repository checks: `SourceCheck.Repo` (licence header, purpose comment and size of every source
   file) and `Format.Check` (`clang-format --dry-run --Werror`; skipped, not failed, when clang-format is missing).
-- GitHub Actions runs the same steps on a clean Ubuntu 24.04 for every push and pull request to `main`.
+- GitHub Actions runs the same steps on a clean Ubuntu 24.04 for every push to `main` and to the `gate/**` branches, and for every pull request to `main`.
 - `librsvg2-bin` provides `rsvg-convert`, which the build uses to render the application icons from `res/vedt/`. CMake stops
   at configure with the package name if it is missing.
 - Optional: `python3 tools/ctxmon_oracle.py` regenerates the ctxmon tests' expected values from the Python original. The
