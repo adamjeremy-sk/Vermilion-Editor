@@ -45,7 +45,8 @@ Go to Line… (Ctrl+G) asks for a line number, or `line:column`, for example `12
 lines that exist. A number past the last line goes to the last line and says so. Press Enter or click Go.
 
 ## The current line
-The line with the cursor is always shaded in light blue.
+The line with the cursor is shaded, so it is easy to find. The shade follows the colour mode. You can turn it off with
+**Highlight the current line** in Tools → Settings…, on the Appearance tab (see [Settings](settings.md)).
 
 ## Limits
 - A document of one enormous line with many highlighted matches may make the window slow or freeze, because the matches

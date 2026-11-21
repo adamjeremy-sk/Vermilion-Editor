@@ -111,8 +111,9 @@ One window, one opened folder. The right-hand stack has the directory sidebar (*
 (which also exists as a standalone program). The bottom panel has build output, problems, terminals and the debugger
 views. There is no toolbar: every command is a menu item that shows its shortcut.
 
-Today (after M2.3) the window has the menu bar, tabs, the editor, the status bar and the search windows. The right-hand
-stack arrives with M3, the bottom panel with M4, the Agent tab with M5 and the ctxmon tab with M6.
+Today (after M2.5) the window has the menu bar, tabs, the editor, the status bar, the search windows and the Settings
+window. The right-hand stack arrives
+with M3, the bottom panel with M4, the Agent tab with M5 and the ctxmon tab with M6.
 
 ---
 
@@ -236,6 +237,7 @@ gates that create them.
 | Chat archive | `~/.local/share/vermilion/chats/` |
 | Revert snapshots | `~/.cache/vermilion/snapshots/` |
 | Editor colour scheme (a copy written on first use) | `~/.cache/vermilion/styles/` |
+| Crash recovery copies | `~/.local/state/vermilion/recovery/` |
 | Request log | `~/.local/state/vermilion/requests.log` |
 | API keys | not stored: `agent.json` names an environment variable |
 
@@ -246,7 +248,7 @@ Reference system: Ubuntu 24.04. Install the development packages:
 
 ```bash
 sudo apt install build-essential cmake pkg-config libgtk-4-dev libgtksourceview-5-dev libjson-glib-dev \
-  libsoup-3.0-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format clang-tidy
+  libsoup-3.0-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format
 ```
 
 Then:
@@ -277,11 +279,11 @@ ctest --test-dir build --output-on-failure
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic: the document list, text scanner and encodings, the manual's parser and page history, search options, replacement rules, Go to Line, message texts, logging, the `Result` type. Planned: diff and permission engines, build presets, the debug client, slash commands, cost, archive. No GTK headers |
+| `src/core/` | UI-free logic: the document list, text scanner and encodings, the manual's parser and page history, search options, replacement rules, Go to Line, message texts, the external-change policy and file hashing, the settings file and its keys, the command-line open queue, crash-recovery logic, logging, the `Result` type. Planned: diff and permission engines, build presets, the debug client, slash commands, cost, archive. No GTK headers |
 | `src/ctxmon/core/` | ctxmon logic, UI-free: log lines, server responses, server state and warnings, graph geometry, VRAM readers. No GTK headers |
 | `src/ctxmon/ui/` | *(M6)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon` |
 | `src/agent/` | The provider adapter, the agent loop, the tool registry. No GTK headers |
-| `src/ui/` | The GTK application: main window and actions, tabs and editor pages, the open and save flow, the search windows and Replace All job, the status bar, the help window, and the compiled-in resources. `gtkx/` is a small helper layer (reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks) |
+| `src/ui/` | The GTK application: main window and actions, tabs and editor pages, the open and save flow, the search windows and Replace All job, the Settings window, the external-change controller and banner, crash-recovery prompts, the status bar, the help window, and the compiled-in resources. `gtkx/` is a small helper layer (reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks) |
 | `tests/` | GoogleTest tests; `tests/ctxmon/` has sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/` |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py` (until M6.6) |
 | `.github/workflows/` | `ci.yml`: configure, build and the full test run on GitHub Actions |

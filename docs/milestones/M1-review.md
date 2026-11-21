@@ -1,6 +1,8 @@
 # M1 milestone review: Model monitor logic
 **Held**: 2026-11-08, Adam and the Orchestrator. **Last M1 commit**: `616fc39` (M1.6), docs `bed4146`. **Tests**: 100, all passing.
 
+**Superseded since (audit, 2026-11-21).** This review is a dated record and keeps its text. Since it was written, the ctxmon UI moved from M2 to M6 (sections 3C and 5 name M2.7 to M2.11; `docs/roadmap.md` has the current gates).
+
 ## 1. Accomplished, against the roadmap
 Everything the roadmap promised for M1 was delivered, gate by gate, each audited PASS:
 - `src/ctxmon/core` (library `vermilion_ctxmon_core`, no GTK) with seven modules: `format` (`fmt_duration`), `log_tokens`, `timing`, `server_api` (`/slots`, `/props`, `/v1/models`), `server_state` (histories, live speed, warnings), `graph`, `vram` (AMD sysfs under an injected root, `nvidia-smi`). About 980 lines of source; the longest file is `server_state.cpp` at 284 lines.
