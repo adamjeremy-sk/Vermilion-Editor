@@ -104,4 +104,24 @@ TEST_F(HelpPageViewTest, ALinkOfAReplacedPageIsGone) {
     EXPECT_FALSE(shown.view->activate_at(first.text.find("a link")));
 }
 
+TEST_F(HelpPageViewTest, AHandlerThatShowsAnotherPageStillSeesItsTarget) {
+    ManualText first = build(kMarkdown);
+    ManualText second = build("Only a [link](other.md).\n");
+    GtkWidget* window = gtk_window_new();
+    std::string seen;
+    {
+        vermilion::ui::HelpPageView* self = nullptr;
+        vermilion::ui::HelpPageView view([&](const std::string& target) {
+            self->show(second); // replaces the page the target came from
+            seen = target;
+        });
+        self = &view;
+        gtk_window_set_child(GTK_WINDOW(window), view.widget());
+        view.show(first);
+        EXPECT_TRUE(view.activate_at(first.text.find("a link")));
+    }
+    gtk_window_destroy(GTK_WINDOW(window));
+    EXPECT_EQ(seen, "open-and-save.md");
+}
+
 } // namespace
