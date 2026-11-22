@@ -152,12 +152,25 @@ TEST_F(AppearancePageTest, NothingAndNonFontsAreNotMonospace) {
     g_object_unref(label);
 }
 
-TEST_F(AppearancePageTest, ItStartsWithTheDefaultsAndTheDefaultFont) {
+TEST_F(AppearancePageTest, ItStartsWithTheSystemFontBoxCheckedAndTheBundledFontGreyedOut) {
     load(vermilion::default_settings());
     EXPECT_EQ(selected(), 2u);
     EXPECT_TRUE(active(page_->highlight_check()));
-    EXPECT_FALSE(active(page_->system_font_check()));
+    EXPECT_TRUE(active(page_->system_font_check()));
+    EXPECT_FALSE(font_enabled());
+    const PangoFontDescription* shown =
+        gtk_font_dialog_button_get_font_desc(GTK_FONT_DIALOG_BUTTON(page_->font_button()));
+    ASSERT_NE(shown, nullptr);
+    g_autofree char* text = pango_font_description_to_string(shown);
+    EXPECT_EQ(std::string(text), std::string("Fantasque Sans Mono 12"));
+    EXPECT_TRUE(stored().font.empty());
+}
+
+TEST_F(AppearancePageTest, UncheckingTheBoxOfTheDefaultsSwitchesToTheBundledFontFirst) {
+    load(vermilion::default_settings());
+    set_active(page_->system_font_check(), false);
     EXPECT_TRUE(font_enabled());
+    EXPECT_EQ(stored().font, std::string("Fantasque Sans Mono 12"));
 }
 
 TEST_F(AppearancePageTest, AnEmptyFontShowsTheSystemFontBox) {

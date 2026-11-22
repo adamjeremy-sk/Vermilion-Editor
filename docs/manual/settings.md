@@ -16,9 +16,9 @@ restart. The window reads the settings file again every time it opens.
   setting and follows it when it changes; on a desktop without one, a GTK theme whose name ends in "-dark" counts as
   dark. Light and Dark can always be chosen by hand. The colours of the editor text follow the mode.
 - **Highlight the current line** shades the line the cursor is on. It is on by default.
-- **Use the system monospace font** is off by default: the editor uses Fantasque Sans Mono 12, the font that comes with
-  Vermilion. Turn the box on to use the desktop's monospace font instead, or choose another font with the font button.
-  Only fixed-width fonts are offered.
+- **Use the system monospace font** is on by default: the editor uses the desktop's monospace font. The font button is
+  greyed out while the box is on, and shows Fantasque Sans Mono 12, the font that comes with Vermilion. Turn the box off
+  and that is the font you get first; choose another with the font button. Only fixed-width fonts are offered.
 
 ## Editor
 - **Tab width** is 4 or 8. The Tab key inserts that many spaces. The status bar shows the width as "Tab Width".
@@ -38,7 +38,7 @@ keys that differ from the defaults, and keeps the keys and groups it does not kn
 |---|---|---|---|
 | `[appearance]` | `colour_mode` | `light`, `dark`, `system` | `system` |
 | `[appearance]` | `highlight_current_line` | `true`, `false` | `true` |
-| `[editor]` | `font` | a font name such as `DejaVu Sans Mono 11`; empty means the system monospace font | `Fantasque Sans Mono 12` |
+| `[editor]` | `font` | a font name such as `DejaVu Sans Mono 11`; empty means the system monospace font | empty (the system monospace font) |
 | `[editor]` | `tab_width` | `4`, `8` | `4` |
 | `[files]` | `confirm_large_reload` | `true`, `false` | `true` |
 | `[files]` | `long_line_limit` | 10000 to 5000000 | 350000 |

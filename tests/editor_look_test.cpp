@@ -21,7 +21,7 @@ TEST(EditorLookValue, TheDefaultsAreTheSettingsDefaults) {
     EXPECT_FALSE(look.dark);
     EXPECT_TRUE(look.highlight_current_line);
     EXPECT_EQ(look.tab_width, 4);
-    EXPECT_EQ(look.font, std::string("Fantasque Sans Mono 12"));
+    EXPECT_EQ(look.font, std::string(""));
     EXPECT_TRUE(look == make_look(default_settings(), false));
 }
 

@@ -9,7 +9,7 @@ https://github.com/belluzj/fantasque-sans/releases/tag/v1.8.0 on 2026-11-21. Lic
 Reserved Font Name (`LICENSE.txt` here, `LICENSES/OFL-1.1.txt` at the repository root). The files are never edited.
 
 Vermilion compiles them into the program and writes them to `$XDG_CACHE_HOME/vermilion/fonts/` at start-up (ARCHITECTURE.md
-7.10, gate M2.5b); the Help window and, by default, the editor use the family "Fantasque Sans Mono".
+7.10, gate M2.5b); the Help window uses the family "Fantasque Sans Mono", and the editor's font setting offers it (the system monospace font stays the default).
 
 sha256:
 
