@@ -395,4 +395,16 @@ target_compile_definitions(vermilion_bundled_font_tests PRIVATE
     VERMILION_FONT_DIR="${CMAKE_SOURCE_DIR}/third_party/fantasque-sans")
 gtest_discover_tests(vermilion_bundled_font_tests)
 
+# The Help page view on a real display (the tests skip without one).
+add_executable(vermilion_help_page_view_tests help_page_view_test.cpp
+    help_page_view_link_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view.cpp)
+target_link_libraries(vermilion_help_page_view_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTK4)
+gtest_discover_tests(vermilion_help_page_view_tests)
+
 add_subdirectory(ctxmon)

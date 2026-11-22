@@ -332,6 +332,13 @@ window.vm-help .vm-help-page label link {
     color: @vm_select_bg;
 }
 
+/* Help page (M2.5b step 5): the text view of the page uses the bundled font at 12 pt, the same for
+   every page, and the width of the page is measured from it. The colours come in a later step. */
+window.vm-help textview.vm-help-view {
+    font-family: "Fantasque Sans Mono", monospace;
+    font-size: 12pt;
+}
+
 /* Find, Replace and Go to Line windows (M2.3): they also have the class vm-main, so their
    buttons, entries and chassis come from the rules above; the status line is bold when it shows
    a problem (a pattern or a replacement that does not compile, text that is not a line). */

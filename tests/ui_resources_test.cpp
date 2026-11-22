@@ -96,6 +96,12 @@ TEST(UiResources, HelpWindowHasItsRules) {
     EXPECT_NE(css.find("window.vm-help .vm-help-page label link"), std::string::npos);
 }
 
+TEST(UiResources, HelpPageViewHasItsFont) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    EXPECT_NE(css.find("window.vm-help textview.vm-help-view {"), std::string::npos);
+    EXPECT_NE(css.find("font-family: \"Fantasque Sans Mono\", monospace;"), std::string::npos);
+}
+
 TEST(UiResources, FindWindowHasItsRule) {
     std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
     EXPECT_NE(css.find("window.vm-find .vm-find-problem"), std::string::npos);
