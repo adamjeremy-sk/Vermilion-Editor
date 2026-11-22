@@ -22,6 +22,7 @@
 > reloads files that change on disk, opens files given on the command line, and has a Settings window with Light, Dark and
 > Follow system colours.
 > It is not ready for daily use, and everything marked "Planned" is a plan. See [Status](#status).
+> Next: the rest of the Help window (M2.5b), then the diff view (M2.6). 1398 tests.
 
 <p align="center">
   <img src="res/github/vermilion-m2.5a-finished.png" width="800" alt="Vermilion Editor: the main window with an empty document, the Help window showing the Settings topic, and the About dialog">
@@ -64,8 +65,11 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ---
 
 ## Status
-M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates; the Help window (M2.5b) is being built on the branch `gate/m2.5b`. 1301 tests, all
-passing at the last commit. Everything after M2 is designed, not started. There are no releases yet.
+M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates. The Help window
+(M2.5b) is being built on the branch `gate/m2.5b`: the bundled font, the page text model, the contents, search and history
+logic and the page view are done, and the window itself is not rebuilt yet. 1398 tests, all passing at the last commit (one
+is skipped when the German locale is not installed). Next: the rest of M2.5b (the page view's colours, its place in the
+window, the side pane), then M2.6 (diff). Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
 Each row is one finished gate; the test count is the total after that gate.
@@ -136,7 +140,7 @@ Rows marked Built exist today; everything else is a plan.
 | Search, replace, go to line | Built (M2.3) | Find (Ctrl+F), Replace (Ctrl+H), Go to Line (Ctrl+G, `line` or `line:column`); match case, whole word, regular expressions; match count; F3 and Shift+F3; Replace All is one Undo step |
 | External changes | Built (M2.4) | A clean tab reloads by itself when its file changes (up to 10 MB); an edited or large tab shows a bar with Reload and Keep mine. A deleted file keeps its tab and text. File → Reload from Disk (Ctrl+R); "Do not ask again" is kept in `settings.ini` |
 | Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
-| Help window | Under way (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons, on one fixed page of 100 characters in a monospace font. Done so far: the bundled Fantasque Sans Mono font (also the new default editor font) and the page text model in core; the window itself is not built yet |
+| Help window | Under way (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons, on one fixed page of 100 characters in the bundled Fantasque Sans Mono font. Done so far, not yet shown in the window: the font, the page text model, the outline, search and history logic, and the page view (links, zoom, scrolling to a heading); the window still shows the old page renderer |
 | Diff view | Planned (M2.6) | Side by side with folding; opened from the external-change banner and the crash-recovery question |
 | Open Recent | Planned (M2.7c) | File → Open Recent, with a way to clear the list |
 | The light program | Planned (M2.7b) | `vermilion` as a plain editor for quick edits, a replacement for gedit or Mousepad; both programs are built from the same editor code |
@@ -237,6 +241,7 @@ gates that create them.
 | Chat archive | `~/.local/share/vermilion/chats/` |
 | Revert snapshots | `~/.cache/vermilion/snapshots/` |
 | Editor colour scheme (a copy written on first use) | `~/.cache/vermilion/styles/` |
+| Bundled font files (written at start when missing or different) | `~/.cache/vermilion/fonts/` |
 | Crash recovery copies | `~/.local/state/vermilion/recovery/` |
 | Request log | `~/.local/state/vermilion/requests.log` |
 | API keys | not stored: `agent.json` names an environment variable |
@@ -248,7 +253,7 @@ Reference system: Ubuntu 24.04. Install the development packages:
 
 ```bash
 sudo apt install build-essential cmake pkg-config libgtk-4-dev libgtksourceview-5-dev libjson-glib-dev \
-  libsoup-3.0-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format
+  libsoup-3.0-dev libvte-2.91-gtk4-dev libgtest-dev librsvg2-bin clang-format libfontconfig-dev libpango1.0-dev
 ```
 
 Then:
@@ -279,17 +284,17 @@ ctest --test-dir build --output-on-failure
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic: the document list, text scanner and encodings, the manual's parser and page history, search options, replacement rules, Go to Line, message texts, the external-change policy and file hashing, the settings file and its keys, the command-line open queue, crash-recovery logic, logging, the `Result` type. Planned: diff and permission engines, build presets, the debug client, slash commands, cost, archive. No GTK headers |
+| `src/core/` | UI-free logic: the document list, text scanner and encodings, the manual's parser, page text, outline, search and result rows and page history, a cache-file writer, search options, replacement rules, Go to Line, message texts, the external-change policy and file hashing, the settings file and its keys, the command-line open queue, crash-recovery logic, logging, the `Result` type. Planned: diff and permission engines, build presets, the debug client, slash commands, cost, archive. No GTK headers |
 | `src/ctxmon/core/` | ctxmon logic, UI-free: log lines, server responses, server state and warnings, graph geometry, VRAM readers. No GTK headers |
 | `src/ctxmon/ui/` | *(M6)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon` |
 | `src/agent/` | The provider adapter, the agent loop, the tool registry. No GTK headers |
-| `src/ui/` | The GTK application: main window and actions, tabs and editor pages, the open and save flow, the search windows and Replace All job, the Settings window, the external-change controller and banner, crash-recovery prompts, the status bar, the help window, and the compiled-in resources. `gtkx/` is a small helper layer (reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks) |
+| `src/ui/` | The GTK application: main window and actions, tabs and editor pages, the open and save flow, the search windows and Replace All job, the Settings window, the external-change controller and banner, crash-recovery prompts, the status bar, the help window and its page view, the bundled font, and the compiled-in resources. `gtkx/` is a small helper layer (reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks) |
 | `tests/` | GoogleTest tests; `tests/ctxmon/` has sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/` |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py` (until M6.6) |
 | `.github/workflows/` | `ci.yml`: configure, build and the full test run on GitHub Actions |
 | `res/vedt/`, `res/github/` | Vermilion's artwork as SVG masters (the build renders the icons to PNG); images used by this README |
-| `third_party/` | Vendored code, kept byte-exact and never edited: xxHash v0.8.3 (BSD-2-Clause; used from M2.4 for file-change detection), with its licence, a `.license` sidecar and a README |
-| `LICENSES/` | The full texts of the licences in use (GPL-3.0-or-later, BSD-2-Clause), for REUSE |
+| `third_party/` | Vendored code and data, kept byte-exact and never edited: xxHash v0.8.3 (BSD-2-Clause; used from M2.4 for file-change detection) and the four Fantasque Sans Mono 1.8.0 font files (SIL OFL 1.1; the Help window's font), each with its licence, `.license` sidecars and a README |
+| `LICENSES/` | The full texts of the licences in use (GPL-3.0-or-later, BSD-2-Clause, OFL-1.1), for REUSE |
 | `reference/ctxmon/` | The Python original of ctxmon (frozen; test oracle until M6.6) and its logo. Not built |
 | `docs/` | `manual/` (the user manual, one topic per file, [index](docs/manual/index.md)), `roadmap.md`, `gate-details.md`, `milestones/` (reviews), `requirements/` (behaviour specifications) |
 | `ARCHITECTURE.md` | The decided architecture |
@@ -345,5 +350,5 @@ Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 Every source file carries an SPDX licence header. REUSE certification (https://reuse.software) is an objective: files
 created from 2026-11-17 on carry their licence information, and older files are brought into line at M9. The model monitor
 began as a port of ctxmon from [llm-suite-test](https://github.com/adamjeremy-sk/llm-suite-test), also by the author. The
-libraries used (GTK, GtkSourceView, GLib, json-glib, libsoup, VTE) are LGPL-licensed; GoogleTest is BSD-licensed. A full
+libraries used (GTK, GtkSourceView, GLib, json-glib, libsoup, VTE) are LGPL-licensed; GoogleTest is BSD-licensed; the bundled Fantasque Sans Mono font is under the SIL Open Font License 1.1. A full
 third-party notice file will be added before the first release.
