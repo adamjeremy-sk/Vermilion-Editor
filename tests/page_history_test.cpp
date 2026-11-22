@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Tests for PageHistory: opening pages, going back, the bound on the back list.
+// Tests for PageHistory: open, back and the bound of the back list (forward has its own file).
 
 #include <gtest/gtest.h>
 
@@ -54,7 +54,7 @@ TEST(PageHistory, OpeningTheCurrentPageOrNothingChangesNothing) {
     EXPECT_FALSE(history.can_go_back());
 }
 
-TEST(PageHistory, ThePageLeftByBackIsNotKept) {
+TEST(PageHistory, OpeningAfterBackDropsTheLaterPages) {
     PageHistory history;
     history.open("index.md");
     history.open("a.md");
