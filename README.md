@@ -22,7 +22,7 @@
 > reloads files that change on disk, opens files given on the command line, and has a Settings window with Light, Dark and
 > Follow system colours.
 > It is not ready for daily use, and everything marked "Planned" is a plan. See [Status](#status).
-> Next: the rest of the Help window (M2.5b), then the diff view (M2.6). 1398 tests.
+> Next: the rest of the Help window (M2.5b), then the diff view (M2.6). 1399 tests.
 
 <p align="center">
   <img src="res/github/vermilion-m2.5a-finished.png" width="800" alt="Vermilion Editor: the main window with an empty document, the Help window showing the Settings topic, and the About dialog">
@@ -67,7 +67,7 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ## Status
 M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates. The Help window
 (M2.5b) is being built on the branch `gate/m2.5b`: the bundled font, the page text model, the contents, search and history
-logic and the page view are done, and the window itself is not rebuilt yet. 1398 tests, all passing at the last commit (one
+logic and the page view are done, and the window itself is not rebuilt yet. 1399 tests, all passing at the last commit (one
 is skipped when the German locale is not installed). Next: the rest of M2.5b (the page view's colours, its place in the
 window, the side pane), then M2.6 (diff). Everything after M2 is designed, not started. There are no releases yet.
 
@@ -139,7 +139,7 @@ Rows marked Built exist today; everything else is a plan.
 | Manual inside the program | Built (M2.2b) | Help → Index (F1): the topics of `docs/manual` in a read-only window, with links, Back and Index |
 | Search, replace, go to line | Built (M2.3) | Find (Ctrl+F), Replace (Ctrl+H), Go to Line (Ctrl+G, `line` or `line:column`); match case, whole word, regular expressions; match count; F3 and Shift+F3; Replace All is one Undo step |
 | External changes | Built (M2.4) | A clean tab reloads by itself when its file changes (up to 10 MB); an edited or large tab shows a bar with Reload and Keep mine. A deleted file keeps its tab and text. File → Reload from Disk (Ctrl+R); "Do not ask again" is kept in `settings.ini` |
-| Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
+| Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font (the system monospace font unless you pick one), tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
 | Help window | Under way (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons, on one fixed page of 100 characters in the bundled Fantasque Sans Mono font. Done so far, not yet shown in the window: the font, the page text model, the outline, search and history logic, and the page view (links, zoom, scrolling to a heading); the window still shows the old page renderer |
 | Diff view | Planned (M2.6) | Side by side with folding; opened from the external-change banner and the crash-recovery question |
 | Open Recent | Planned (M2.7c) | File → Open Recent, with a way to clear the list |
