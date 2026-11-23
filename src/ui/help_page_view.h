@@ -41,7 +41,8 @@ inline constexpr char kTagHeading3[] = "h3"; // bold; levels 3 to 6
 
 // Lines of text that the window shows when it opens (Adam, 2026-11-21).
 inline constexpr int kHelpPageLines = 36;
-// Blank space above the first and below the last line, in pixels.
+// Blank space above the first and below the last line, in pixels (the text view's own top and
+// bottom margins, so that a heading scrolled to the top is not clipped).
 inline constexpr int kHelpPageMargin = 8;
 
 inline constexpr double kHelpMinZoom = 0.5;

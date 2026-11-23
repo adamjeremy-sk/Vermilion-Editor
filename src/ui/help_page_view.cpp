@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Implements the Help page view: the text view, its tags and its links.
+// Implements the Help page view: the text view, its tags, its links and its page layout.
 
 #include "ui/help_page_view.h"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <string>
@@ -25,15 +24,6 @@ constexpr double kHeading2Scale = 1.25;
 constexpr int kItemIndentColumns = 2;
 // The page width in advances of the digit "0": kManualColumns plus one column of room.
 constexpr double kPageColumnsWithRoom = static_cast<double>(kManualColumns) + 1.5;
-// The steps of zoom in and out, increasing.
-constexpr double kZoomSteps[] = {0.5, 0.7, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0};
-// A scroll to a heading is tried every kScrollTickMs ms until the position has been right
-// kScrollSteadyTicks tries in a row, at most kScrollMaxTicks tries; while the window is not shown
-// it waits, at most kScrollMaxWaits ticks.
-constexpr guint kScrollTickMs = 50;
-constexpr int kScrollSteadyTicks = 3;
-constexpr int kScrollMaxTicks = 60;
-constexpr int kScrollMaxWaits = 200;
 
 // Bad bytes become U+FFFD, so GTK never warns about the text.
 std::string valid_text(const std::string& text) {
@@ -61,14 +51,6 @@ Measure measure_font(GtkWidget* view, double zoom) {
     m.advance = static_cast<double>(width) / (10.0 * PANGO_SCALE);
     m.height = static_cast<int>(std::ceil(static_cast<double>(height) / PANGO_SCALE));
     return m;
-}
-
-// Adds a Ctrl+key shortcut that activates `action` to the shortcut `controller`.
-void add_shortcut(GtkEventController* controller, guint key, const char* action) {
-    gtk_shortcut_controller_add_shortcut(
-        GTK_SHORTCUT_CONTROLLER(controller),
-        gtk_shortcut_new(gtk_keyval_trigger_new(key, GDK_CONTROL_MASK),
-                         gtk_named_action_new(action)));
 }
 
 } // namespace
@@ -110,10 +92,12 @@ void HelpPageView::build_widgets() {
     gtk_text_view_set_editable(view_, FALSE);
     gtk_text_view_set_cursor_visible(view_, FALSE);
     gtk_text_view_set_wrap_mode(view_, GTK_WRAP_CHAR);
-    gtk_widget_set_margin_start(view, 0);
-    gtk_widget_set_margin_end(view, 0);
-    gtk_widget_set_margin_top(view, kHelpPageMargin);
-    gtk_widget_set_margin_bottom(view, kHelpPageMargin);
+    // The margins belong to the text view, not to the widget: a widget margin clips the top of a
+    // heading that is scrolled to the top.
+    gtk_text_view_set_left_margin(view_, 0);
+    gtk_text_view_set_right_margin(view_, 0);
+    gtk_text_view_set_top_margin(view_, kHelpPageMargin);
+    gtk_text_view_set_bottom_margin(view_, kHelpPageMargin);
     gtk_widget_set_cursor_from_name(view, "text");
 
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(inner_), view);
@@ -140,49 +124,6 @@ void HelpPageView::connect_pointer() {
         [this](GtkEventControllerMotion*, double x, double y) { on_motion(x, y); });
     leave_signal_ = gtkx::connect<void(GtkEventControllerMotion*)>(
         motion, "leave", [this](GtkEventControllerMotion*) { hover_at(page_.length); });
-}
-
-void HelpPageView::connect_wheel() {
-    GtkEventController* wheel =
-        gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_VERTICAL); // floating
-    gtk_event_controller_set_name(wheel, kHelpScrollController);
-    gtk_widget_add_controller(outer_, wheel); // the outer window owns it
-    wheel_signal_ = gtkx::connect<gboolean(GtkEventControllerScroll*, double, double)>(
-        wheel, "scroll", [this](GtkEventControllerScroll*, double, double dy) -> gboolean {
-            on_wheel(dy);
-            return TRUE;
-        });
-}
-
-void HelpPageView::build_zoom_actions() {
-    GSimpleActionGroup* group = g_simple_action_group_new();
-    GSimpleAction* action_in = g_simple_action_new("zoom-in", nullptr);
-    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_in));
-    zoom_in_signal_ = gtkx::connect<void(GSimpleAction*, GVariant*)>(
-        action_in, "activate", [this](GSimpleAction*, GVariant*) { zoom_in(); });
-    g_object_unref(action_in); // the map holds it
-    GSimpleAction* action_out = g_simple_action_new("zoom-out", nullptr);
-    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_out));
-    zoom_out_signal_ = gtkx::connect<void(GSimpleAction*, GVariant*)>(
-        action_out, "activate", [this](GSimpleAction*, GVariant*) { zoom_out(); });
-    g_object_unref(action_out); // the map holds it
-    GSimpleAction* action_reset = g_simple_action_new("zoom-reset", nullptr);
-    g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action_reset));
-    zoom_reset_signal_ = gtkx::connect<void(GSimpleAction*, GVariant*)>(
-        action_reset, "activate", [this](GSimpleAction*, GVariant*) { reset_zoom(); });
-    g_object_unref(action_reset); // the map holds it
-    gtk_widget_insert_action_group(root_, "page", G_ACTION_GROUP(group));
-    g_object_unref(group);
-
-    GtkEventController* keys = gtk_shortcut_controller_new(); // floating; the widget owns it
-    add_shortcut(keys, GDK_KEY_equal, "page.zoom-in");
-    add_shortcut(keys, GDK_KEY_plus, "page.zoom-in");
-    add_shortcut(keys, GDK_KEY_KP_Add, "page.zoom-in");
-    add_shortcut(keys, GDK_KEY_minus, "page.zoom-out");
-    add_shortcut(keys, GDK_KEY_KP_Subtract, "page.zoom-out");
-    add_shortcut(keys, GDK_KEY_0, "page.zoom-reset");
-    add_shortcut(keys, GDK_KEY_KP_0, "page.zoom-reset");
-    gtk_widget_add_controller(root_, keys);
 }
 
 GtkAdjustment* HelpPageView::vadjustment() const {
@@ -287,59 +228,6 @@ void HelpPageView::show(const ManualText& page) {
     gtk_adjustment_set_value(vadjustment(), 0.0);
 }
 
-bool HelpPageView::scroll_to_heading(std::size_t index) {
-    if (index >= heading_marks_.size()) {
-        return false;
-    }
-    stop_heading_scroll();
-    scroll_index_ = index;
-    scroll_steady_ = 0;
-    scroll_ticks_ = 0;
-    scroll_waits_ = 0;
-    scroll_source_ = g_timeout_add(kScrollTickMs, &HelpPageView::run_heading_scroll, this);
-    run_heading_scroll(this); // one try at once
-    return true;
-}
-
-void HelpPageView::stop_heading_scroll() {
-    if (scroll_source_ != 0) {
-        g_source_remove(scroll_source_);
-        scroll_source_ = 0;
-    }
-}
-
-gboolean HelpPageView::run_heading_scroll(gpointer data) {
-    HelpPageView* self = static_cast<HelpPageView*>(data);
-    if (!gtk_widget_get_mapped(self->root_)) {
-        if (++self->scroll_waits_ >= kScrollMaxWaits) {
-            self->scroll_source_ = 0;
-            return G_SOURCE_REMOVE;
-        }
-        return G_SOURCE_CONTINUE;
-    }
-    GtkTextIter at;
-    gtk_text_buffer_get_iter_at_mark(self->buffer_, &at, self->heading_marks_[self->scroll_index_]);
-    GdkRectangle where;
-    gtk_text_view_get_iter_location(self->view_, &at, &where);
-    GtkAdjustment* adjustment = self->vadjustment();
-    const double last =
-        gtk_adjustment_get_upper(adjustment) - gtk_adjustment_get_page_size(adjustment);
-    const double want =
-        std::max(0.0, std::min(static_cast<double>(where.y + kHelpPageMargin), last));
-    const double value = gtk_adjustment_get_value(adjustment);
-    if (std::fabs(value - want) > 0.5) {
-        gtk_adjustment_set_value(adjustment, want);
-        self->scroll_steady_ = 0;
-    } else {
-        ++self->scroll_steady_;
-    }
-    if (self->scroll_steady_ >= kScrollSteadyTicks || ++self->scroll_ticks_ >= kScrollMaxTicks) {
-        self->scroll_source_ = 0;
-        return G_SOURCE_REMOVE;
-    }
-    return G_SOURCE_CONTINUE;
-}
-
 std::size_t HelpPageView::offset_at(double x, double y) const {
     int bx = 0;
     int by = 0;
@@ -376,44 +264,6 @@ void HelpPageView::on_click(double x, double y) {
 
 void HelpPageView::on_motion(double x, double y) {
     hover_at(offset_at(x, y));
-}
-
-void HelpPageView::on_wheel(double dy) {
-    GtkAdjustment* adjustment = vadjustment();
-    const double step = std::pow(gtk_adjustment_get_page_size(adjustment), 2.0 / 3.0);
-    gtk_adjustment_set_value(adjustment, gtk_adjustment_get_value(adjustment) + dy * step);
-}
-
-bool HelpPageView::set_zoom(double zoom) {
-    const double clamped = std::min(kHelpMaxZoom, std::max(kHelpMinZoom, zoom));
-    if (clamped == zoom_) {
-        return false;
-    }
-    zoom_ = clamped;
-    apply_zoom();
-    return true;
-}
-
-bool HelpPageView::zoom_in() {
-    for (double step : kZoomSteps) {
-        if (step > zoom_ + 1e-9) {
-            return set_zoom(step);
-        }
-    }
-    return false;
-}
-
-bool HelpPageView::zoom_out() {
-    for (std::size_t i = std::size(kZoomSteps); i > 0; --i) {
-        if (kZoomSteps[i - 1] < zoom_ - 1e-9) {
-            return set_zoom(kZoomSteps[i - 1]);
-        }
-    }
-    return false;
-}
-
-bool HelpPageView::reset_zoom() {
-    return set_zoom(1.0);
 }
 
 } // namespace vermilion::ui
