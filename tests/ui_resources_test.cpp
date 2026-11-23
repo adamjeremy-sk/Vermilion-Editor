@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
@@ -236,6 +238,106 @@ TEST(UiResources, IconHasEverySize) {
         EXPECT_EQ(read_be32(png, 16), size);
         EXPECT_EQ(read_be32(png, 20), size);
     }
+}
+
+// The colour names of the Help page (see ui/help_page_view.h), in both palettes.
+constexpr const char* kHelpColourNames[] = {
+    "vm_help_h1",       "vm_help_h2",         "vm_help_link",
+    "vm_help_code_bg",  "vm_help_th_bg",      "vm_help_th_text",
+    "vm_help_match_bg", "vm_help_current_bg", "vm_help_current_text"};
+
+// The colour that `css` gives `name` with @define-color (as red, green, blue in 0..1), or false.
+bool defined_colour(const std::string& css, const std::string& name, double (&rgb)[3]) {
+    const std::string key = "@define-color " + name + " #";
+    const std::size_t at = css.find(key);
+    if (at == std::string::npos || css.size() < at + key.size() + 7) {
+        return false;
+    }
+    const std::string hex = css.substr(at + key.size(), 6);
+    if (css[at + key.size() + 6] != ';') {
+        return false;
+    }
+    for (int i = 0; i < 3; ++i) {
+        rgb[i] = std::stoi(hex.substr(2 * i, 2), nullptr, 16) / 255.0;
+    }
+    return true;
+}
+
+// The WCAG contrast ratio of two defined colours; 0 when one is missing.
+double contrast(const std::string& css, const std::string& a, const std::string& b) {
+    double ca[3];
+    double cb[3];
+    if (!defined_colour(css, a, ca) || !defined_colour(css, b, cb)) {
+        return 0.0;
+    }
+    const auto luminance = [](const double(&c)[3]) {
+        double lin[3];
+        for (int i = 0; i < 3; ++i) {
+            lin[i] = c[i] <= 0.03928 ? c[i] / 12.92 : std::pow((c[i] + 0.055) / 1.055, 2.4);
+        }
+        return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+    };
+    const double la = luminance(ca);
+    const double lb = luminance(cb);
+    return (std::max(la, lb) + 0.05) / (std::min(la, lb) + 0.05);
+}
+
+TEST(UiResources, BothPalettesDefineTheHelpColours) {
+    for (const char* file : {"classic_light.css", "classic_dark.css"}) {
+        const std::string css =
+            resource_text((std::string("/io/github/adamjeremy_sk/Vermilion/") + file).c_str());
+        for (const char* name : kHelpColourNames) {
+            double rgb[3];
+            EXPECT_TRUE(defined_colour(css, name, rgb)) << file << " " << name;
+        }
+    }
+}
+
+// Text on its background is at least 4.5:1 in both palettes: headings and links on the page
+// colour, body text on the tint of a code span and of a match, the table header's text on its
+// background, the current match's text on its background. (A link on a tint is not asserted: no
+// tint is pale enough for the red link colour to reach 4.5 on it, and the case is rare.)
+TEST(UiResources, TheHelpColoursAreReadableInBothPalettes) {
+    for (const char* file : {"classic_light.css", "classic_dark.css"}) {
+        const std::string css =
+            resource_text((std::string("/io/github/adamjeremy_sk/Vermilion/") + file).c_str());
+        SCOPED_TRACE(file);
+        EXPECT_GE(contrast(css, "vm_help_h1", "vm_field_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_help_h2", "vm_field_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_help_link", "vm_field_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_field_text", "vm_help_code_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_field_text", "vm_help_match_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_help_th_text", "vm_help_th_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_help_current_text", "vm_help_current_bg"), 4.5);
+    }
+}
+
+// The three kinds of background of a Help page differ from the page colour, so that they show.
+TEST(UiResources, TheHelpTintsStandOutFromThePage) {
+    for (const char* file : {"classic_light.css", "classic_dark.css"}) {
+        const std::string css =
+            resource_text((std::string("/io/github/adamjeremy_sk/Vermilion/") + file).c_str());
+        SCOPED_TRACE(file);
+        EXPECT_GE(contrast(css, "vm_help_code_bg", "vm_field_bg"), 1.1);
+        EXPECT_GE(contrast(css, "vm_help_match_bg", "vm_field_bg"), 1.3);
+        EXPECT_GE(contrast(css, "vm_help_current_bg", "vm_field_bg"), 1.5);
+    }
+}
+
+TEST(UiResources, HelpPageViewIsDrawnInTheFieldColours) {
+    std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
+    const std::size_t page = css.find("window.vm-help textview.vm-help-view text {");
+    ASSERT_NE(page, std::string::npos);
+    const std::size_t page_end = css.find('}', page);
+    const std::string page_rule = css.substr(page, page_end - page);
+    EXPECT_NE(page_rule.find("background-color: @vm_field_bg;"), std::string::npos);
+    EXPECT_NE(page_rule.find("color: @vm_field_text;"), std::string::npos);
+    const std::size_t selection = css.find("window.vm-help textview.vm-help-view text selection {");
+    ASSERT_NE(selection, std::string::npos);
+    const std::size_t selection_end = css.find('}', selection);
+    const std::string selection_rule = css.substr(selection, selection_end - selection);
+    EXPECT_NE(selection_rule.find("background-color: @vm_select_bg;"), std::string::npos);
+    EXPECT_NE(selection_rule.find("color: @vm_select_text;"), std::string::npos);
 }
 
 } // namespace

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 // The Help page: a read-only text view that shows one ManualText page in exactly kManualColumns
-// columns, with its links, headings and zoom.
+// columns, with its links, headings, zoom and colours.
 
 #pragma once
 
@@ -44,6 +44,18 @@ inline constexpr int kHelpPageLines = 36;
 // Blank space above the first and below the last line, in pixels (the text view's own top and
 // bottom margins, so that a heading scrolled to the top is not clipped).
 inline constexpr int kHelpPageMargin = 8;
+
+// The colour names of the Help page, defined with @define-color in classic_light.css and
+// classic_dark.css (the roles are in those files). refresh_colours() reads them.
+inline constexpr char kColourH1[] = "vm_help_h1";                    // text of a level 1 heading
+inline constexpr char kColourH2[] = "vm_help_h2";                    // text of levels 2 and 3
+inline constexpr char kColourLink[] = "vm_help_link";                // text of a link
+inline constexpr char kColourCodeBg[] = "vm_help_code_bg";           // background of a code span
+inline constexpr char kColourTableHeadBg[] = "vm_help_th_bg";        // background of a table header
+inline constexpr char kColourTableHeadText[] = "vm_help_th_text";    // text of a table header
+inline constexpr char kColourMatchBg[] = "vm_help_match_bg";         // background of a search match
+inline constexpr char kColourCurrentBg[] = "vm_help_current_bg";     // the current search match
+inline constexpr char kColourCurrentText[] = "vm_help_current_text"; // text on the current match
 
 inline constexpr double kHelpMinZoom = 0.5;
 inline constexpr double kHelpMaxZoom = 3.0;
@@ -128,6 +140,14 @@ public:
     bool zoom_in();
     bool zoom_out();
     bool reset_zoom();
+
+    // Reads the colours of the page from the stylesheet again (the names above, through the
+    // style of the text view) and puts them into the text tags: heading and link text, the
+    // background of code spans, the table header's background and text. A name that the
+    // stylesheet does not define leaves that colour unset (the view's own text colour). Called at
+    // construction and whenever the view is mapped; the window calls it when the palette changes,
+    // because tag colours are not CSS rules and do not follow a new palette by themselves.
+    void refresh_colours();
 
     // The width of the page in pixels at the current zoom: 101.5 advances of the digit "0" in the
     // view's font at that zoom, rounded (GTK wraps a line of this width after exactly

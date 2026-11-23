@@ -398,8 +398,10 @@ gtest_discover_tests(vermilion_bundled_font_tests)
 # The Help page view on a real display (the tests skip without one).
 add_executable(vermilion_help_page_view_tests help_page_view_test.cpp
     help_page_view_link_test.cpp help_page_view_zoom_test.cpp help_page_view_margin_test.cpp
+    help_page_view_colour_test.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_page_view.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp)
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_colours.cpp)
 target_link_libraries(vermilion_help_page_view_tests PRIVATE
     GTest::gtest_main
     vermilion_core

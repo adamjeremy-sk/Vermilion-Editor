@@ -15,3 +15,15 @@
 @define-color vm_select_bg #145ba6;
 @define-color vm_select_text #ffffff;
 @define-color vm_info_bg #4a4730;
+
+/* Help page (M2.5b): the same names as classic_light.css. Dark mode keeps #520210 and #2e0005 for
+   backgrounds; text uses light tints that stay above 4.5:1 on the page colour (#2d2e30). */
+@define-color vm_help_h1 #f2a09a;
+@define-color vm_help_h2 #ffb3ab;
+@define-color vm_help_link #f5857a;
+@define-color vm_help_code_bg #443a3d;
+@define-color vm_help_th_bg #520210;
+@define-color vm_help_th_text #ffffff;
+@define-color vm_help_match_bg #7a1f31;
+@define-color vm_help_current_bg #e44333;
+@define-color vm_help_current_text #000000;

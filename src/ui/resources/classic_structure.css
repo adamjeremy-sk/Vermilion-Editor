@@ -333,10 +333,23 @@ window.vm-help .vm-help-page label link {
 }
 
 /* Help page (M2.5b step 5): the text view of the page uses the bundled font at 12 pt, the same for
-   every page, and the width of the page is measured from it. The colours come in a later step. */
+   every page, and the width of the page is measured from it. The page is drawn in the field
+   colours; the colours of headings, links, code and table headers are text tags that
+   HelpPageView::refresh_colours() fills from the vm_help_* names of the palette. */
 window.vm-help textview.vm-help-view {
     font-family: "Fantasque Sans Mono", monospace;
     font-size: 12pt;
+}
+
+window.vm-help textview.vm-help-view,
+window.vm-help textview.vm-help-view text {
+    background-color: @vm_field_bg;
+    color: @vm_field_text;
+}
+
+window.vm-help textview.vm-help-view text selection {
+    background-color: @vm_select_bg;
+    color: @vm_select_text;
 }
 
 /* Find, Replace and Go to Line windows (M2.3): they also have the class vm-main, so their

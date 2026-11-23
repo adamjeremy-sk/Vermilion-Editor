@@ -62,8 +62,11 @@ HelpPageView::HelpPageView(LinkHandler on_link) : on_link_(std::move(on_link)) {
     connect_pointer();
     connect_wheel();
     // The font in use is known only once the view has a style; measure it then and now.
-    map_signal_ = gtkx::connect<void(GtkWidget*)>(GTK_WIDGET(view_), "map",
-                                                  [this](GtkWidget*) { apply_zoom(); });
+    map_signal_ = gtkx::connect<void(GtkWidget*)>(GTK_WIDGET(view_), "map", [this](GtkWidget*) {
+        apply_zoom();
+        refresh_colours();
+    });
+    refresh_colours();
     build_zoom_actions();
     apply_zoom();
 }
@@ -137,12 +140,13 @@ GtkAdjustment* HelpPageView::hadjustment() const {
 void HelpPageView::build_tags() {
     body_ = gtk_text_buffer_create_tag(buffer_, kTagBody, "scale", 1.0, nullptr);
     item_ = gtk_text_buffer_create_tag(buffer_, kTagItem, nullptr);
-    table_header_ =
-        gtk_text_buffer_create_tag(buffer_, kTagTableHeader, "weight", PANGO_WEIGHT_BOLD, nullptr);
     bold_ = gtk_text_buffer_create_tag(buffer_, kTagBold, "weight", PANGO_WEIGHT_BOLD, nullptr);
     code_ = gtk_text_buffer_create_tag(buffer_, kTagCode, nullptr);
     link_ =
         gtk_text_buffer_create_tag(buffer_, kTagLink, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
+    // Created after the code and link tags, so that its colours win inside a table header.
+    table_header_ =
+        gtk_text_buffer_create_tag(buffer_, kTagTableHeader, "weight", PANGO_WEIGHT_BOLD, nullptr);
     heading_[0] = gtk_text_buffer_create_tag(buffer_, kTagHeading1, "weight", PANGO_WEIGHT_BOLD,
                                              "scale", kHeading1Scale, nullptr);
     heading_[1] = gtk_text_buffer_create_tag(buffer_, kTagHeading2, "weight", PANGO_WEIGHT_BOLD,
