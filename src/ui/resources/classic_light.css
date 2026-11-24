@@ -15,18 +15,8 @@
 @define-color vm_select_bg #0a246a;
 @define-color vm_select_text #ffffff;
 @define-color vm_info_bg #ffffe1;
+
+/* Used by the Help page only: the colour of a link and the background of a search match (the
+   current match uses the selection colours). */
 @define-color vm_link #0a246a;
 @define-color vm_match_bg #ffe066;
-
-/* Help page (M2.5b): the vermilion accent, only in the Help window. h1 and the table header use
-   #520210, h2 and h3 use #2e0005, links #dc143c (always underlined), the current search match
-   #e44333 with black text (too light for small text on white, so never used as text). */
-@define-color vm_help_h1 #520210;
-@define-color vm_help_h2 #2e0005;
-@define-color vm_help_link #dc143c;
-@define-color vm_help_code_bg #f8e8ea;
-@define-color vm_help_th_bg #520210;
-@define-color vm_help_th_text #ffffff;
-@define-color vm_help_match_bg #f4cfd3;
-@define-color vm_help_current_bg #e44333;
-@define-color vm_help_current_text #000000;
