@@ -46,8 +46,9 @@ std::vector<Page> read_pages() {
         std::ostringstream text;
         text << in.rdbuf();
         const std::string name = it->path().filename().string();
-        pages.push_back(
-            {name, vermilion::build_manual_text(vermilion::parse_manual(text.str())).text});
+        pages.push_back({name, vermilion::build_manual_text(vermilion::parse_manual(text.str()),
+                                                            vermilion::kManualColumns)
+                                   .text});
     }
     std::sort(pages.begin(), pages.end(),
               [](const Page& a, const Page& b) { return a.name < b.name; });

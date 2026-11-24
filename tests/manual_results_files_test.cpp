@@ -42,8 +42,10 @@ std::vector<SearchPage> read_pages() {
         std::ostringstream text;
         text << in.rdbuf();
         const std::string name = it->path().filename().string();
-        pages.push_back(
-            {name, name, vermilion::build_manual_text(vermilion::parse_manual(text.str())).text});
+        pages.push_back({name, name,
+                         vermilion::build_manual_text(vermilion::parse_manual(text.str()),
+                                                      vermilion::kManualColumns)
+                             .text});
     }
     std::sort(pages.begin(), pages.end(),
               [](const SearchPage& a, const SearchPage& b) { return a.file < b.file; });

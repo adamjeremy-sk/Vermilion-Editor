@@ -30,7 +30,8 @@ inline void spin(int ms) {
 }
 
 inline ManualText build(const std::string& markdown) {
-    return vermilion::build_manual_text(vermilion::parse_manual(markdown));
+    return vermilion::build_manual_text(vermilion::parse_manual(markdown),
+                                        vermilion::kManualColumns);
 }
 
 // Plain text with no ranges.

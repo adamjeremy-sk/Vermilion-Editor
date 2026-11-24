@@ -36,7 +36,8 @@ ManualText page_of_file(const std::string& name) {
     std::ifstream file(std::string(VERMILION_MANUAL_DIR) + "/" + name);
     std::stringstream text;
     text << file.rdbuf();
-    return vermilion::build_manual_text(vermilion::parse_manual(text.str()));
+    return vermilion::build_manual_text(vermilion::parse_manual(text.str()),
+                                        vermilion::kManualColumns);
 }
 
 // Runs the main loop for about `ms` milliseconds.

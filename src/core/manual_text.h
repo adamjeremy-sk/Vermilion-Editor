@@ -74,7 +74,7 @@ struct ManualText {
 //  `links`; Text spans add nothing.
 //
 // Tables (a table with no rows or no columns is skipped). The column count is the larger of
-// `columns` and the longest row; a short row gets empty cells. Cell text is split into words at
+// its own and the longest row; a short row gets empty cells. Cell text is split into words at
 // spaces and tabs, so runs of blanks become one space, and is wrapped inside its column (a word
 // longer than the column is cut into pieces of the column's width). The widths come from
 // fit_columns (core/manual_table.h) with the natural width of a column (its widest cell on one
@@ -83,7 +83,11 @@ struct ManualText {
 // tallest cell. Right after the header row comes a line of "-" under each column joined by "-+-".
 // Styled spans keep their style over a wrap; the padding and the separators have none.
 // `table_headers` covers the lines of the header row and not the line of dashes.
-ManualText build_manual_text(const ManualPage& page);
+//
+// `columns` is the width, in characters, that a table line must fit in (the other lines are
+// wrapped by the view, so only tables depend on it). A table cannot be narrower than one
+// character per column and its gaps, so with a small `columns` its lines are longer than that.
+ManualText build_manual_text(const ManualPage& page, std::size_t columns);
 
 // The link at character offset `offset`, or null if there is none there: a link covers its
 // `begin` up to but not including its `end`. For clicks in the view.

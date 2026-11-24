@@ -24,7 +24,8 @@ using vermilion::SpanKind;
 using vermilion::TextRange;
 
 ManualText build(const std::string& markdown) {
-    return vermilion::build_manual_text(vermilion::parse_manual(markdown));
+    return vermilion::build_manual_text(vermilion::parse_manual(markdown),
+                                        vermilion::kManualColumns);
 }
 
 bool same(const TextRange& range, std::size_t begin, std::size_t end) {
@@ -45,7 +46,7 @@ TEST(ManualTextCount, CharactersAreNotBytes) {
 }
 
 TEST(ManualTextPage, AnEmptyPageGivesEmptyText) {
-    const ManualText built = vermilion::build_manual_text(ManualPage{});
+    const ManualText built = vermilion::build_manual_text(ManualPage{}, vermilion::kManualColumns);
     EXPECT_EQ(built.text, std::string());
     EXPECT_EQ(built.length, std::size_t{0});
     EXPECT_TRUE(built.headings.empty());
@@ -99,7 +100,7 @@ TEST(ManualTextPage, AHeadingLevelOutsideOneToSixIsMovedIntoIt) {
     none.level = 0;
     none.spans.push_back(plain("none"));
     page.blocks = {deep, none};
-    const ManualText built = vermilion::build_manual_text(page);
+    const ManualText built = vermilion::build_manual_text(page, vermilion::kManualColumns);
     ASSERT_EQ(built.headings.size(), std::size_t{2});
     EXPECT_EQ(built.headings[0].level, 6);
     EXPECT_EQ(built.headings[1].level, 1);
@@ -135,7 +136,7 @@ TEST(ManualTextPage, EmptyHeadingsAndParagraphsAreSkipped) {
     ManualBlock item;
     item.kind = ManualBlockKind::ListItem;
     page.blocks = {heading, blank, text, item};
-    const ManualText built = vermilion::build_manual_text(page);
+    const ManualText built = vermilion::build_manual_text(page, vermilion::kManualColumns);
     EXPECT_EQ(built.text, std::string("x\n\n\xE2\x80\xA2 "));
     EXPECT_TRUE(built.headings.empty());
     EXPECT_TRUE(built.bold.empty());
@@ -160,7 +161,7 @@ TEST(ManualTextPage, ATableWithoutRowsOrColumnsIsSkipped) {
     after.spans.push_back(plain("b"));
     ManualPage page;
     page.blocks = {before, no_rows, no_columns, after};
-    const ManualText built = vermilion::build_manual_text(page);
+    const ManualText built = vermilion::build_manual_text(page, vermilion::kManualColumns);
     EXPECT_EQ(built.text, std::string("a\n\nb"));
     EXPECT_TRUE(built.tables.empty());
     EXPECT_TRUE(built.table_headers.empty());
@@ -172,7 +173,8 @@ TEST(ManualTextPage, ATableTakesItsColumnCountFromItsLongestRow) {
     table.rows = {ManualRow{ManualCell{plain("x")}}};
     ManualPage page;
     page.blocks = {table};
-    EXPECT_EQ(vermilion::build_manual_text(page).text, std::string("x\n-"));
+    EXPECT_EQ(vermilion::build_manual_text(page, vermilion::kManualColumns).text,
+              std::string("x\n-"));
 }
 
 TEST(ManualTextPage, ATableAfterAParagraphMovesItsRanges) {
@@ -199,6 +201,60 @@ TEST(ManualTextPage, ATableIsLaidOutToThePageWidth) {
     const ManualText built = build("| A | B |\n|---|---|\n| a | " + cell + "|");
     const std::string first = built.text.substr(0, built.text.find('\n'));
     EXPECT_EQ(vermilion::character_count(first), vermilion::kManualColumns);
+}
+
+// The width of a table line is the `columns` argument.
+TEST(ManualTextPage, ATableIsLaidOutToTheColumnsGiven) {
+    std::string cell;
+    for (int i = 0; i < 40; ++i) {
+        cell += "word ";
+    }
+    const vermilion::ManualPage page =
+        vermilion::parse_manual("| A | B |\n|---|---|\n| a | " + cell + "|");
+    for (const std::size_t columns : {std::size_t{40}, std::size_t{60}, std::size_t{150}}) {
+        const ManualText built = vermilion::build_manual_text(page, columns);
+        const std::string first = built.text.substr(0, built.text.find('\n'));
+        EXPECT_EQ(vermilion::character_count(first), columns);
+    }
+}
+
+// Only tables depend on the width: the rest of a page is the same text whatever it is.
+TEST(ManualTextPage, TextOutsideTablesDoesNotDependOnTheColumns) {
+    const vermilion::ManualPage page = vermilion::parse_manual(
+        "# Title\n\nSome **bold** and `code` and [link](a-topic.md).\n\n- one\n- two");
+    const ManualText narrow = vermilion::build_manual_text(page, 20);
+    const ManualText wide = vermilion::build_manual_text(page, 200);
+    EXPECT_EQ(narrow.text, wide.text);
+    EXPECT_EQ(narrow.length, wide.length);
+    EXPECT_EQ(narrow.bold.size(), wide.bold.size());
+    EXPECT_EQ(narrow.code.size(), wide.code.size());
+    EXPECT_EQ(narrow.links.size(), wide.links.size());
+    EXPECT_EQ(narrow.list_items.size(), wide.list_items.size());
+    EXPECT_EQ(narrow.headings.size(), wide.headings.size());
+}
+
+// Fewer columns than a table can fit in gives its narrowest form, the same length on every line.
+TEST(ManualTextPage, ATableNeverGetsNarrowerThanOneCharacterPerColumn) {
+    const vermilion::ManualPage page =
+        vermilion::parse_manual("| A | B |\n|---|---|\n| aaa | bbb |");
+    const ManualText built = vermilion::build_manual_text(page, 0);
+    ASSERT_EQ(built.tables.size(), std::size_t{1});
+    std::size_t line_length = 0;
+    std::size_t begin = 0;
+    while (begin <= built.text.size()) {
+        std::size_t end = built.text.find('\n', begin);
+        if (end == std::string::npos) {
+            end = built.text.size();
+        }
+        const std::size_t length =
+            vermilion::character_count(built.text.substr(begin, end - begin));
+        if (line_length == 0) {
+            line_length = length;
+        }
+        EXPECT_EQ(length, line_length);
+        begin = end + 1;
+    }
+    EXPECT_EQ(line_length, std::size_t{5});
 }
 
 TEST(ManualTextPage, EveryRangeInAMixedPageIsInOrder) {

@@ -51,8 +51,8 @@ bool has_content(const ManualBlock& block) {
 // Writes one page into a ManualText, keeping how many characters it has written so far.
 class Builder {
 public:
-    // Starts writing into `out`, which begins empty.
-    explicit Builder(ManualText& out) : out_(out) {}
+    // Starts writing into `out`, which begins empty; tables are laid out in `columns` characters.
+    Builder(ManualText& out, std::size_t columns) : out_(out), columns_(columns) {}
 
     // Writes every block that has content, with one empty line between them (or one newline
     // between two list items), and sets the length.
@@ -146,7 +146,7 @@ private:
 
     // Writes a table: its laid-out text, its range, its header range and its styled spans.
     void table(const ManualBlock& block) {
-        const TableLayout layout = layout_table(block, kManualColumns);
+        const TableLayout layout = layout_table(block, columns_);
         const std::size_t begin = length_;
         text(layout.text);
         out_.tables.push_back({begin, length_});
@@ -163,6 +163,7 @@ private:
     }
 
     ManualText& out_;        // the result being written
+    std::size_t columns_;    // the width that a table line must fit in
     std::size_t length_ = 0; // the characters written so far
 };
 
@@ -178,9 +179,9 @@ std::size_t character_count(std::string_view text) {
     return count;
 }
 
-ManualText build_manual_text(const ManualPage& page) {
+ManualText build_manual_text(const ManualPage& page, std::size_t columns) {
     ManualText built;
-    Builder(built).add(page);
+    Builder(built, columns).add(page);
     return built;
 }
 

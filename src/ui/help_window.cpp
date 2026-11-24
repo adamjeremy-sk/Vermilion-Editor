@@ -148,7 +148,7 @@ void HelpWindow::show(const std::string& name) {
         block.spans[0].text = "This topic is not available: " + name;
         page.blocks.push_back(std::move(block));
     }
-    page_view_->show(build_manual_text(page));
+    page_view_->show(build_manual_text(page, kManualColumns));
 }
 
 void HelpWindow::update_actions() {

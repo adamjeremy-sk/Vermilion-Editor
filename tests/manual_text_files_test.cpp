@@ -50,7 +50,7 @@ std::vector<Topic> read_topics() {
         Topic topic;
         topic.name = it->path().filename().string();
         topic.page = vermilion::parse_manual(text.str());
-        topic.built = vermilion::build_manual_text(topic.page);
+        topic.built = vermilion::build_manual_text(topic.page, vermilion::kManualColumns);
         topics.push_back(topic);
     }
     std::sort(topics.begin(), topics.end(),

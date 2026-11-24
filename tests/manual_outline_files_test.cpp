@@ -40,8 +40,8 @@ std::map<std::string, ManualText> read_pages() {
         std::ifstream in(it->path(), std::ios::binary);
         std::ostringstream text;
         text << in.rdbuf();
-        pages[it->path().filename().string()] =
-            vermilion::build_manual_text(vermilion::parse_manual(text.str()));
+        pages[it->path().filename().string()] = vermilion::build_manual_text(
+            vermilion::parse_manual(text.str()), vermilion::kManualColumns);
     }
     return pages;
 }

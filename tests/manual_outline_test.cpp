@@ -22,7 +22,8 @@ using vermilion::ManualText;
 using vermilion::OutlineTopic;
 
 ManualText text_of(const std::string& markdown) {
-    return vermilion::build_manual_text(vermilion::parse_manual(markdown));
+    return vermilion::build_manual_text(vermilion::parse_manual(markdown),
+                                        vermilion::kManualColumns);
 }
 
 TEST(ManualOutline, LinkedTopicsFollowTheOrderOfTheLinks) {
