@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// The Help page: a read-only text view that shows one ManualText page in exactly kManualColumns
-// columns, with its links, headings, zoom and colours.
+// The Help page: a read-only text view that shows one manual page as wide as its window, with its
+// links, headings, zoom and colours.
 
 #pragma once
 
@@ -41,6 +41,9 @@ inline constexpr char kTagHeading3[] = "h3"; // bold; levels 3 to 6
 
 // Lines of text that the window shows when it opens (Adam, 2026-11-21).
 inline constexpr int kHelpPageLines = 36;
+// Columns of text that the window shows when it opens (Adam, 2026-11-23); also the width a page is
+// laid out for until the window has a width.
+inline constexpr int kHelpOpenColumns = 100;
 // Blank space above the first and below the last line, in pixels (the text view's own top and
 // bottom margins, so that a heading scrolled to the top is not clipped).
 inline constexpr int kHelpPageMargin = 8;
@@ -61,19 +64,20 @@ inline constexpr double kHelpMaxZoom = 3.0;
 
 // One Help page on the screen. Main loop only.
 //
-// Layout. The page is as wide as kManualColumns characters of the view's font at the current zoom
-// (page_width()), centred in the space the window gives it. When that space is narrower than the
-// page, the page keeps its width and the window scrolls sideways; the text never re-wraps to
-// another width, so the tables built by core/manual_table.h stay whole. A line that is longer than
-// the page wraps after exactly kManualColumns characters (headings, bigger than the body text,
-// wrap sooner). Everything is selectable and copyable; nothing can be edited.
+// Layout. The page is as wide as the window gives it: the text wraps to that width, and the tables
+// of the page are laid out for it, in columns (characters of the view's font at the current zoom).
+// A page shown with show_source() is laid out again, with the reading position kept, whenever the
+// number of columns changes: 100 ms after the last change of the window's width, and at once when
+// the zoom changes. A table cannot be narrower than page_min_columns(); when the window is, the
+// page keeps that width and the window scrolls sideways. A page shown with show() is a fixed text
+// and is never laid out again. Everything is selectable and copyable; nothing can be edited.
 //
 // A GtkTextView that is the direct child of a GtkScrolledWindow follows the window's width, so the
 // widget has two scrolled windows: the outer one scrolls sideways (never up or down) and holds the
-// inner one, which is exactly page_width() wide and centred; the inner one holds the view and
-// scrolls it up and down (its bar is not drawn: a GtkScrollbar of its own sits at the right edge of
-// the widget, so the bar stays in view when the page is wider than the window). The view scrolls
-// itself, so the mouse wheel, the keys, a drag that selects text beyond the edge and
+// inner one, which is as wide as the outer one (at least min_width(), the table minimum) and holds
+// the view and scrolls it up and down (its bar is not drawn: a GtkScrollbar of its own sits at the
+// right edge of the widget, so the bar stays in view when the page is wider than the window). The
+// view scrolls itself, so the mouse wheel, the keys, a drag that selects text beyond the edge and
 // gtk_text_view_scroll_to_mark all work as in any text view; a wheel turn over the empty space at
 // either side of the page scrolls it too.
 class HelpPageView {
@@ -101,10 +105,16 @@ public:
     GtkAdjustment* vadjustment() const;
     GtkAdjustment* hadjustment() const;
 
-    // Shows `page`: replaces the text, applies the tags, drops the selection and any scroll still
-    // queued, and scrolls to the top. Link targets and offsets are those of `page`. A text mark
-    // is put at the start of every heading.
+    // Shows `page`, a fixed text that is never laid out again: replaces the text, applies the
+    // tags, drops the selection and any scroll still queued, and scrolls to the top. Link targets
+    // and offsets are those of `page`. A text mark is put at the start of every heading.
     void show(const ManualText& page);
+    // Shows a manual page like show(), laid out for the columns that the window gives (see
+    // columns()), and lays it out again when they change. Keeps a copy of `page`.
+    void show_source(const ManualPage& page);
+    // The number of columns the page on the screen was laid out for (kHelpOpenColumns before the
+    // window has a width; at least page_min_columns() of the page).
+    std::size_t columns() const { return columns_; }
     // The page on the screen (empty text before the first show()).
     const ManualText& page() const { return page_; }
 
@@ -147,6 +157,10 @@ public:
     // construction and whenever the view is mapped; the window calls it when the palette changes,
     // because tag colours are not CSS rules and do not follow a new palette by themselves.
     void refresh_colours();
+    // The width in pixels of a window that shows `columns` columns of text and the bar at the right
+    // edge: `columns` plus one and a half advances of the digit "0" in the view's font at the
+    // current zoom (a line needs that much room beyond its last column), rounded up, plus the bar.
+    int width_for_columns(int columns) const;
 
     // The width of the page in pixels at the current zoom: 101.5 advances of the digit "0" in the
     // view's font at that zoom, rounded (GTK wraps a line of this width after exactly
@@ -169,6 +183,27 @@ private:
     void build_zoom_actions();
     void apply_zoom();
     void apply_page_tags();
+    // The advance of the digit "0" in the view's font at the current zoom, in pixels.
+    double advance() const;
+    // Puts `page` into the view (the body of show()).
+    void set_text(const ManualText& page);
+    // The width in pixels below which the page scrolls sideways, or -1 for a page with no table.
+    int min_width() const;
+    // The number of columns that the window gives the page now (kHelpOpenColumns without a width).
+    std::size_t measure_columns() const;
+    // The character that the reader is looking at: the first one in the window, or the target of
+    // a scroll that is still trying, or what a waiting layout was asked to keep.
+    std::size_t reading_offset() const;
+    // Lays the source page out again if the number of columns changed, keeping the place `offset`.
+    void relayout(std::size_t offset);
+    // Does that 100 ms after the last call, for the place that the reader has now.
+    void request_relayout();
+    void stop_relayout();
+    static gboolean run_relayout(gpointer data);
+    void on_width();
+    // Scrolls the character `offset` to the top of the window, like scroll_to_heading().
+    void scroll_to_offset(std::size_t offset);
+    void start_scroll(GtkTextMark* mark);
     void on_click(double x, double y);
     void on_motion(double x, double y);
     // The character under the point (x, y) of the widget, or page().length.
@@ -179,6 +214,13 @@ private:
 
     LinkHandler on_link_;
     ManualText page_;
+    ManualPage source_;           // the page of show_source(); empty after show()
+    bool has_source_ = false;     // whether the page can be laid out again
+    std::size_t min_columns_ = 0; // page_min_columns(source_)
+    std::size_t columns_ = kHelpOpenColumns;
+    bool width_seen_ = false;        // whether the window has had a width
+    std::size_t pending_offset_ = 0; // the place that a waiting layout keeps
+    unsigned relayout_source_ = 0;   // GLib source id of a waiting layout; 0 if none
     double zoom_ = 1.0;
     bool pointer_on_link_ = false;
 
@@ -188,7 +230,8 @@ private:
     GtkTextView* view_ = nullptr; // borrowed; the inner window owns it
     GtkTextBuffer* buffer_ = nullptr;
     std::vector<GtkTextMark*> heading_marks_; // borrowed; the buffer owns them; one per heading
-    std::size_t scroll_index_ = 0;            // the heading a running scroll goes to
+    GtkTextMark* anchor_mark_ = nullptr;      // borrowed; where a layout put the reader
+    GtkTextMark* scroll_mark_ = nullptr;      // borrowed; the mark a running scroll goes to
     int scroll_steady_ = 0;                   // tries in a row at which the position was right
     int scroll_ticks_ = 0;                    // tries so far
     int scroll_waits_ = 0;                    // ticks spent waiting for the window to be shown
@@ -208,6 +251,7 @@ private:
     gtkx::SignalConnection leave_signal_;
     gtkx::SignalConnection wheel_signal_;
     gtkx::SignalConnection map_signal_;
+    gtkx::SignalConnection width_signal_;
     gtkx::SignalConnection zoom_in_signal_;
     gtkx::SignalConnection zoom_out_signal_;
     gtkx::SignalConnection zoom_reset_signal_;

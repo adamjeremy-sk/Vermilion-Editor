@@ -82,14 +82,18 @@ bool HelpPageView::scroll_to_heading(std::size_t index) {
     if (index >= heading_marks_.size()) {
         return false;
     }
+    start_scroll(heading_marks_[index]);
+    return true;
+}
+
+void HelpPageView::start_scroll(GtkTextMark* mark) {
     stop_heading_scroll();
-    scroll_index_ = index;
+    scroll_mark_ = mark;
     scroll_steady_ = 0;
     scroll_ticks_ = 0;
     scroll_waits_ = 0;
     scroll_source_ = g_timeout_add(kScrollTickMs, &HelpPageView::run_heading_scroll, this);
     run_heading_scroll(this); // one try at once
-    return true;
 }
 
 void HelpPageView::stop_heading_scroll() {
@@ -97,6 +101,7 @@ void HelpPageView::stop_heading_scroll() {
         g_source_remove(scroll_source_);
         scroll_source_ = 0;
     }
+    scroll_mark_ = nullptr;
 }
 
 gboolean HelpPageView::run_heading_scroll(gpointer data) {
@@ -109,7 +114,7 @@ gboolean HelpPageView::run_heading_scroll(gpointer data) {
         return G_SOURCE_CONTINUE;
     }
     GtkTextIter at;
-    gtk_text_buffer_get_iter_at_mark(self->buffer_, &at, self->heading_marks_[self->scroll_index_]);
+    gtk_text_buffer_get_iter_at_mark(self->buffer_, &at, self->scroll_mark_);
     GdkRectangle where;
     gtk_text_view_get_iter_location(self->view_, &at, &where);
     GtkAdjustment* adjustment = self->vadjustment();
@@ -142,8 +147,10 @@ bool HelpPageView::set_zoom(double zoom) {
     if (clamped == zoom_) {
         return false;
     }
+    const std::size_t at = reading_offset(); // before the tags change the layout
     zoom_ = clamped;
     apply_zoom();
+    relayout(at);
     return true;
 }
 

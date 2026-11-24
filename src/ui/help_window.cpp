@@ -11,7 +11,6 @@
 
 #include "core/manual_page.h"
 #include "core/manual_spans.h"
-#include "core/manual_text.h"
 #include "ui/gtkx/signal.h"
 
 namespace vermilion::ui {
@@ -101,8 +100,8 @@ HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent)
     gtk_box_append(GTK_BOX(root), bar);
     gtk_box_append(GTK_BOX(root), page);
     gtk_window_set_child(window_, root);
-    // The window opens as wide as the page and kHelpPageLines lines high below the bar.
-    gtk_window_set_default_size(window_, page_view_->natural_width(),
+    // The window opens kHelpOpenColumns columns wide and kHelpPageLines lines high below the bar.
+    gtk_window_set_default_size(window_, page_view_->width_for_columns(kHelpOpenColumns),
                                 natural_height(bar) + page_view_->height_for_lines(kHelpPageLines));
     GtkSettings* settings = gtk_settings_get_default(); // borrowed; null without a display
     if (settings != nullptr) {
@@ -148,7 +147,7 @@ void HelpWindow::show(const std::string& name) {
         block.spans[0].text = "This topic is not available: " + name;
         page.blocks.push_back(std::move(block));
     }
-    page_view_->show(build_manual_text(page, kManualColumns));
+    page_view_->show_source(page);
 }
 
 void HelpWindow::update_actions() {

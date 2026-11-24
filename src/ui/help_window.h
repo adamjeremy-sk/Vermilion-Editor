@@ -19,8 +19,8 @@ class HelpWindow {
 public:
     // Creates the window for app, transient for parent (borrowed; the help window is destroyed
     // with it) and shows the page "index.md". GTK owns the window; this object must be destroyed
-    // when the window emits "destroy". The window opens as wide as the page and kHelpPageLines
-    // lines high (below the button bar).
+    // when the window emits "destroy". The window opens kHelpOpenColumns columns wide and
+    // kHelpPageLines lines high (below the button bar).
     HelpWindow(GtkApplication* app, GtkWindow* parent);
 
     HelpWindow(const HelpWindow&) = delete;

@@ -32,12 +32,11 @@ using vermilion::ui::HelpWindow;
 bool g_display = false;
 
 // The text that the page view shows for a topic file of the manual folder.
-ManualText page_of_file(const std::string& name) {
+ManualText page_of_file(const std::string& name, std::size_t columns = vermilion::kManualColumns) {
     std::ifstream file(std::string(VERMILION_MANUAL_DIR) + "/" + name);
     std::stringstream text;
     text << file.rdbuf();
-    return vermilion::build_manual_text(vermilion::parse_manual(text.str()),
-                                        vermilion::kManualColumns);
+    return vermilion::build_manual_text(vermilion::parse_manual(text.str()), columns);
 }
 
 // Runs the main loop for about `ms` milliseconds.
@@ -256,7 +255,7 @@ TEST_F(HelpWindowTest, ANameThatIsNotATopicIsIgnored) {
     }
 }
 
-TEST_F(HelpWindowTest, ItOpensThirtySixLinesHighAndAsWideAsThePage) {
+TEST_F(HelpWindowTest, ItOpensThirtySixLinesHighAndAHundredColumnsWide) {
     vermilion::ui::HelpPageView& view = help_->page_view();
     gtk_window_present(help_->window());
     spin(500);
@@ -264,10 +263,23 @@ TEST_F(HelpWindowTest, ItOpensThirtySixLinesHighAndAsWideAsThePage) {
     EXPECT_EQ(static_cast<int>(gtk_adjustment_get_page_size(view.vadjustment())),
               view.height_for_lines(vermilion::ui::kHelpPageLines));
     EXPECT_EQ(vermilion::ui::kHelpPageLines, 36);
-    EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(help_->window())), view.natural_width());
-    EXPECT_EQ(gtk_widget_get_width(view.widget()), view.natural_width());
-    EXPECT_GT(view.natural_width(), view.page_width());
-    EXPECT_LT(view.natural_width(), view.page_width() + 60);
+    const int wide = view.width_for_columns(vermilion::ui::kHelpOpenColumns);
+    EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(help_->window())), wide);
+    EXPECT_EQ(gtk_widget_get_width(view.widget()), wide);
+    EXPECT_EQ(view.columns(), static_cast<std::size_t>(vermilion::ui::kHelpOpenColumns));
+    EXPECT_EQ(vermilion::ui::kHelpOpenColumns, 100);
+}
+
+TEST_F(HelpWindowTest, ThePageIsLaidOutAgainForTheWidthItHas) {
+    vermilion::ui::HelpPageView& view = help_->page_view();
+    help_->open_topic("settings.md");
+    gtk_window_present(help_->window());
+    spin(500);
+    EXPECT_EQ(page().text, page_of_file("settings.md", 100).text);
+    ASSERT_TRUE(view.set_zoom(1.5));
+    EXPECT_LT(view.columns(), std::size_t{100});
+    EXPECT_EQ(page().text, page_of_file("settings.md", view.columns()).text);
+    EXPECT_NE(page().text, page_of_file("settings.md", 100).text);
 }
 
 TEST_F(HelpWindowTest, TheNaturalWidthFollowsTheZoom) {

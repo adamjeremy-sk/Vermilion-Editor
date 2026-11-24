@@ -33,39 +33,6 @@ TEST_F(HelpPageViewTest, ShowPutsTheTextIntoTheView) {
     EXPECT_EQ(gtk_text_view_get_wrap_mode(shown.text()), GTK_WRAP_CHAR);
 }
 
-TEST_F(HelpPageViewTest, ALongLineWrapsAfterExactlyAHundredColumns) {
-    Shown shown(1700, 500);
-    shown.view->show(bare(std::string(300, 'x')));
-    spin(300);
-    EXPECT_EQ(shown.first_line_chars(), 100);
-}
-
-TEST_F(HelpPageViewTest, ThePageIsCentredInAWideWindow) {
-    Shown shown(1900, 500);
-    shown.view->show(bare("short"));
-    spin(300);
-    graphene_point_t origin = GRAPHENE_POINT_INIT(0, 0);
-    graphene_point_t in_scroller;
-    ASSERT_TRUE(
-        gtk_widget_compute_point(GTK_WIDGET(shown.text()), shown.outer(), &origin, &in_scroller));
-    const int outer = gtk_widget_get_width(shown.outer());
-    const int page = shown.view->page_width();
-    EXPECT_LT(page, outer);
-    EXPECT_NEAR(in_scroller.x, (outer - page) / 2.0, 1.5);
-}
-
-TEST_F(HelpPageViewTest, ANarrowWindowScrollsSidewaysAndKeepsThePageWidth) {
-    Shown shown(500, 400);
-    shown.view->show(bare(std::string(250, 'x')));
-    spin(300);
-    const int page = shown.view->page_width();
-    EXPECT_GT(page, 500);
-    EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(shown.text())), page);
-    EXPECT_GE(gtk_adjustment_get_upper(shown.hadjustment()), page);
-    EXPECT_LT(gtk_adjustment_get_page_size(shown.hadjustment()), page);
-    EXPECT_EQ(shown.first_line_chars(), 100);
-}
-
 TEST_F(HelpPageViewTest, TheWindowHeightHoldsTheLinesAsked) {
     Shown shown(900, 500);
     const int one = shown.view->line_height();
@@ -115,14 +82,16 @@ TEST_F(HelpPageViewTest, TagsCoverTheirRanges) {
 }
 
 TEST_F(HelpPageViewTest, AListItemHangsByTwoColumns) {
-    Shown shown(1700, 500);
+    Shown shown(900, 500);
     ManualText page = build("- " + std::string(250, 'y') + "\n");
     ASSERT_EQ(page.list_items.size(), std::size_t{1});
     shown.view->show(page);
     spin(300);
-    EXPECT_EQ(shown.first_line_chars(), 100);
+    const int line = shown.first_line_chars();
+    EXPECT_GT(line, 50);
+    EXPECT_LT(line, 250);
     const GdkRectangle first = shown.where(0);
-    const GdkRectangle second_line = shown.where(100);
+    const GdkRectangle second_line = shown.where(line);
     const double advance = shown.where(3).x - shown.where(2).x;
     EXPECT_EQ(first.x, 0);
     EXPECT_GT(second_line.y, first.y);

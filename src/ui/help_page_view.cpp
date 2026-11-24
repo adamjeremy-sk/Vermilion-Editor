@@ -64,8 +64,11 @@ HelpPageView::HelpPageView(LinkHandler on_link) : on_link_(std::move(on_link)) {
     // The font in use is known only once the view has a style; measure it then and now.
     map_signal_ = gtkx::connect<void(GtkWidget*)>(GTK_WIDGET(view_), "map", [this](GtkWidget*) {
         apply_zoom();
+        relayout(reading_offset());
         refresh_colours();
     });
+    width_signal_ = gtkx::connect<void(GObject*, GParamSpec*)>(
+        hadjustment(), "notify::page-size", [this](GObject*, GParamSpec*) { on_width(); });
     refresh_colours();
     build_zoom_actions();
     apply_zoom();
@@ -73,6 +76,7 @@ HelpPageView::HelpPageView(LinkHandler on_link) : on_link_(std::move(on_link)) {
 
 HelpPageView::~HelpPageView() {
     stop_heading_scroll();
+    stop_relayout();
 }
 
 void HelpPageView::build_widgets() {
@@ -86,7 +90,6 @@ void HelpPageView::build_widgets() {
     gtk_widget_add_css_class(inner_, kHelpHolderClass);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(inner_), GTK_POLICY_NEVER,
                                    GTK_POLICY_EXTERNAL);
-    gtk_widget_set_halign(inner_, GTK_ALIGN_CENTER);
     gtk_widget_set_vexpand(inner_, TRUE);
 
     GtkWidget* view = gtk_text_view_new(); // floating; the inner window owns it
@@ -162,7 +165,11 @@ void HelpPageView::apply_zoom() {
     const Measure font = measure_font(GTK_WIDGET(view_), zoom_);
     const int indent = static_cast<int>(lround(kItemIndentColumns * font.advance));
     g_object_set(item_, "indent", -indent, nullptr);
-    gtk_widget_set_size_request(inner_, page_width(), -1);
+    gtk_widget_set_size_request(inner_, min_width(), -1);
+}
+
+double HelpPageView::advance() const {
+    return measure_font(GTK_WIDGET(view_), zoom_).advance;
 }
 
 int HelpPageView::page_width() const {
@@ -221,11 +228,24 @@ void HelpPageView::apply_page_tags() {
 }
 
 void HelpPageView::show(const ManualText& page) {
+    stop_relayout();
+    source_ = ManualPage{};
+    has_source_ = false;
+    min_columns_ = 0;
+    gtk_widget_set_size_request(inner_, min_width(), -1);
+    set_text(page);
+}
+
+void HelpPageView::set_text(const ManualText& page) {
     stop_heading_scroll();
     for (GtkTextMark* mark : heading_marks_) {
         gtk_text_buffer_delete_mark(buffer_, mark);
     }
     heading_marks_.clear();
+    if (anchor_mark_ != nullptr) {
+        gtk_text_buffer_delete_mark(buffer_, anchor_mark_);
+        anchor_mark_ = nullptr;
+    }
     page_ = page;
     gtk_text_buffer_set_text(buffer_, valid_text(page_.text).c_str(), -1);
     apply_page_tags();

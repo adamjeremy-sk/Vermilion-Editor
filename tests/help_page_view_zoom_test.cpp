@@ -54,16 +54,19 @@ double heading_y(const Shown& shown, const ManualText& page, std::size_t index) 
            vermilion::ui::kHelpPageMargin;
 }
 
-TEST_F(HelpPageViewTest, TheWrapStaysAtAHundredAtEveryZoomAndInANarrowWindow) {
+TEST_F(HelpPageViewTest, TheWrapFollowsTheZoom) {
     Shown shown(600, 500);
     shown.view->show(bare(std::string(400, 'x')));
-    const double zooms[] = {0.5, 0.85, 1.0, 1.3, 2.0, 3.0};
-    for (double zoom : zooms) {
+    int previous = 100000;
+    for (const double zoom : {0.5, 0.85, 1.0, 1.3, 2.0, 3.0}) {
         shown.view->set_zoom(zoom);
         spin(300);
-        EXPECT_EQ(shown.first_line_chars(), 100) << "zoom " << zoom;
-        EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(shown.text())), shown.view->page_width())
+        const double advance = shown.where(1).x - shown.where(0).x;
+        EXPECT_NEAR(shown.first_line_chars(),
+                    gtk_widget_get_width(GTK_WIDGET(shown.text())) / advance, 2.5)
             << "zoom " << zoom;
+        EXPECT_LT(shown.first_line_chars(), previous) << "zoom " << zoom;
+        previous = shown.first_line_chars();
     }
 }
 
