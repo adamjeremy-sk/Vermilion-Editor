@@ -18,7 +18,7 @@ using vermilion::TableLayout;
 using vermilion::TextRange;
 
 // The page width these tests lay out for. It is fixed here, so they do not follow a change of
-// the width of the Help page (kManualColumns).
+// the width of the Help page (kManualTestColumns).
 constexpr std::size_t kColumns = 80;
 
 // The layout of the first table in `markdown`, in lines of kColumns characters.

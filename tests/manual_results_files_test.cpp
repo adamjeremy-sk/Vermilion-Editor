@@ -17,6 +17,7 @@
 #include "core/manual_results.h"
 #include "core/manual_text.h"
 #include "core/search_options.h"
+#include "manual_test_columns.h"
 
 #ifndef VERMILION_MANUAL_DIR
 #error "VERMILION_MANUAL_DIR must name docs/manual; tests/CMakeLists.txt defines it"
@@ -42,10 +43,10 @@ std::vector<SearchPage> read_pages() {
         std::ostringstream text;
         text << in.rdbuf();
         const std::string name = it->path().filename().string();
-        pages.push_back({name, name,
-                         vermilion::build_manual_text(vermilion::parse_manual(text.str()),
-                                                      vermilion::kManualColumns)
-                             .text});
+        pages.push_back(
+            {name, name,
+             vermilion::build_manual_text(vermilion::parse_manual(text.str()), kManualTestColumns)
+                 .text});
     }
     std::sort(pages.begin(), pages.end(),
               [](const SearchPage& a, const SearchPage& b) { return a.file < b.file; });

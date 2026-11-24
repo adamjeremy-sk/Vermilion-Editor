@@ -12,6 +12,7 @@
 #include "core/manual_outline.h"
 #include "core/manual_page.h"
 #include "core/manual_text.h"
+#include "manual_test_columns.h"
 
 namespace {
 
@@ -22,8 +23,7 @@ using vermilion::ManualText;
 using vermilion::OutlineTopic;
 
 ManualText text_of(const std::string& markdown) {
-    return vermilion::build_manual_text(vermilion::parse_manual(markdown),
-                                        vermilion::kManualColumns);
+    return vermilion::build_manual_text(vermilion::parse_manual(markdown), kManualTestColumns);
 }
 
 TEST(ManualOutline, LinkedTopicsFollowTheOrderOfTheLinks) {

@@ -104,13 +104,9 @@ TEST_F(HelpPageViewTest, ZoomStopsAtItsLimits) {
     EXPECT_DOUBLE_EQ(shown.view->zoom(), 1.15);
 }
 
-TEST_F(HelpPageViewTest, ZoomScalesThePageWidth) {
+TEST_F(HelpPageViewTest, ZoomScalesTheTags) {
     Shown shown(900, 500);
-    const int base = shown.view->page_width();
     shown.view->set_zoom(2.0);
-    const double ratio = static_cast<double>(shown.view->page_width()) / base;
-    EXPECT_GT(ratio, 1.9);
-    EXPECT_LT(ratio, 2.1);
     EXPECT_NEAR(shown.tag_scale(vermilion::ui::kTagBody), 2.0, 1e-9);
     EXPECT_NEAR(shown.tag_scale(vermilion::ui::kTagHeading1), 3.0, 1e-9);
     EXPECT_NEAR(shown.tag_scale(vermilion::ui::kTagHeading2), 2.5, 1e-9);

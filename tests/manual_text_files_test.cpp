@@ -15,6 +15,7 @@
 
 #include "core/manual_page.h"
 #include "core/manual_text.h"
+#include "manual_test_columns.h"
 
 #ifndef VERMILION_MANUAL_DIR
 #error "VERMILION_MANUAL_DIR must name docs/manual; tests/CMakeLists.txt defines it"
@@ -50,7 +51,7 @@ std::vector<Topic> read_topics() {
         Topic topic;
         topic.name = it->path().filename().string();
         topic.page = vermilion::parse_manual(text.str());
-        topic.built = vermilion::build_manual_text(topic.page, vermilion::kManualColumns);
+        topic.built = vermilion::build_manual_text(topic.page, kManualTestColumns);
         topics.push_back(topic);
     }
     std::sort(topics.begin(), topics.end(),
@@ -158,7 +159,7 @@ TEST(ManualTextFiles, EveryTableLineFitsThePage) {
             std::istringstream lines(text);
             std::string line;
             while (std::getline(lines, line)) {
-                EXPECT_LE(vermilion::character_count(line), vermilion::kManualColumns) << line;
+                EXPECT_LE(vermilion::character_count(line), kManualTestColumns) << line;
             }
         }
     }

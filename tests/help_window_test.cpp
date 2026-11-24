@@ -18,6 +18,7 @@
 #include "core/manual_page.h"
 #include "core/manual_spans.h"
 #include "core/manual_text.h"
+#include "manual_test_columns.h"
 #include "ui/help_page_view.h"
 #include "ui/help_window.h"
 #include "ui/style.h"
@@ -32,7 +33,7 @@ using vermilion::ui::HelpWindow;
 bool g_display = false;
 
 // The text that the page view shows for a topic file of the manual folder.
-ManualText page_of_file(const std::string& name, std::size_t columns = vermilion::kManualColumns) {
+ManualText page_of_file(const std::string& name, std::size_t columns = kManualTestColumns) {
     std::ifstream file(std::string(VERMILION_MANUAL_DIR) + "/" + name);
     std::stringstream text;
     text << file.rdbuf();
@@ -282,13 +283,12 @@ TEST_F(HelpWindowTest, ThePageIsLaidOutAgainForTheWidthItHas) {
     EXPECT_NE(page().text, page_of_file("settings.md", 100).text);
 }
 
-TEST_F(HelpWindowTest, TheNaturalWidthFollowsTheZoom) {
+TEST_F(HelpWindowTest, TheOpeningWidthFollowsTheZoom) {
     vermilion::ui::HelpPageView& view = help_->page_view();
-    const int before = view.natural_width();
-    const int bar = before - view.page_width();
+    const int before = view.width_for_columns(vermilion::ui::kHelpOpenColumns);
     ASSERT_TRUE(view.set_zoom(2.0));
-    EXPECT_EQ(view.natural_width(), view.page_width() + bar);
-    EXPECT_GT(view.natural_width(), before * 1.8); // twice the page, whatever the font is
+    EXPECT_GT(view.width_for_columns(vermilion::ui::kHelpOpenColumns),
+              before * 1.8); // twice the page, whatever the font is
 }
 
 TEST_F(HelpWindowTest, ThePageReadsItsColoursAgainWhenTheDarkFlagChanges) {

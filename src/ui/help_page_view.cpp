@@ -22,8 +22,6 @@ constexpr double kHeading1Scale = 1.5;
 constexpr double kHeading2Scale = 1.25;
 // The hanging indent of a list item, in columns of the view's font.
 constexpr int kItemIndentColumns = 2;
-// The page width in advances of the digit "0": kManualColumns plus one column of room.
-constexpr double kPageColumnsWithRoom = static_cast<double>(kManualColumns) + 1.5;
 
 // Bad bytes become U+FFFD, so GTK never warns about the text.
 std::string valid_text(const std::string& text) {
@@ -172,24 +170,12 @@ double HelpPageView::advance() const {
     return measure_font(GTK_WIDGET(view_), zoom_).advance;
 }
 
-int HelpPageView::page_width() const {
-    return static_cast<int>(
-        lround(kPageColumnsWithRoom * measure_font(GTK_WIDGET(view_), zoom_).advance));
-}
-
 int HelpPageView::line_height() const {
     return measure_font(GTK_WIDGET(view_), zoom_).height;
 }
 
 int HelpPageView::height_for_lines(int lines) const {
     return lines * line_height() + 2 * kHelpPageMargin;
-}
-
-int HelpPageView::natural_width() const {
-    int bar = 0;
-    gtk_widget_measure(gtk_widget_get_last_child(root_), GTK_ORIENTATION_HORIZONTAL, -1, nullptr,
-                       &bar, nullptr, nullptr); // the root box holds the page, then the bar
-    return page_width() + bar;
 }
 
 void HelpPageView::apply_page_tags() {

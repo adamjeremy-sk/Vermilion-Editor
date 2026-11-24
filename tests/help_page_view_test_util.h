@@ -15,6 +15,7 @@
 
 #include "core/manual_page.h"
 #include "core/manual_text.h"
+#include "manual_test_columns.h"
 #include "ui/help_page_view.h"
 
 namespace vermilion::ui::help_test {
@@ -30,8 +31,7 @@ inline void spin(int ms) {
 }
 
 inline ManualText build(const std::string& markdown) {
-    return vermilion::build_manual_text(vermilion::parse_manual(markdown),
-                                        vermilion::kManualColumns);
+    return vermilion::build_manual_text(vermilion::parse_manual(markdown), kManualTestColumns);
 }
 
 // Plain text with no ranges.

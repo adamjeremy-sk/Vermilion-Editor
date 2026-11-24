@@ -100,7 +100,11 @@ TEST_F(HelpPageViewTest, TheTablesAreLaidOutForTheColumnsOfTheWindow) {
     EXPECT_GE(narrow, vermilion::page_min_columns(page));
     EXPECT_EQ(shown.view->page().text, vermilion::build_manual_text(page, narrow).text);
     resize(shown, 1500, 500);
-    EXPECT_EQ(shown.view->columns(), wide);
+    EXPECT_GT(shown.view->columns(), narrow);
+    EXPECT_EQ(shown.view->page().text,
+              vermilion::build_manual_text(page, shown.view->columns()).text);
+    EXPECT_NEAR(static_cast<double>(shown.view->columns()),
+                width_of_text(shown) / advance_of(shown) - 1.5, 1.5);
 }
 
 TEST_F(HelpPageViewTest, ANarrowWindowScrollsSidewaysAtTheTableMinimum) {

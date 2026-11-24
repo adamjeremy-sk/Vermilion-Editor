@@ -13,10 +13,6 @@
 
 namespace vermilion {
 
-// The width of the Help page in characters. Tables are laid out to fit it; other lines are
-// wrapped by the view.
-inline constexpr std::size_t kManualColumns = 100;
-
 // Every offset and width in this file counts characters (Unicode code points), not bytes: the
 // unit of GtkTextBuffer offsets. The Help page is monospace, so one character is one column
 // (combining marks and wide characters are not handled).

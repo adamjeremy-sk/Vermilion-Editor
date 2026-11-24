@@ -10,6 +10,7 @@
 
 #include "core/manual_page.h"
 #include "core/manual_text.h"
+#include "manual_test_columns.h"
 
 namespace {
 
@@ -24,8 +25,7 @@ using vermilion::SpanKind;
 using vermilion::TextRange;
 
 ManualText build(const std::string& markdown) {
-    return vermilion::build_manual_text(vermilion::parse_manual(markdown),
-                                        vermilion::kManualColumns);
+    return vermilion::build_manual_text(vermilion::parse_manual(markdown), kManualTestColumns);
 }
 
 bool same(const TextRange& range, std::size_t begin, std::size_t end) {
@@ -46,7 +46,7 @@ TEST(ManualTextCount, CharactersAreNotBytes) {
 }
 
 TEST(ManualTextPage, AnEmptyPageGivesEmptyText) {
-    const ManualText built = vermilion::build_manual_text(ManualPage{}, vermilion::kManualColumns);
+    const ManualText built = vermilion::build_manual_text(ManualPage{}, kManualTestColumns);
     EXPECT_EQ(built.text, std::string());
     EXPECT_EQ(built.length, std::size_t{0});
     EXPECT_TRUE(built.headings.empty());
@@ -100,7 +100,7 @@ TEST(ManualTextPage, AHeadingLevelOutsideOneToSixIsMovedIntoIt) {
     none.level = 0;
     none.spans.push_back(plain("none"));
     page.blocks = {deep, none};
-    const ManualText built = vermilion::build_manual_text(page, vermilion::kManualColumns);
+    const ManualText built = vermilion::build_manual_text(page, kManualTestColumns);
     ASSERT_EQ(built.headings.size(), std::size_t{2});
     EXPECT_EQ(built.headings[0].level, 6);
     EXPECT_EQ(built.headings[1].level, 1);
@@ -136,7 +136,7 @@ TEST(ManualTextPage, EmptyHeadingsAndParagraphsAreSkipped) {
     ManualBlock item;
     item.kind = ManualBlockKind::ListItem;
     page.blocks = {heading, blank, text, item};
-    const ManualText built = vermilion::build_manual_text(page, vermilion::kManualColumns);
+    const ManualText built = vermilion::build_manual_text(page, kManualTestColumns);
     EXPECT_EQ(built.text, std::string("x\n\n\xE2\x80\xA2 "));
     EXPECT_TRUE(built.headings.empty());
     EXPECT_TRUE(built.bold.empty());
@@ -161,7 +161,7 @@ TEST(ManualTextPage, ATableWithoutRowsOrColumnsIsSkipped) {
     after.spans.push_back(plain("b"));
     ManualPage page;
     page.blocks = {before, no_rows, no_columns, after};
-    const ManualText built = vermilion::build_manual_text(page, vermilion::kManualColumns);
+    const ManualText built = vermilion::build_manual_text(page, kManualTestColumns);
     EXPECT_EQ(built.text, std::string("a\n\nb"));
     EXPECT_TRUE(built.tables.empty());
     EXPECT_TRUE(built.table_headers.empty());
@@ -173,8 +173,7 @@ TEST(ManualTextPage, ATableTakesItsColumnCountFromItsLongestRow) {
     table.rows = {ManualRow{ManualCell{plain("x")}}};
     ManualPage page;
     page.blocks = {table};
-    EXPECT_EQ(vermilion::build_manual_text(page, vermilion::kManualColumns).text,
-              std::string("x\n-"));
+    EXPECT_EQ(vermilion::build_manual_text(page, kManualTestColumns).text, std::string("x\n-"));
 }
 
 TEST(ManualTextPage, ATableAfterAParagraphMovesItsRanges) {
@@ -200,7 +199,7 @@ TEST(ManualTextPage, ATableIsLaidOutToThePageWidth) {
     }
     const ManualText built = build("| A | B |\n|---|---|\n| a | " + cell + "|");
     const std::string first = built.text.substr(0, built.text.find('\n'));
-    EXPECT_EQ(vermilion::character_count(first), vermilion::kManualColumns);
+    EXPECT_EQ(vermilion::character_count(first), kManualTestColumns);
 }
 
 // The width of a table line is the `columns` argument.

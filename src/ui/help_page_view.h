@@ -162,17 +162,10 @@ public:
     // current zoom (a line needs that much room beyond its last column), rounded up, plus the bar.
     int width_for_columns(int columns) const;
 
-    // The width of the page in pixels at the current zoom: 101.5 advances of the digit "0" in the
-    // view's font at that zoom, rounded (GTK wraps a line of this width after exactly
-    // kManualColumns characters; a line needs one character of room beyond its last column).
-    int page_width() const;
     // The height of one line of body text at the current zoom, in pixels.
     int line_height() const;
     // The height of `lines` lines of body text plus the margins above and below, in pixels.
     int height_for_lines(int lines) const;
-    // The width at which a window shows the whole page and the scroll bar at its right edge:
-    // page_width() plus the width of the bar, in pixels.
-    int natural_width() const;
 
 private:
     void build_tags();
@@ -226,7 +219,7 @@ private:
 
     GtkWidget* root_ = nullptr;   // borrowed; floating, then owned by its container
     GtkWidget* outer_ = nullptr;  // borrowed; the root box owns it: scrolls sideways
-    GtkWidget* inner_ = nullptr;  // borrowed; the outer window owns it: page_width() wide
+    GtkWidget* inner_ = nullptr;  // borrowed; the outer window owns it: min_width() wide
     GtkTextView* view_ = nullptr; // borrowed; the inner window owns it
     GtkTextBuffer* buffer_ = nullptr;
     std::vector<GtkTextMark*> heading_marks_; // borrowed; the buffer owns them; one per heading

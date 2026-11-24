@@ -17,6 +17,7 @@
 #include "core/manual_outline.h"
 #include "core/manual_page.h"
 #include "core/manual_text.h"
+#include "manual_test_columns.h"
 
 #ifndef VERMILION_MANUAL_DIR
 #error "VERMILION_MANUAL_DIR must name docs/manual; tests/CMakeLists.txt defines it"
@@ -40,8 +41,8 @@ std::map<std::string, ManualText> read_pages() {
         std::ifstream in(it->path(), std::ios::binary);
         std::ostringstream text;
         text << in.rdbuf();
-        pages[it->path().filename().string()] = vermilion::build_manual_text(
-            vermilion::parse_manual(text.str()), vermilion::kManualColumns);
+        pages[it->path().filename().string()] =
+            vermilion::build_manual_text(vermilion::parse_manual(text.str()), kManualTestColumns);
     }
     return pages;
 }
