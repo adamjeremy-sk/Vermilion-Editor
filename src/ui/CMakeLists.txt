@@ -38,25 +38,16 @@ endforeach()
 find_program(GLIB_COMPILE_RESOURCES glib-compile-resources REQUIRED)
 set(VERMILION_RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 set(VERMILION_RESOURCE_XML ${VERMILION_RESOURCE_DIR}/vermilion.gresource.xml)
-# The bundled font (Fantasque Sans Mono, vendored): its four TTFs go into the resources under fonts/.
-set(VERMILION_FONT_DIR ${CMAKE_SOURCE_DIR}/third_party/fantasque-sans)
-set(VERMILION_FONT_FILES
-    ${VERMILION_FONT_DIR}/FantasqueSansMono-Regular.ttf
-    ${VERMILION_FONT_DIR}/FantasqueSansMono-Bold.ttf
-    ${VERMILION_FONT_DIR}/FantasqueSansMono-Italic.ttf
-    ${VERMILION_FONT_DIR}/FantasqueSansMono-BoldItalic.ttf)
 set(VERMILION_RESOURCE_CPP ${CMAKE_CURRENT_BINARY_DIR}/vermilion_resources.cpp)
 set(VERMILION_RESOURCE_H ${CMAKE_CURRENT_BINARY_DIR}/vermilion_resources.h)
 add_custom_command(
     OUTPUT ${VERMILION_RESOURCE_CPP} ${VERMILION_RESOURCE_H}
     COMMAND ${GLIB_COMPILE_RESOURCES} --sourcedir=${VERMILION_RESOURCE_DIR}
             --sourcedir=${VERMILION_ICON_BUILD_DIR} --c-name=vermilion
-            --sourcedir=${VERMILION_FONT_DIR}
             --manual-register --generate-source --target=${VERMILION_RESOURCE_CPP}
             ${VERMILION_RESOURCE_XML}
     COMMAND ${GLIB_COMPILE_RESOURCES} --sourcedir=${VERMILION_RESOURCE_DIR}
             --sourcedir=${VERMILION_ICON_BUILD_DIR} --c-name=vermilion
-            --sourcedir=${VERMILION_FONT_DIR}
             --manual-register --generate-header --target=${VERMILION_RESOURCE_H}
             ${VERMILION_RESOURCE_XML}
     DEPENDS ${VERMILION_RESOURCE_XML}
@@ -66,7 +57,6 @@ add_custom_command(
             ${VERMILION_RESOURCE_DIR}/menus.ui
             ${VERMILION_RESOURCE_DIR}/styles/vermilion-classic.xml
             ${VERMILION_RESOURCE_DIR}/styles/vermilion-classic-dark.xml
-            ${VERMILION_FONT_FILES}
             ${VERMILION_ICON_PNGS}
     VERBATIM)
 # The user manual (Adam, 2026-11-11): every docs/manual/*.md is compiled into the program as a
@@ -106,11 +96,9 @@ target_link_libraries(vermilion_resources
     PUBLIC PkgConfig::GTK4
     PRIVATE vermilion_warnings vermilion_noexc)
 
-add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp check_question.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp recovery_controller.cpp recovery_io.cpp recovery_prompt.cpp main_window_recovery.cpp find_window.cpp search_controller.cpp search_session.cpp glib_timer.cpp main_window_search.cpp replace_controller.cpp replace_controller_job.cpp replace_window.cpp line_jump.cpp goto_line_window.cpp editor_scheme.cpp file_inspector.cpp file_watcher.cpp change_banner.cpp document_tabs_reload.cpp tabs_external_host.cpp external_change_controller.cpp external_change_look.cpp external_change_reload.cpp command_line.cpp main_window_command_line.cpp appearance_controller.cpp font_css.cpp font_style.cpp editor_page_look.cpp document_tabs_look.cpp appearance_host.cpp main_window_appearance.cpp system_theme.cpp settings_window.cpp settings_page_appearance.cpp settings_page_editor.cpp settings_page_files.cpp window_shortcuts.cpp main_window_settings.cpp bundled_font.cpp help_page_view.cpp help_page_view_zoom.cpp help_page_view_colours.cpp)
+add_executable(vermilion main.cpp main_window.cpp document_tabs.cpp tab_label.cpp status_bar.cpp style.cpp close_dialog.cpp check_question.cpp file_probe.cpp document_loader.cpp editor_page.cpp file_opener.cpp document_saver.cpp save_controller.cpp format_commands.cpp window_actions.cpp help_window.cpp recovery_controller.cpp recovery_io.cpp recovery_prompt.cpp main_window_recovery.cpp find_window.cpp search_controller.cpp search_session.cpp glib_timer.cpp main_window_search.cpp replace_controller.cpp replace_controller_job.cpp replace_window.cpp line_jump.cpp goto_line_window.cpp editor_scheme.cpp file_inspector.cpp file_watcher.cpp change_banner.cpp document_tabs_reload.cpp tabs_external_host.cpp external_change_controller.cpp external_change_look.cpp external_change_reload.cpp command_line.cpp main_window_command_line.cpp appearance_controller.cpp font_css.cpp font_style.cpp editor_page_look.cpp document_tabs_look.cpp appearance_host.cpp main_window_appearance.cpp system_theme.cpp settings_window.cpp settings_page_appearance.cpp settings_page_editor.cpp settings_page_files.cpp window_shortcuts.cpp main_window_settings.cpp help_page_view.cpp help_page_view_zoom.cpp help_page_view_colours.cpp)
 target_include_directories(vermilion PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(vermilion PRIVATE
-    PkgConfig::FONTCONFIG
-    PkgConfig::PANGOFT2
     PkgConfig::GTK4
     PkgConfig::GTKSOURCEVIEW5
     vermilion_core
