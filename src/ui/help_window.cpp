@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Builds the help window: the manual's pages as labels and grids in a scrolling area.
+// Builds the help window: the buttons and the page view that shows one page of the manual.
 
 #include "ui/help_window.h"
 
@@ -12,6 +12,7 @@
 
 #include "core/manual_page.h"
 #include "core/manual_spans.h"
+#include "core/manual_text.h"
 #include "ui/gtkx/signal.h"
 #include "ui/gtkx/string.h"
 
@@ -136,8 +137,9 @@ GtkWidget* block_widget(const ManualBlock& block, std::vector<GtkWidget*>& links
     return span_label(block.spans, kTextChars, links);
 }
 
-// Floating until the scrolled window takes it over.
-GtkWidget* page_widget(const ManualPage& page, std::vector<GtkWidget*>& links) {
+// The label renderer of the old window: nothing calls it since the page view; step 5e deletes it
+// with the functions above. Floating until the scrolled window takes it over.
+[[maybe_unused]] GtkWidget* page_widget(const ManualPage& page, std::vector<GtkWidget*>& links) {
     GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_widget_add_css_class(box, "vm-help-page");
     for (const auto& block : page.blocks) {
@@ -185,13 +187,28 @@ GtkWidget* action_button(const char* label, const char* action, const char* tool
     return button;
 }
 
+// The bar with the Back and Index buttons; floating until the root box takes it over.
+GtkWidget* build_bar() {
+    GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_add_css_class(bar, "vm-help-bar");
+    gtk_box_append(GTK_BOX(bar), action_button("Back", "win.back", "Back (Alt+Left)"));
+    gtk_box_append(GTK_BOX(bar), action_button("Index", "win.to-index", "Index"));
+    return bar;
+}
+
+// The natural height of `widget`, in pixels.
+int natural_height(GtkWidget* widget) {
+    int natural = 0;
+    gtk_widget_measure(widget, GTK_ORIENTATION_VERTICAL, -1, nullptr, &natural, nullptr, nullptr);
+    return natural;
+}
+
 } // namespace
 
 HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent)
     : window_(GTK_WINDOW(gtk_application_window_new(app))) { // GTK owns the window; it is borrowed
     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window_), FALSE);
     gtk_window_set_title(window_, "Vermilion Editor Help");
-    gtk_window_set_default_size(window_, 780, 640);
     gtk_window_set_transient_for(window_, parent);
     gtk_window_set_destroy_with_parent(window_, TRUE);
     gtk_widget_add_css_class(GTK_WIDGET(window_), "vm-main");
@@ -199,20 +216,25 @@ HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent)
     g_action_map_add_action_entries(G_ACTION_MAP(window_), kActions, G_N_ELEMENTS(kActions), this);
     const char* const back_keys[] = {"<Alt>Left", nullptr};
     gtk_application_set_accels_for_action(app, "win.back", back_keys);
-    // Floating; the window takes the root box over.
+    page_view_ =
+        std::make_unique<HelpPageView>([this](const std::string& target) { open_topic(target); });
+    GtkWidget* page = page_view_->widget(); // borrowed; the page view owns it until the box has it
+    gtk_widget_set_vexpand(page, TRUE);
+    // Floating; the window takes it over.
     GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    // Floating; the root box takes the bar over.
-    GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_widget_add_css_class(bar, "vm-help-bar");
-    gtk_box_append(GTK_BOX(bar), action_button("Back", "win.back", "Back (Alt+Left)"));
-    gtk_box_append(GTK_BOX(bar), action_button("Index", "win.to-index", "Index"));
+    GtkWidget* bar = build_bar(); // floating; the root box takes it over
     gtk_box_append(GTK_BOX(root), bar);
-    scroller_ = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new()); // floating; the root box owns it
-    gtk_widget_add_css_class(GTK_WIDGET(scroller_), "vm-help-well");
-    gtk_scrolled_window_set_policy(scroller_, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_widget_set_vexpand(GTK_WIDGET(scroller_), TRUE);
-    gtk_box_append(GTK_BOX(root), GTK_WIDGET(scroller_));
+    gtk_box_append(GTK_BOX(root), page);
     gtk_window_set_child(window_, root);
+    // The window opens as wide as the page and kHelpPageLines lines high below the bar.
+    gtk_window_set_default_size(window_, page_view_->natural_width(),
+                                natural_height(bar) + page_view_->height_for_lines(kHelpPageLines));
+    GtkSettings* settings = gtk_settings_get_default(); // borrowed; null without a display
+    if (settings != nullptr) {
+        palette_signal_ = gtkx::connect<void(GObject*, GParamSpec*)>(
+            settings, "notify::gtk-application-prefer-dark-theme",
+            [this](GObject*, GParamSpec*) { page_view_->refresh_colours(); });
+    }
     open_topic(kIndexTopic);
 }
 
@@ -233,16 +255,13 @@ void HelpWindow::show_index() {
 }
 
 void HelpWindow::open_topic(const std::string& name) {
-    if (history_.open(name)) {
+    if (is_topic_name(name) && history_.open(name)) {
         show(name);
         update_actions();
     }
 }
 
 void HelpWindow::show(const std::string& name) {
-    // This may run inside a link click; the old connections are released here.
-    link_signals_.clear();
-    std::vector<GtkWidget*> links;
     std::optional<std::string> text = topic_text(name);
     ManualPage page;
     if (text.has_value()) {
@@ -254,16 +273,7 @@ void HelpWindow::show(const std::string& name) {
         block.spans[0].text = "This topic is not available: " + name;
         page.blocks.push_back(std::move(block));
     }
-    GtkWidget* content = page_widget(page, links);
-    for (GtkWidget* label : links) {
-        link_signals_.push_back(gtkx::connect<gboolean(GtkLabel*, const char*)>(
-            label, "activate-link", [this](GtkLabel*, const char* uri) -> gboolean {
-                return follow_link(uri) ? TRUE : FALSE;
-            }));
-    }
-    // Takes the floating box and releases the old page.
-    gtk_scrolled_window_set_child(scroller_, content);
-    gtk_adjustment_set_value(gtk_scrolled_window_get_vadjustment(scroller_), 0.0);
+    page_view_->show(build_manual_text(page));
 }
 
 void HelpWindow::update_actions() {
@@ -271,13 +281,6 @@ void HelpWindow::update_actions() {
     if (action != nullptr) {
         g_simple_action_set_enabled(G_SIMPLE_ACTION(action), history_.can_go_back() ? TRUE : FALSE);
     }
-}
-
-bool HelpWindow::follow_link(const char* uri) {
-    if (uri != nullptr && is_topic_name(uri)) {
-        open_topic(uri);
-    }
-    return true;
 }
 
 } // namespace vermilion::ui

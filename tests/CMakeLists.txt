@@ -410,4 +410,22 @@ target_link_libraries(vermilion_help_page_view_tests PRIVATE
     PkgConfig::GTK4)
 gtest_discover_tests(vermilion_help_page_view_tests)
 
+# The Help window on a real display (the tests skip without one).
+add_executable(vermilion_help_window_tests help_window_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_window.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/style.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_colours.cpp)
+target_link_libraries(vermilion_help_window_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_resources
+    vermilion_warnings
+    PkgConfig::GTK4)
+target_compile_definitions(vermilion_help_window_tests PRIVATE
+    VERMILION_MANUAL_DIR="${CMAKE_SOURCE_DIR}/docs/manual")
+gtest_discover_tests(vermilion_help_window_tests)
+
 add_subdirectory(ctxmon)

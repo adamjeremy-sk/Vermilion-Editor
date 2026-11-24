@@ -179,6 +179,13 @@ int HelpPageView::height_for_lines(int lines) const {
     return lines * line_height() + 2 * kHelpPageMargin;
 }
 
+int HelpPageView::natural_width() const {
+    int bar = 0;
+    gtk_widget_measure(gtk_widget_get_last_child(root_), GTK_ORIENTATION_HORIZONTAL, -1, nullptr,
+                       &bar, nullptr, nullptr); // the root box holds the page, then the bar
+    return page_width() + bar;
+}
+
 void HelpPageView::apply_page_tags() {
     const auto apply = [this](GtkTextTag* tag, std::size_t begin, std::size_t end) {
         GtkTextIter from;

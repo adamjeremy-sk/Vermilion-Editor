@@ -157,6 +157,9 @@ public:
     int line_height() const;
     // The height of `lines` lines of body text plus the margins above and below, in pixels.
     int height_for_lines(int lines) const;
+    // The width at which a window shows the whole page and the scroll bar at its right edge:
+    // page_width() plus the width of the bar, in pixels.
+    int natural_width() const;
 
 private:
     void build_tags();
