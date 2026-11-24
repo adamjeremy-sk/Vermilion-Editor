@@ -1502,3 +1502,8 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 
 ### Moved out of HANDOFF.md on the same day (not archived: it binds)
 - The "Prompt rules" paragraph of Next action (2), with the step 4 lessons, now lives in AI_ONBOARDING.md section 2, item 10. The Step 5 plan text of Next action (0) now lives in `claude/M2.5b_plan_amendments.md` (the plan file stays the base).
+
+## Part 45 — rotated out of HANDOFF.md on 2026-11-24 (twenty-fifth chat, step 6 designed)
+
+### 2026-11-21 (night, twenty-second chat) - 5a, 5b, 2c built, audited, committed
+- **5a** `HelpPageView` (`1a600dc`), **5b** zoom, scroll to a heading, wheel (`5c213c1`, 1398 tests), **2c** the editor default font is the system monospace font again (`911adda`, 1399 tests). A probe showed widget margins clip a heading's top 8 px (fixed in 5c1). Third kernel panic at 22:33, diagnosed from kdump (CVE-2026-53285, Backlog Hardware); Adam booted 7.0.0-43 at 22:53.
