@@ -58,6 +58,20 @@ void expect_highlights(const Shown& shown, std::optional<std::size_t> current) {
     }
 }
 
+// 300 lines "line n", the word "needle" on line `needle_line` (counted from 1).
+ManualText long_page(int needle_line) {
+    std::string text;
+    for (int i = 1; i <= 300; ++i) {
+        text += i == needle_line ? "needle\n" : "line " + std::to_string(i) + "\n";
+    }
+    return bare(text);
+}
+
+// The top of the character at `offset` in the coordinates of the vertical adjustment.
+double top_of(const Shown& shown, int offset) {
+    return shown.where(offset).y + vermilion::ui::kHelpPageMargin;
+}
+
 TEST_F(HelpPageViewTest, NothingIsHighlightedBeforeASearch) {
     Shown shown(900, 500);
     shown.view->show(bare("alpha beta alpha"));
@@ -197,6 +211,51 @@ TEST_F(HelpPageViewTest, ASourcePageIsSearchedToo) {
     expect_highlights(shown, std::nullopt);
 }
 
+TEST_F(HelpPageViewTest, StepScrollsAFarMatchToTheMiddleOfTheWindow) {
+    Shown shown(900, 300);
+    shown.view->show(long_page(150));
+    ASSERT_EQ(shown.view->set_search(options("needle")), std::size_t{1});
+    ASSERT_TRUE(shown.view->step(true).has_value());
+    spin(1500);
+    const int at = static_cast<int>(shown.view->matches()[0].begin);
+    GtkAdjustment* adjustment = shown.vadjustment();
+    const double value = gtk_adjustment_get_value(adjustment);
+    const double page = gtk_adjustment_get_page_size(adjustment);
+    EXPECT_GT(value, 1000.0);
+    const double middle = top_of(shown, at) + shown.where(at).height / 2.0;
+    EXPECT_NEAR(middle, value + page / 2.0, 3.0);
+}
+
+TEST_F(HelpPageViewTest, StepDoesNotScrollAMatchThatShows) {
+    Shown shown(900, 500);
+    shown.view->show(long_page(15));
+    ASSERT_EQ(shown.view->set_search(options("needle")), std::size_t{1});
+    ASSERT_TRUE(shown.view->step(true).has_value());
+    spin(600);
+    const int at = static_cast<int>(shown.view->matches()[0].begin);
+    ASSERT_GT(top_of(shown, at), 200.0); // far enough from the top for a centred scroll to show
+    EXPECT_EQ(gtk_adjustment_get_value(shown.vadjustment()), 0.0);
+}
+
+TEST_F(HelpPageViewTest, StepBringsAMatchAboveTheWindowBackIntoView) {
+    Shown shown(900, 300);
+    shown.view->show(long_page(5));
+    ASSERT_EQ(shown.view->set_search(options("line 29")), std::size_t{11});
+    ASSERT_TRUE(shown.view->step(false).has_value()); // the last one, far down
+    spin(1500);
+    const double far = gtk_adjustment_get_value(shown.vadjustment());
+    ASSERT_GT(far, 500.0);
+    for (std::size_t i = 0; i < 10; ++i) {
+        ASSERT_TRUE(shown.view->step(false).has_value());
+    }
+    spin(1500);
+    const int at = static_cast<int>(shown.view->matches()[0].begin);
+    const double value = gtk_adjustment_get_value(shown.vadjustment());
+    EXPECT_LE(value, top_of(shown, at));
+    EXPECT_LE(top_of(shown, at) + shown.where(at).height,
+              value + gtk_adjustment_get_page_size(shown.vadjustment()) + 1.0);
+}
+
 // Paragraphs "needle", a table with the word in a cell, and a last paragraph "needle".
 ManualPage table_page() {
     std::string markdown = "needle at the start\n\n";
@@ -213,11 +272,15 @@ ManualPage table_page() {
     return vermilion::parse_manual(markdown);
 }
 
-TEST_F(HelpPageViewTest, ANewLayoutSearchesTheNewText) {
+TEST_F(HelpPageViewTest, ANewLayoutSearchesTheNewTextAndKeepsTheCurrentMatch) {
     Shown shown(1500, 500);
-    shown.view->show_source(table_page());
+    const ManualPage page = table_page();
+    shown.view->show_source(page);
     spin(300);
     ASSERT_EQ(shown.view->set_search(options("needle")), std::size_t{3});
+    ASSERT_TRUE(shown.view->step(true).has_value());
+    ASSERT_TRUE(shown.view->step(true).has_value()); // the one in the table cell
+    expect_highlights(shown, std::size_t{1});
     const std::size_t wide = shown.view->columns();
     gtk_window_set_default_size(GTK_WINDOW(shown.window), 800, 500);
     spin(1500);
@@ -225,18 +288,114 @@ TEST_F(HelpPageViewTest, ANewLayoutSearchesTheNewText) {
     EXPECT_EQ(shown.view->matches(),
               vermilion::find_matches(shown.view->page().text, options("needle")));
     ASSERT_EQ(shown.view->matches().size(), std::size_t{3});
-    expect_highlights(shown, std::nullopt);
+    expect_highlights(shown, std::size_t{1});
+    ASSERT_EQ(shown.view->page().tables.size(), std::size_t{1});
+    EXPECT_GE(shown.view->matches()[1].begin, shown.view->page().tables[0].begin);
+    EXPECT_LT(shown.view->matches()[1].begin, shown.view->page().tables[0].end);
 }
 
-TEST_F(HelpPageViewTest, ZoomKeepsTheHighlights) {
+// A phrase in a paragraph, in a table cell that a narrow layout wraps in the middle of the phrase,
+// and in a last paragraph.
+ManualPage phrase_page() {
+    std::string markdown = "needle in a haystack\n\n";
+    for (int i = 0; i < 30; ++i) {
+        markdown += "Paragraph " + std::to_string(i) + " " + std::string(40, 'z') + "\n\n";
+    }
+    markdown += "| Name | Meaning | Notes |\n|---|---|---|\n";
+    for (int i = 0; i < 3; ++i) {
+        markdown +=
+            "| first second third fourth fifth | alpha beta gamma delta epsilon zeta theta iota "
+            "kappa | twenty_four_chars_long__ one two three four five six seven eight nine ten |\n";
+    }
+    markdown += "| needle in a cell | two | three |\n\nneedle in a stack\n";
+    return vermilion::parse_manual(markdown);
+}
+
+TEST_F(HelpPageViewTest, ANewLayoutWithAnotherNumberOfMatchesKeepsTheNearestMatch) {
+    Shown shown(1500, 500);
+    shown.view->show_source(phrase_page());
+    spin(300);
+    ASSERT_EQ(shown.view->set_search(options("needle in a")), std::size_t{3});
+    ASSERT_TRUE(shown.view->step(false).has_value()); // the last paragraph
+    expect_highlights(shown, std::size_t{2});
+    gtk_window_set_default_size(GTK_WINDOW(shown.window), 800, 500);
+    spin(1500);
+    ASSERT_EQ(shown.view->matches().size(), std::size_t{2}); // the cell no longer holds the phrase
+    const std::size_t last = shown.view->page().text.rfind("needle in a stack");
+    ASSERT_NE(last, std::string::npos);
+    EXPECT_EQ(shown.view->matches()[1].begin, last);
+    expect_highlights(shown, std::size_t{1});
+}
+
+// Two paragraphs with a phrase, then a table whose last cell holds the phrase too.
+ManualPage phrase_at_the_end() {
+    std::string markdown = "needle in a haystack\n\nneedle in a stack\n\n";
+    for (int i = 0; i < 30; ++i) {
+        markdown += "Paragraph " + std::to_string(i) + " " + std::string(40, 'z') + "\n\n";
+    }
+    markdown += "| Name | Meaning | Notes |\n|---|---|---|\n";
+    for (int i = 0; i < 3; ++i) {
+        markdown +=
+            "| first second third fourth fifth | alpha beta gamma delta epsilon zeta theta iota "
+            "kappa | twenty_four_chars_long__ one two three four five six seven eight nine ten |\n";
+    }
+    markdown += "| needle in a cell | two | three |\n";
+    return vermilion::parse_manual(markdown);
+}
+
+TEST_F(HelpPageViewTest, ANewLayoutWithNoMatchAfterTheOldPlaceKeepsTheLastMatch) {
+    Shown shown(1500, 500);
+    shown.view->show_source(phrase_at_the_end());
+    spin(300);
+    ASSERT_EQ(shown.view->set_search(options("needle in a")), std::size_t{3});
+    ASSERT_TRUE(shown.view->step(false).has_value()); // the one in the last cell
+    expect_highlights(shown, std::size_t{2});
+    gtk_window_set_default_size(GTK_WINDOW(shown.window), 800, 500);
+    spin(1500);
+    ASSERT_EQ(shown.view->matches().size(), std::size_t{2}); // the cell no longer holds the phrase
+    expect_highlights(shown, std::size_t{1});
+}
+
+void count_criticals(const gchar*, GLogLevelFlags, const gchar*, gpointer data) {
+    ++*static_cast<int*>(data);
+}
+
+TEST_F(HelpPageViewTest, ANewSearchEndsTheScrollToTheOldCurrentMatch) {
+    Shown shown(900, 300);
+    shown.view->show(long_page(150));
+    ASSERT_EQ(shown.view->set_search(options("needle")), std::size_t{1});
+    ASSERT_TRUE(shown.view->step(true).has_value()); // the scroll to it is still trying
+    int criticals = 0;
+    const guint handler =
+        g_log_set_handler("Gtk", G_LOG_LEVEL_CRITICAL, count_criticals, &criticals);
+    shown.view->set_search(options("line"));
+    spin(600);
+    g_log_remove_handler("Gtk", handler);
+    EXPECT_EQ(criticals, 0);
+}
+
+TEST_F(HelpPageViewTest, ANewLayoutWithoutACurrentMatchHasNone) {
     Shown shown(1500, 500);
     shown.view->show_source(table_page());
     spin(300);
     ASSERT_EQ(shown.view->set_search(options("needle")), std::size_t{3});
+    gtk_window_set_default_size(GTK_WINDOW(shown.window), 800, 500);
+    spin(1500);
+    ASSERT_EQ(shown.view->matches().size(), std::size_t{3});
+    expect_highlights(shown, std::nullopt);
+}
+
+TEST_F(HelpPageViewTest, ZoomKeepsTheHighlightsAndTheCurrentMatch) {
+    Shown shown(1500, 500);
+    shown.view->show_source(table_page());
+    spin(300);
+    ASSERT_EQ(shown.view->set_search(options("needle")), std::size_t{3});
+    ASSERT_TRUE(shown.view->step(false).has_value());
+    expect_highlights(shown, std::size_t{2});
     ASSERT_TRUE(shown.view->set_zoom(2.0));
     spin(300);
     ASSERT_EQ(shown.view->matches().size(), std::size_t{3});
-    expect_highlights(shown, std::nullopt);
+    expect_highlights(shown, std::size_t{2});
 }
 
 TEST_F(HelpPageViewTest, AFixedPageKeepsItsHighlightsWhenTheWindowChanges) {

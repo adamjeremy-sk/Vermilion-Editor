@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -226,7 +227,7 @@ void HelpPageView::show(const ManualText& page) {
     set_text(page);
 }
 
-void HelpPageView::set_text(const ManualText& page) {
+void HelpPageView::set_text(const ManualText& page, std::optional<std::size_t> keep_match_at) {
     stop_heading_scroll();
     for (GtkTextMark* mark : heading_marks_) {
         gtk_text_buffer_delete_mark(buffer_, mark);
@@ -244,7 +245,7 @@ void HelpPageView::set_text(const ManualText& page) {
         gtk_text_buffer_get_iter_at_offset(buffer_, &at, static_cast<int>(heading.begin));
         heading_marks_.push_back(gtk_text_buffer_create_mark(buffer_, nullptr, &at, TRUE));
     }
-    highlight_page();
+    highlight_page(keep_match_at);
     hover_at(page_.length);
     gtk_adjustment_set_value(vadjustment(), 0.0);
 }

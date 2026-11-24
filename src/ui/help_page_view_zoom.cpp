@@ -86,8 +86,9 @@ bool HelpPageView::scroll_to_heading(std::size_t index) {
     return true;
 }
 
-void HelpPageView::start_scroll(GtkTextMark* mark) {
+void HelpPageView::start_scroll(GtkTextMark* mark, bool centre) {
     stop_heading_scroll();
+    scroll_centre_ = centre;
     scroll_mark_ = mark;
     scroll_steady_ = 0;
     scroll_ticks_ = 0;
@@ -120,9 +121,15 @@ gboolean HelpPageView::run_heading_scroll(gpointer data) {
     GtkAdjustment* adjustment = self->vadjustment();
     const double last =
         gtk_adjustment_get_upper(adjustment) - gtk_adjustment_get_page_size(adjustment);
-    const double want =
-        std::max(0.0, std::min(static_cast<double>(where.y + kHelpPageMargin), last));
     const double value = gtk_adjustment_get_value(adjustment);
+    const double top = static_cast<double>(where.y + kHelpPageMargin);
+    double want = top;
+    if (self->scroll_centre_) {
+        const double page = gtk_adjustment_get_page_size(adjustment);
+        const bool shown = top >= value && top + where.height <= value + page;
+        want = shown ? value : top - (page - where.height) / 2.0;
+    }
+    want = std::max(0.0, std::min(want, last));
     if (std::fabs(value - want) > 0.5) {
         gtk_adjustment_set_value(adjustment, want);
         self->scroll_steady_ = 0;

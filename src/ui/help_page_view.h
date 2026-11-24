@@ -160,8 +160,10 @@ public:
     // kTagMatch on every match of the page on the screen (find_matches() over page().text; no
     // match at all when the pattern is bad); no match is current afterwards. It returns the number
     // of matches. show() and show_source() search the new page, and a page laid out again
-    // searches its new text; none of them makes a match current. The highlights do not touch the
-    // text selection.
+    // searches its new text; neither makes a match current, except that a new layout keeps the
+    // current match: it keeps its number when the new text has as many matches as the old one,
+    // and otherwise it is the first match that ends after the corresponding place of the new text
+    // (the last match when none does). The highlights do not touch the text selection.
     std::size_t set_search(const SearchOptions& options);
     const SearchOptions& search() const { return search_; }
     // The matches of the search in page().text, in order (empty when no search is set).
@@ -170,8 +172,10 @@ public:
     std::optional<std::size_t> current_match() const { return current_match_; }
     // Makes the next match (forward) or the previous one the current match, with step_match()
     // (core/manual_search.h): from no current match it goes to the first one (forward) or the last
-    // one (backward) without wrapping. It does not scroll. Returns the step, or nothing, and no
-    // change, when the page has no match.
+    // one (backward) without wrapping. The match is scrolled into the middle of the window unless
+    // it is on the screen entirely (the polling of scroll_to_heading() is used, so it also works
+    // while GTK lays the page out). Returns the step, or nothing, and no change, when the page
+    // has no match.
     std::optional<MatchStep> step(bool forward);
 
     // Reads the colours of the page from the stylesheet again (the names above, through the
@@ -203,14 +207,19 @@ private:
     void apply_page_tags();
     // The advance of the digit "0" in the view's font at the current zoom, in pixels.
     double advance() const;
-    // Puts `page` into the view (the body of show()).
-    void set_text(const ManualText& page);
-    // Searches page_ again with search_: matches_ and the tags on them; no match is current.
-    void highlight_page();
-    // Takes the tags off the page and forgets matches_ and the current match.
+    // Puts `page` into the view (the body of show()). `keep_match_at` is an offset in `page`:
+    // when it has a value, the current match is kept, see set_search().
+    void set_text(const ManualText& page, std::optional<std::size_t> keep_match_at = std::nullopt);
+    // Searches page_ again with search_: matches_, the tags, and the current match when
+    // `keep_match_at` has a value and there is a match: the old current match's number when the
+    // old and the new list are equally long, else the first match that ends after
+    // `keep_match_at` (the last one when none does).
+    void highlight_page(std::optional<std::size_t> keep_match_at);
+    // Takes the tags off the page and forgets matches_, the current match and its mark.
     void clear_highlights();
-    // Makes match `index` the current one: moves kTagCurrentMatch to it.
-    void make_current(std::size_t index);
+    // Makes match `index` the current one: moves kTagCurrentMatch, puts match_mark_ at its start,
+    // and, with `scroll`, starts the scroll that brings it into view (centred).
+    void make_current(std::size_t index, bool scroll);
     // The width in pixels below which the page scrolls sideways, or -1 for a page with no table.
     int min_width() const;
     // The number of columns that the window gives the page now (kHelpOpenColumns without a width).
@@ -227,7 +236,9 @@ private:
     void on_width();
     // Scrolls the character `offset` to the top of the window, like scroll_to_heading().
     void scroll_to_offset(std::size_t offset);
-    void start_scroll(GtkTextMark* mark);
+    // Starts the polling scroll to `mark`: its line at the top of the window, or, with `centre`,
+    // in the middle unless it is on the screen entirely.
+    void start_scroll(GtkTextMark* mark, bool centre = false);
     void on_click(double x, double y);
     void on_motion(double x, double y);
     // The character under the point (x, y) of the widget, or page().length.
@@ -259,6 +270,8 @@ private:
     std::vector<GtkTextMark*> heading_marks_; // borrowed; the buffer owns them; one per heading
     GtkTextMark* anchor_mark_ = nullptr;      // borrowed; where a layout put the reader
     GtkTextMark* scroll_mark_ = nullptr;      // borrowed; the mark a running scroll goes to
+    GtkTextMark* match_mark_ = nullptr;       // borrowed; the start of the current match
+    bool scroll_centre_ = false;              // whether the running scroll centres its mark
     int scroll_steady_ = 0;                   // tries in a row at which the position was right
     int scroll_ticks_ = 0;                    // tries so far
     int scroll_waits_ = 0;                    // ticks spent waiting for the window to be shown

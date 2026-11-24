@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 
 #include "core/manual_table.h"
 #include "core/manual_text.h"
@@ -86,8 +87,12 @@ void HelpPageView::relayout(std::size_t offset) {
     }
     const ManualText built = build_manual_text(source_, columns);
     const std::size_t target = corresponding_offset(page_, built, offset);
+    std::optional<std::size_t> keep_match_at;
+    if (current_match_.has_value()) {
+        keep_match_at = corresponding_offset(page_, built, matches_[*current_match_].begin);
+    }
     columns_ = columns;
-    set_text(built); // drops the selection and scrolls to the top
+    set_text(built, keep_match_at); // drops the selection and scrolls to the top
     scroll_to_offset(target);
 }
 
