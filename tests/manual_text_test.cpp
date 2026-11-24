@@ -295,4 +295,52 @@ TEST(ManualTextLink, NoLinksMeansNull) {
     EXPECT_EQ(vermilion::link_at(ManualText{}, 0), nullptr);
 }
 
+// The same page laid out for two widths: only the tables differ.
+TEST(ManualTextOffset, TextAroundATableMovesByTheChangeOfTheTable) {
+    const vermilion::ManualPage page = vermilion::parse_manual(
+        "intro paragraph\n\n| A | B |\n|---|---|\n| aaaa bbbb cccc | dddd eeee ffff |\n\n"
+        "last paragraph here");
+    const ManualText wide = vermilion::build_manual_text(page, 80);
+    const ManualText narrow = vermilion::build_manual_text(page, 16);
+    ASSERT_EQ(wide.tables.size(), std::size_t{1});
+    ASSERT_EQ(narrow.tables.size(), std::size_t{1});
+    ASSERT_NE(wide.length, narrow.length);
+    const auto at = [](const ManualText& text, const char* word) {
+        return vermilion::character_count(text.text.substr(0, text.text.find(word)));
+    };
+    EXPECT_EQ(vermilion::corresponding_offset(wide, narrow, 0), std::size_t{0});
+    EXPECT_EQ(vermilion::corresponding_offset(wide, narrow, at(wide, "paragraph")),
+              at(narrow, "paragraph"));
+    EXPECT_EQ(vermilion::corresponding_offset(wide, narrow, at(wide, "last")), at(narrow, "last"));
+    EXPECT_EQ(vermilion::corresponding_offset(narrow, wide, at(narrow, "last")), at(wide, "last"));
+    EXPECT_EQ(vermilion::corresponding_offset(wide, narrow, wide.length), narrow.length);
+}
+
+TEST(ManualTextOffset, AnOffsetInsideATableStaysInsideIt) {
+    const vermilion::ManualPage page = vermilion::parse_manual(
+        "intro\n\n| A | B |\n|---|---|\n| aaaa bbbb cccc | dddd eeee ffff |\n\nlast");
+    const ManualText wide = vermilion::build_manual_text(page, 80);
+    const ManualText narrow = vermilion::build_manual_text(page, 16);
+    ASSERT_EQ(wide.tables.size(), std::size_t{1});
+    ASSERT_EQ(narrow.tables.size(), std::size_t{1});
+    EXPECT_EQ(vermilion::corresponding_offset(wide, narrow, wide.tables[0].begin),
+              narrow.tables[0].begin);
+    for (std::size_t offset = wide.tables[0].begin; offset < wide.tables[0].end; ++offset) {
+        const std::size_t moved = vermilion::corresponding_offset(wide, narrow, offset);
+        EXPECT_GE(moved, narrow.tables[0].begin);
+        EXPECT_LT(moved, narrow.tables[0].end);
+    }
+    EXPECT_EQ(vermilion::corresponding_offset(wide, narrow, wide.tables[0].end),
+              narrow.tables[0].end);
+}
+
+TEST(ManualTextOffset, WithoutTheSameTablesTheOffsetIsOnlyLimited) {
+    const ManualText plain = build("one two three");
+    const ManualText other = build("| A |\n|---|\n| a |\n");
+    ASSERT_NE(plain.tables.size(), other.tables.size());
+    EXPECT_EQ(vermilion::corresponding_offset(plain, other, 3), std::size_t{3});
+    EXPECT_EQ(vermilion::corresponding_offset(plain, other, 5000), other.length);
+    EXPECT_EQ(vermilion::corresponding_offset(ManualText{}, ManualText{}, 7), std::size_t{0});
+}
+
 } // namespace

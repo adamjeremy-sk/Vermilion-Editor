@@ -89,6 +89,13 @@ struct ManualText {
 // character per column and its gaps, so with a small `columns` its lines are longer than that.
 ManualText build_manual_text(const ManualPage& page, std::size_t columns);
 
+// The offset in `to` of the character at `offset` in `from`, when both are the same page laid out
+// for different widths: only the tables differ, so the text between them is the same. An offset
+// inside a table goes to the same fraction of the table's text in `to`; one after a table is
+// moved by the change of length of the tables before it. When the two do not have the same number
+// of tables, the offset is only limited to `to.length`. Never past `to.length`.
+std::size_t corresponding_offset(const ManualText& from, const ManualText& to, std::size_t offset);
+
 // The link at character offset `offset`, or null if there is none there: a link covers its
 // `begin` up to but not including its `end`. For clicks in the view.
 const LinkRange* link_at(const ManualText& built, std::size_t offset);

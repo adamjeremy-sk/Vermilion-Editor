@@ -226,27 +226,42 @@ std::vector<std::vector<Line>> wrap_row(const ManualRow& row, const std::vector<
     return wrapped;
 }
 
-} // namespace
+// The widths that a table's columns want: for each column its widest cell on one line (`natural`)
+// and its longest word (`minimum`), both at least 1. The count is the larger of the table's own
+// and its longest row.
+struct ColumnSizes {
+    std::vector<std::size_t> natural;
+    std::vector<std::size_t> minimum;
+};
 
-TableLayout layout_table(const ManualBlock& table, std::size_t total) {
+ColumnSizes column_sizes(const ManualBlock& table) {
     std::size_t columns = table.columns;
     for (const ManualRow& row : table.rows) {
         if (row.size() > columns) {
             columns = row.size();
         }
     }
-    std::vector<std::size_t> natural(columns, 1);
-    std::vector<std::size_t> minimum(columns, 1);
+    ColumnSizes sizes;
+    sizes.natural.assign(columns, 1);
+    sizes.minimum.assign(columns, 1);
     for (std::size_t c = 0; c < columns; ++c) {
         for (const ManualRow& row : table.rows) {
             if (c < row.size()) {
                 const std::vector<Word> words = cell_words(row[c]);
-                natural[c] = std::max(natural[c], natural_width(words));
-                minimum[c] = std::max(minimum[c], longest_word(words));
+                sizes.natural[c] = std::max(sizes.natural[c], natural_width(words));
+                sizes.minimum[c] = std::max(sizes.minimum[c], longest_word(words));
             }
         }
     }
-    const std::vector<std::size_t> width = fit_columns(natural, minimum, total);
+    return sizes;
+}
+
+} // namespace
+
+TableLayout layout_table(const ManualBlock& table, std::size_t total) {
+    const ColumnSizes sizes = column_sizes(table);
+    const std::size_t columns = sizes.natural.size();
+    const std::vector<std::size_t> width = fit_columns(sizes.natural, sizes.minimum, total);
 
     TableLayout out;
     std::size_t chars = 0;
@@ -295,6 +310,28 @@ TableLayout layout_table(const ManualBlock& table, std::size_t total) {
     }
     out.length = chars;
     return out;
+}
+
+std::size_t table_min_columns(const ManualBlock& table) {
+    const ColumnSizes sizes = column_sizes(table);
+    if (sizes.minimum.empty()) {
+        return 0;
+    }
+    std::size_t total = 3 * (sizes.minimum.size() - 1);
+    for (const std::size_t longest : sizes.minimum) {
+        total += longest;
+    }
+    return total;
+}
+
+std::size_t page_min_columns(const ManualPage& page) {
+    std::size_t largest = 0;
+    for (const ManualBlock& block : page.blocks) {
+        if (block.kind == ManualBlockKind::Table && !block.rows.empty()) {
+            largest = std::max(largest, table_min_columns(block));
+        }
+    }
+    return largest;
 }
 
 } // namespace vermilion

@@ -216,4 +216,46 @@ TEST(ManualTableColumns, NoColumnsAndTooManyColumns) {
     EXPECT_EQ(vermilion::fit_columns(Widths(21, 5), Widths(21, 5), 80), Widths(21, 1));
 }
 
+// The table of the first block of `markdown`.
+vermilion::ManualBlock table_of(const std::string& markdown) {
+    return vermilion::parse_manual(markdown).blocks[0];
+}
+
+TEST(ManualTableMinimum, IsTheLongestWordOfEachColumnPlusTheGaps) {
+    const vermilion::ManualBlock table =
+        table_of("| alpha beta | gamma |\n|---|---|\n| delta epsilonx | z |\n");
+    EXPECT_EQ(vermilion::table_min_columns(table), std::size_t{8 + 5 + 3});
+}
+
+TEST(ManualTableMinimum, ARaggedRowCountsItsExtraColumn) {
+    const vermilion::ManualBlock table = table_of("| a | b |\n|---|---|\n| xx | yyy | zzzz |\n");
+    ASSERT_EQ(table.columns, std::size_t{3});
+    EXPECT_EQ(vermilion::table_min_columns(table), std::size_t{2 + 3 + 4 + 6});
+}
+
+TEST(ManualTableMinimum, NoWordIsCutAtTheMinimumAndOneIsCutBelow) {
+    const vermilion::ManualBlock table = table_of("| Name | Meaning |\n|---|---|\n| first second "
+                                                  "third | a verylongwordhere and more words |\n");
+    const std::size_t minimum = vermilion::table_min_columns(table);
+    EXPECT_EQ(minimum, std::size_t{6 + 3 + 16});
+    const TableLayout at = vermilion::layout_table(table, minimum);
+    EXPECT_NE(at.text.find("verylongwordhere"), std::string::npos);
+    for (const std::string& line : lines_of(at.text)) {
+        EXPECT_LE(vermilion::character_count(line), minimum);
+    }
+    const TableLayout below = vermilion::layout_table(table, minimum - 1);
+    EXPECT_EQ(below.text.find("verylongwordhere"), std::string::npos);
+}
+
+TEST(ManualTableMinimum, ThePageMinimumIsTheLargestTableAndNoTableIsZero) {
+    EXPECT_EQ(vermilion::page_min_columns(vermilion::parse_manual("Just text.\n\n- an item")),
+              std::size_t{0});
+    EXPECT_EQ(vermilion::page_min_columns(vermilion::ManualPage{}), std::size_t{0});
+    const vermilion::ManualPage page =
+        vermilion::parse_manual("| a | b |\n|---|---|\n| xx | yy |\n\ntext\n\n"
+                                "| a | b | c |\n|---|---|---|\n| xxxxx | yyyyy | zzzzz |\n\n"
+                                "| a |\n|---|\n| xxxxxxx |\n");
+    EXPECT_EQ(vermilion::page_min_columns(page), std::size_t{5 + 5 + 5 + 6});
+}
+
 } // namespace

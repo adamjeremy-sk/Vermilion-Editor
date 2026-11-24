@@ -185,6 +185,29 @@ ManualText build_manual_text(const ManualPage& page, std::size_t columns) {
     return built;
 }
 
+std::size_t corresponding_offset(const ManualText& from, const ManualText& to, std::size_t offset) {
+    if (from.tables.size() != to.tables.size()) {
+        return std::min(offset, to.length);
+    }
+    std::size_t from_end = 0; // the end of the last table before `offset`, in `from`
+    std::size_t to_end = 0;   // and in `to`
+    for (std::size_t i = 0; i < from.tables.size(); ++i) {
+        const TextRange& was = from.tables[i];
+        const TextRange& now = to.tables[i];
+        if (offset < was.begin) {
+            break;
+        }
+        if (offset < was.end) {
+            const std::size_t inside =
+                (offset - was.begin) * (now.end - now.begin) / (was.end - was.begin);
+            return now.begin + std::min(inside, now.end - now.begin - 1);
+        }
+        from_end = was.end;
+        to_end = now.end;
+    }
+    return std::min(to_end + (offset - from_end), to.length);
+}
+
 const LinkRange* link_at(const ManualText& built, std::size_t offset) {
     const auto it = std::upper_bound(
         built.links.begin(), built.links.end(), offset,

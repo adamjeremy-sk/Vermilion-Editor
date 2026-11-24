@@ -43,4 +43,12 @@ struct TableLayout {
 // The caller has checked that the table has a row and a column.
 TableLayout layout_table(const ManualBlock& table, std::size_t total);
 
+// The narrowest `total` at which layout_table cuts no word of `table`: the longest word of each
+// column plus 3 characters for every gap between columns. 0 for a table with no column.
+std::size_t table_min_columns(const ManualBlock& table);
+
+// The largest table_min_columns of the tables of `page` that have a row, or 0 when there is none.
+// The Help page never lays a table out in less, and scrolls sideways when its window is narrower.
+std::size_t page_min_columns(const ManualPage& page);
+
 } // namespace vermilion
