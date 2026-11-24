@@ -140,8 +140,7 @@ TEST(AppearancePageIndex, AnIndexOutsideTheListGivesFollowSystem) {
 }
 
 TEST(AppearancePageIndex, ThereIsADefaultFont) {
-    EXPECT_EQ(std::string(AppearancePage::default_font_text()),
-              std::string("Fantasque Sans Mono 12"));
+    EXPECT_EQ(std::string(AppearancePage::default_font_text()), std::string("Monospace 12"));
 }
 
 TEST_F(AppearancePageTest, NothingAndNonFontsAreNotMonospace) {
@@ -152,7 +151,7 @@ TEST_F(AppearancePageTest, NothingAndNonFontsAreNotMonospace) {
     g_object_unref(label);
 }
 
-TEST_F(AppearancePageTest, ItStartsWithTheSystemFontBoxCheckedAndTheBundledFontGreyedOut) {
+TEST_F(AppearancePageTest, ItStartsWithTheSystemFontBoxCheckedAndTheGenericFontGreyedOut) {
     load(vermilion::default_settings());
     EXPECT_EQ(selected(), 2u);
     EXPECT_TRUE(active(page_->highlight_check()));
@@ -162,15 +161,15 @@ TEST_F(AppearancePageTest, ItStartsWithTheSystemFontBoxCheckedAndTheBundledFontG
         gtk_font_dialog_button_get_font_desc(GTK_FONT_DIALOG_BUTTON(page_->font_button()));
     ASSERT_NE(shown, nullptr);
     g_autofree char* text = pango_font_description_to_string(shown);
-    EXPECT_EQ(std::string(text), std::string("Fantasque Sans Mono 12"));
+    EXPECT_EQ(std::string(text), std::string("Monospace 12"));
     EXPECT_TRUE(stored().font.empty());
 }
 
-TEST_F(AppearancePageTest, UncheckingTheBoxOfTheDefaultsSwitchesToTheBundledFontFirst) {
+TEST_F(AppearancePageTest, UncheckingTheBoxOfTheDefaultsSwitchesToTheGenericFontFirst) {
     load(vermilion::default_settings());
     set_active(page_->system_font_check(), false);
     EXPECT_TRUE(font_enabled());
-    EXPECT_EQ(stored().font, std::string("Fantasque Sans Mono 12"));
+    EXPECT_EQ(stored().font, std::string("Monospace 12"));
 }
 
 TEST_F(AppearancePageTest, AnEmptyFontShowsTheSystemFontBox) {
@@ -272,7 +271,7 @@ TEST_F(AppearancePageTest, WithNoFontOfItsOwnUncheckingGivesTheDefaultFont) {
     settings.font.clear();
     load(settings);
     set_active(page_->system_font_check(), false);
-    EXPECT_EQ(stored().font, std::string("Fantasque Sans Mono 12"));
+    EXPECT_EQ(stored().font, std::string("Monospace 12"));
 }
 
 TEST_F(AppearancePageTest, AFontChosenInTheButtonIsStored) {

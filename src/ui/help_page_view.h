@@ -18,7 +18,7 @@
 namespace vermilion::ui {
 
 // CSS classes: the text view, and the inner scrolled window around it. The stylesheet gives the
-// view its font (the bundled font at 12 pt).
+// view its font (the system monospace font at 12 pt).
 inline constexpr char kHelpViewClass[] = "vm-help-view";
 inline constexpr char kHelpHolderClass[] = "vm-help-holder";
 

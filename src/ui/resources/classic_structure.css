@@ -275,12 +275,12 @@ window.vm-help .vm-help-bar {
     padding: 4px;
 }
 
-/* Help page (M2.5b step 5): the text view of the page uses the bundled font at 12 pt, the same for
-   every page, and the width of the page is measured from it. The page is drawn in the field
-   colours; the colours of headings, links, code and table headers are text tags that
+/* Help page (M2.5b step 5): the text view of the page uses the system monospace font at 12 pt, the
+   same for every page, and the width of the page is measured from it. The page is drawn in the
+   field colours; the colours of headings, links, code and table headers are text tags that
    HelpPageView::refresh_colours() fills from the vm_help_* names of the palette. */
 window.vm-help textview.vm-help-view {
-    font-family: "Fantasque Sans Mono", monospace;
+    font-family: monospace;
     font-size: 12pt;
 }
 

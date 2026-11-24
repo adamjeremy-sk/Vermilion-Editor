@@ -17,7 +17,7 @@ restart. The window reads the settings file again every time it opens.
   dark. Light and Dark can always be chosen by hand. The colours of the editor text follow the mode.
 - **Highlight the current line** shades the line the cursor is on. It is on by default.
 - **Use the system monospace font** is on by default: the editor uses the desktop's monospace font. The font button is
-  greyed out while the box is on, and shows Fantasque Sans Mono 12, the font that comes with Vermilion. Turn the box off
+  greyed out while the box is on, and shows Monospace 12, the system's generic monospace font. Turn the box off
   and that is the font you get first; choose another with the font button. Only fixed-width fonts are offered.
 
 ## Editor

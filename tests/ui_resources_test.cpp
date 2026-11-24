@@ -104,7 +104,8 @@ TEST(UiResources, HelpWindowKeepsItsBarRuleAndNothingOfTheLabelPage) {
 TEST(UiResources, HelpPageViewHasItsFont) {
     std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
     EXPECT_NE(css.find("window.vm-help textview.vm-help-view {"), std::string::npos);
-    EXPECT_NE(css.find("font-family: \"Fantasque Sans Mono\", monospace;"), std::string::npos);
+    EXPECT_NE(css.find("font-family: monospace;"), std::string::npos);
+    EXPECT_EQ(css.find("Fantasque"), std::string::npos);
 }
 
 TEST(UiResources, FindWindowHasItsRule) {

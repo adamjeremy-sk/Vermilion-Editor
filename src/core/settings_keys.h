@@ -25,8 +25,9 @@ inline constexpr const char* kEditorGroup = "editor";
 inline constexpr const char* kFont = "font";
 inline constexpr const char* kFontDefault = "";
 // The font the settings page shows (greyed out) while the system monospace font is in use, and
-// switches to first when that box is unchecked: the font the program bundles, Fantasque Sans Mono.
-inline constexpr const char* kFontFirstChoice = "Fantasque Sans Mono 12";
+// switches to first when that box is unchecked: the generic family Monospace, which the system maps
+// to its own monospace font.
+inline constexpr const char* kFontFirstChoice = "Monospace 12";
 
 // How wide a tab is, and how many spaces the Tab key inserts: 4 or 8. Integer.
 inline constexpr const char* kTabWidth = "tab_width";
