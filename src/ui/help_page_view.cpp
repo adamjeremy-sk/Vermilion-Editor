@@ -153,6 +153,8 @@ void HelpPageView::build_tags() {
                                              "scale", kHeading2Scale, nullptr);
     heading_[2] = gtk_text_buffer_create_tag(buffer_, kTagHeading3, "weight", PANGO_WEIGHT_BOLD,
                                              "scale", 1.0, nullptr);
+    // Created last, so that its colours win over those of the other tags.
+    match_tag_ = gtk_text_buffer_create_tag(buffer_, kTagMatch, nullptr);
 }
 
 void HelpPageView::apply_zoom() {
@@ -240,6 +242,7 @@ void HelpPageView::set_text(const ManualText& page) {
         gtk_text_buffer_get_iter_at_offset(buffer_, &at, static_cast<int>(heading.begin));
         heading_marks_.push_back(gtk_text_buffer_create_mark(buffer_, nullptr, &at, TRUE));
     }
+    highlight_page();
     hover_at(page_.length);
     gtk_adjustment_set_value(vadjustment(), 0.0);
 }

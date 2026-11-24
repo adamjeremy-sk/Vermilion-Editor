@@ -12,7 +12,9 @@
 #include <string>
 #include <vector>
 
+#include "core/manual_search.h"
 #include "core/manual_text.h"
+#include "core/search_options.h"
 #include "ui/gtkx/signal.h"
 
 namespace vermilion::ui {
@@ -38,6 +40,7 @@ inline constexpr char kTagLink[] = "link";   // not underlined: the colour and t
 inline constexpr char kTagHeading1[] = "h1"; // bold, 1.5 times the zoom
 inline constexpr char kTagHeading2[] = "h2"; // bold, 1.25 times the zoom
 inline constexpr char kTagHeading3[] = "h3"; // bold; levels 3 to 6
+inline constexpr char kTagMatch[] = "match"; // every match of the search
 
 // Lines of text that the window shows when it opens (Adam, 2026-11-21).
 inline constexpr int kHelpPageLines = 36;
@@ -149,10 +152,21 @@ public:
     bool zoom_in();
     bool zoom_out();
     bool reset_zoom();
+    // Search. The view shows the matches of one search in whatever page it shows. set_search()
+    // makes `options` the search (an empty text, see search_enabled(), switches it off) and puts
+    // kTagMatch on every match of the page on the screen (find_matches() over page().text; no
+    // match at all when the pattern is bad). It returns the number of matches. show() and
+    // show_source() search the new page, and a page laid out again searches its new text. The
+    // highlights do not touch the text selection.
+    std::size_t set_search(const SearchOptions& options);
+    const SearchOptions& search() const { return search_; }
+    // The matches of the search in page().text, in order (empty when no search is set).
+    const std::vector<SearchMatch>& matches() const { return matches_; }
 
     // Reads the colours of the page from the stylesheet again (the names above, through the
     // style of the text view) and puts them into the text tags: heading and link text, the
-    // background of code spans, the table header's background and text. A name that the
+    // background of code spans, the table header's background and text, the background of
+    // matches. A name that the
     // stylesheet does not define leaves that colour unset (the view's own text colour). Called at
     // construction and whenever the view is mapped; the window calls it when the palette changes,
     // because tag colours are not CSS rules and do not follow a new palette by themselves.
@@ -180,6 +194,10 @@ private:
     double advance() const;
     // Puts `page` into the view (the body of show()).
     void set_text(const ManualText& page);
+    // Searches page_ again with search_: matches_ and the tags on them.
+    void highlight_page();
+    // Takes the tags off the page and forgets matches_.
+    void clear_highlights();
     // The width in pixels below which the page scrolls sideways, or -1 for a page with no table.
     int min_width() const;
     // The number of columns that the window gives the page now (kHelpOpenColumns without a width).
@@ -211,9 +229,11 @@ private:
     bool has_source_ = false;     // whether the page can be laid out again
     std::size_t min_columns_ = 0; // page_min_columns(source_)
     std::size_t columns_ = kHelpOpenColumns;
-    bool width_seen_ = false;        // whether the window has had a width
-    std::size_t pending_offset_ = 0; // the place that a waiting layout keeps
-    unsigned relayout_source_ = 0;   // GLib source id of a waiting layout; 0 if none
+    SearchOptions search_;             // the search whose matches are shown
+    std::vector<SearchMatch> matches_; // its matches in page_.text
+    bool width_seen_ = false;          // whether the window has had a width
+    std::size_t pending_offset_ = 0;   // the place that a waiting layout keeps
+    unsigned relayout_source_ = 0;     // GLib source id of a waiting layout; 0 if none
     double zoom_ = 1.0;
     bool pointer_on_link_ = false;
 
@@ -238,6 +258,7 @@ private:
     GtkTextTag* code_ = nullptr;
     GtkTextTag* link_ = nullptr;
     GtkTextTag* heading_[3] = {nullptr, nullptr, nullptr};
+    GtkTextTag* match_tag_ = nullptr;
 
     gtkx::SignalConnection click_signal_;
     gtkx::SignalConnection motion_signal_;

@@ -9,6 +9,7 @@
 #include <string>
 
 #include "core/manual_text.h"
+#include "core/search_options.h"
 #include "help_page_view_test_util.h"
 #include "ui/help_page_view.h"
 
@@ -18,9 +19,9 @@ using namespace vermilion::ui::help_test;
 using vermilion::ManualText;
 
 // A palette with every name the tags read in one colour per name (0 the link, 1 the code span, 2
-// and 3 the background and the text of a table header); `shift` changes them all.
+// and 3 the background and the text of a table header, 4 a match); `shift` changes them all.
 std::string palette_css(int shift) {
-    const char* names[] = {"vm_link", "vm_light", "vm_chassis", "vm_field_text"};
+    const char* names[] = {"vm_link", "vm_light", "vm_chassis", "vm_field_text", "vm_match_bg"};
     std::string css;
     int n = 0;
     for (const char* name : names) {
@@ -144,6 +145,40 @@ TEST_F(HelpPageViewTest, RefreshColoursReadsTheNewPalette) {
     expect_colour(shown, vermilion::ui::kTagCode, "background", 1, 5);
     expect_colour(shown, vermilion::ui::kTagTableHeader, "background", 2, 5);
     expect_colour(shown, vermilion::ui::kTagTableHeader, "foreground", 3, 5);
+}
+
+TEST_F(HelpPageViewTest, TheMatchTagTakesItsColourFromThePalette) {
+    PaletteOnDisplay palette(0);
+    Shown shown(900, 500);
+    expect_colour(shown, vermilion::ui::kTagMatch, "background", 4, 0);
+    GdkRGBA unused;
+    EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagMatch, "foreground", unused));
+    palette.load(5);
+    shown.view->refresh_colours();
+    expect_colour(shown, vermilion::ui::kTagMatch, "background", 4, 5);
+}
+
+// A match wins over the colours of a code span and a link.
+TEST_F(HelpPageViewTest, AMatchOverridesTheColoursOfCodeAndLinks) {
+    PaletteOnDisplay palette(0);
+    Shown shown(900, 500);
+    ManualText page = build("Plain `code` and [link](a.md) text.\n");
+    ASSERT_EQ(page.code.size(), std::size_t{1});
+    ASSERT_EQ(page.links.size(), std::size_t{1});
+    shown.view->show(page);
+    vermilion::SearchOptions options;
+    options.text = "code|link";
+    options.regex = true;
+    ASSERT_EQ(shown.view->set_search(options), std::size_t{2});
+    GdkRGBA got;
+    const GdkRGBA match_bg = palette_colour(4, 0);
+    const GdkRGBA link_text = palette_colour(0, 0);
+    ASSERT_TRUE(colour_at(shown, page.code[0].begin, "background", got));
+    EXPECT_TRUE(gdk_rgba_equal(&got, &match_bg));
+    ASSERT_TRUE(colour_at(shown, page.links[0].begin, "background", got));
+    EXPECT_TRUE(gdk_rgba_equal(&got, &match_bg));
+    ASSERT_TRUE(colour_at(shown, page.links[0].begin, "foreground", got));
+    EXPECT_TRUE(gdk_rgba_equal(&got, &link_text));
 }
 
 TEST_F(HelpPageViewTest, WithoutAPaletteTheColoursAreUnset) {
