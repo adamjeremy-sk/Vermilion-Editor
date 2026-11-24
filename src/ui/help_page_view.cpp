@@ -153,8 +153,10 @@ void HelpPageView::build_tags() {
                                              "scale", kHeading2Scale, nullptr);
     heading_[2] = gtk_text_buffer_create_tag(buffer_, kTagHeading3, "weight", PANGO_WEIGHT_BOLD,
                                              "scale", 1.0, nullptr);
-    // Created last, so that its colours win over those of the other tags.
+    // Created last, so that their colours win over those of the other tags; the current match
+    // after the others, so that it wins over a plain match.
     match_tag_ = gtk_text_buffer_create_tag(buffer_, kTagMatch, nullptr);
+    current_tag_ = gtk_text_buffer_create_tag(buffer_, kTagCurrentMatch, nullptr);
 }
 
 void HelpPageView::apply_zoom() {

@@ -39,6 +39,8 @@ void HelpPageView::refresh_colours() {
     set_tag_colour(view, table_header_, "background", kColourTableHeadBg);
     set_tag_colour(view, table_header_, "foreground", kColourTableHeadText);
     set_tag_colour(view, match_tag_, "background", kColourMatchBg);
+    set_tag_colour(view, current_tag_, "background", kColourCurrentBg);
+    set_tag_colour(view, current_tag_, "foreground", kColourCurrentText);
 }
 
 } // namespace vermilion::ui

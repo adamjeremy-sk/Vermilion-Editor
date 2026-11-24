@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <string>
 
 #include "core/manual_page.h"
@@ -22,8 +23,10 @@ namespace {
 using namespace vermilion::ui::help_test;
 using vermilion::ManualPage;
 using vermilion::ManualText;
+using vermilion::MatchStep;
 using vermilion::SearchMatch;
 using vermilion::SearchOptions;
+using vermilion::ui::kTagCurrentMatch;
 using vermilion::ui::kTagMatch;
 
 SearchOptions options(const std::string& text, bool match_case = false, bool whole_word = false,
@@ -37,15 +40,21 @@ SearchOptions options(const std::string& text, bool match_case = false, bool who
 }
 
 // Every character of the page on the screen has kTagMatch exactly when a match of the view covers
-// it.
-void expect_highlights(const Shown& shown) {
+// it, and kTagCurrentMatch exactly when match number `current` covers it (no character has it when
+// `current` is empty).
+void expect_highlights(const Shown& shown, std::optional<std::size_t> current) {
     const auto& matches = shown.view->matches();
+    ASSERT_EQ(shown.view->current_match(), current);
     for (std::size_t at = 0; at < shown.view->page().length; ++at) {
         bool in_match = false;
         for (const SearchMatch& match : matches) {
             in_match = in_match || (at >= match.begin && at < match.end);
         }
+        const bool in_current =
+            current.has_value() && at >= matches[*current].begin && at < matches[*current].end;
         EXPECT_EQ(shown.has_tag(kTagMatch, static_cast<int>(at)), in_match) << "match at " << at;
+        EXPECT_EQ(shown.has_tag(kTagCurrentMatch, static_cast<int>(at)), in_current)
+            << "current at " << at;
     }
 }
 
@@ -54,7 +63,7 @@ TEST_F(HelpPageViewTest, NothingIsHighlightedBeforeASearch) {
     shown.view->show(bare("alpha beta alpha"));
     EXPECT_TRUE(shown.view->search().text.empty());
     EXPECT_TRUE(shown.view->matches().empty());
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 TEST_F(HelpPageViewTest, EveryMatchOfTheSearchIsHighlighted) {
@@ -66,7 +75,7 @@ TEST_F(HelpPageViewTest, EveryMatchOfTheSearchIsHighlighted) {
     EXPECT_EQ(shown.view->matches()[0], (SearchMatch{0, 5}));
     EXPECT_EQ(shown.view->matches()[1], (SearchMatch{11, 16}));
     EXPECT_EQ(shown.view->matches()[2], (SearchMatch{23, 28}));
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 TEST_F(HelpPageViewTest, TheOptionsOfTheSearchApply) {
@@ -77,7 +86,7 @@ TEST_F(HelpPageViewTest, TheOptionsOfTheSearchApply) {
     EXPECT_EQ(shown.view->set_search(options("foo", false, true)), std::size_t{3});
     EXPECT_EQ(shown.view->set_search(options("fo+", false, false, true)), std::size_t{5});
     EXPECT_EQ(shown.view->set_search(options("fo+", false, false, false)), std::size_t{0});
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 TEST_F(HelpPageViewTest, ABadPatternHighlightsNothing) {
@@ -85,30 +94,98 @@ TEST_F(HelpPageViewTest, ABadPatternHighlightsNothing) {
     shown.view->show(bare("alpha (beta)"));
     EXPECT_EQ(shown.view->set_search(options("(", false, false, true)), std::size_t{0});
     EXPECT_EQ(shown.view->search().text, "(");
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 TEST_F(HelpPageViewTest, AnEmptySearchTakesTheHighlightsOff) {
     Shown shown(900, 500);
     shown.view->show(bare("alpha beta alpha"));
     ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{2});
+    ASSERT_TRUE(shown.view->step(true).has_value());
     EXPECT_EQ(shown.view->set_search(SearchOptions{}), std::size_t{0});
     EXPECT_TRUE(shown.view->search().text.empty());
     EXPECT_TRUE(shown.view->matches().empty());
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
-TEST_F(HelpPageViewTest, ShowingAnotherPageSearchesIt) {
+TEST_F(HelpPageViewTest, StepGoesToTheFirstMatchFromNowhereAndToTheLastBackward) {
+    Shown shown(900, 500);
+    shown.view->show(bare("alpha beta alpha gamma alpha"));
+    ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{3});
+    std::optional<MatchStep> first = shown.view->step(true);
+    ASSERT_TRUE(first.has_value());
+    EXPECT_EQ(first->index, std::size_t{0});
+    EXPECT_FALSE(first->wrapped);
+    expect_highlights(shown, std::size_t{0});
+    ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{3});
+    expect_highlights(shown, std::nullopt);
+    std::optional<MatchStep> last = shown.view->step(false);
+    ASSERT_TRUE(last.has_value());
+    EXPECT_EQ(last->index, std::size_t{2});
+    EXPECT_FALSE(last->wrapped);
+    expect_highlights(shown, std::size_t{2});
+}
+
+TEST_F(HelpPageViewTest, StepsMoveAndWrapAtTheEnds) {
+    Shown shown(900, 500);
+    shown.view->show(bare("alpha beta alpha gamma alpha"));
+    ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{3});
+    ASSERT_TRUE(shown.view->step(true).has_value());
+    std::optional<MatchStep> second = shown.view->step(true);
+    ASSERT_TRUE(second.has_value());
+    EXPECT_EQ(second->index, std::size_t{1});
+    EXPECT_FALSE(second->wrapped);
+    expect_highlights(shown, std::size_t{1});
+    std::optional<MatchStep> third = shown.view->step(true);
+    ASSERT_TRUE(third.has_value());
+    EXPECT_EQ(third->index, std::size_t{2});
+    std::optional<MatchStep> wrapped = shown.view->step(true);
+    ASSERT_TRUE(wrapped.has_value());
+    EXPECT_EQ(wrapped->index, std::size_t{0});
+    EXPECT_TRUE(wrapped->wrapped);
+    expect_highlights(shown, std::size_t{0});
+    std::optional<MatchStep> back = shown.view->step(false);
+    ASSERT_TRUE(back.has_value());
+    EXPECT_EQ(back->index, std::size_t{2});
+    EXPECT_TRUE(back->wrapped);
+    expect_highlights(shown, std::size_t{2});
+    std::optional<MatchStep> before = shown.view->step(false);
+    ASSERT_TRUE(before.has_value());
+    EXPECT_EQ(before->index, std::size_t{1});
+    EXPECT_FALSE(before->wrapped);
+}
+
+TEST_F(HelpPageViewTest, StepDoesNothingWithoutMatches) {
+    Shown shown(900, 500);
+    shown.view->show(bare("alpha beta"));
+    EXPECT_FALSE(shown.view->step(true).has_value());
+    ASSERT_EQ(shown.view->set_search(options("zzz")), std::size_t{0});
+    EXPECT_FALSE(shown.view->step(true).has_value());
+    EXPECT_FALSE(shown.view->step(false).has_value());
+    expect_highlights(shown, std::nullopt);
+}
+
+TEST_F(HelpPageViewTest, ANewSearchForgetsTheCurrentMatch) {
+    Shown shown(900, 500);
+    shown.view->show(bare("alpha beta alpha gamma"));
+    ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{2});
+    ASSERT_TRUE(shown.view->step(true).has_value());
+    ASSERT_EQ(shown.view->set_search(options("a")), std::size_t{7});
+    expect_highlights(shown, std::nullopt);
+}
+
+TEST_F(HelpPageViewTest, ShowingAnotherPageSearchesItAndForgetsTheCurrentMatch) {
     Shown shown(900, 500);
     shown.view->show(bare("alpha beta alpha"));
     ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{2});
+    ASSERT_TRUE(shown.view->step(true).has_value());
     shown.view->show(bare("gamma alpha delta alpha alpha"));
     ASSERT_EQ(shown.view->matches().size(), std::size_t{3});
     EXPECT_EQ(shown.view->matches()[0].begin, std::size_t{6});
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
     shown.view->show(bare("nothing here"));
     EXPECT_TRUE(shown.view->matches().empty());
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
     EXPECT_EQ(shown.view->search(), options("alpha"));
 }
 
@@ -117,7 +194,7 @@ TEST_F(HelpPageViewTest, ASourcePageIsSearchedToo) {
     shown.view->set_search(options("here"));
     shown.view->show_source(vermilion::parse_manual("# Title\n\nSome words here and here.\n"));
     EXPECT_EQ(shown.view->matches().size(), std::size_t{2});
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 // Paragraphs "needle", a table with the word in a cell, and a last paragraph "needle".
@@ -148,7 +225,7 @@ TEST_F(HelpPageViewTest, ANewLayoutSearchesTheNewText) {
     EXPECT_EQ(shown.view->matches(),
               vermilion::find_matches(shown.view->page().text, options("needle")));
     ASSERT_EQ(shown.view->matches().size(), std::size_t{3});
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 TEST_F(HelpPageViewTest, ZoomKeepsTheHighlights) {
@@ -159,19 +236,20 @@ TEST_F(HelpPageViewTest, ZoomKeepsTheHighlights) {
     ASSERT_TRUE(shown.view->set_zoom(2.0));
     spin(300);
     ASSERT_EQ(shown.view->matches().size(), std::size_t{3});
-    expect_highlights(shown);
+    expect_highlights(shown, std::nullopt);
 }
 
 TEST_F(HelpPageViewTest, AFixedPageKeepsItsHighlightsWhenTheWindowChanges) {
     Shown shown(1500, 500);
     shown.view->show(bare("alpha beta alpha"));
     ASSERT_EQ(shown.view->set_search(options("alpha")), std::size_t{2});
+    ASSERT_TRUE(shown.view->step(true).has_value());
     gtk_window_set_default_size(GTK_WINDOW(shown.window), 700, 500);
     spin(600);
     shown.view->set_zoom(1.5);
     spin(300);
     ASSERT_EQ(shown.view->matches().size(), std::size_t{2});
-    expect_highlights(shown);
+    expect_highlights(shown, std::size_t{0});
 }
 
 } // namespace
