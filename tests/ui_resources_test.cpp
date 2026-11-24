@@ -90,12 +90,15 @@ TEST(UiResources, StructureHasChangeBannerRule) {
     EXPECT_NE(css.find("window.vm-main box.vm-change-banner {"), std::string::npos);
 }
 
-TEST(UiResources, HelpWindowHasItsRules) {
+TEST(UiResources, HelpWindowKeepsItsBarRuleAndNothingOfTheLabelPage) {
     std::string css = resource_text("/io/github/adamjeremy_sk/Vermilion/classic_structure.css");
-    EXPECT_NE(css.find("window.vm-help scrolledwindow.vm-help-well"), std::string::npos);
-    EXPECT_NE(css.find("window.vm-help label.vm-help-h1"), std::string::npos);
-    EXPECT_NE(css.find("window.vm-help grid.vm-help-table"), std::string::npos);
-    EXPECT_NE(css.find("window.vm-help .vm-help-page label link"), std::string::npos);
+    EXPECT_NE(css.find("window.vm-help .vm-help-bar {"), std::string::npos);
+    for (const char* gone :
+         {"vm-help-well", "vm-help-page", "vm-help-h1", "vm-help-h2", "vm-help-h3", "vm-help-item",
+          "vm-help-table", "vm-help-th", "vm-help-td", "vm-help-bullet"}) {
+        SCOPED_TRACE(gone);
+        EXPECT_EQ(css.find(gone), std::string::npos);
+    }
 }
 
 TEST(UiResources, HelpPageViewHasItsFont) {

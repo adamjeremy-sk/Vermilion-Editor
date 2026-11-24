@@ -8,13 +8,11 @@
 #include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "core/manual_page.h"
 #include "core/manual_spans.h"
 #include "core/manual_text.h"
 #include "ui/gtkx/signal.h"
-#include "ui/gtkx/string.h"
 
 namespace vermilion::ui {
 namespace {
@@ -22,131 +20,8 @@ namespace {
 constexpr const char* kManualPrefix = "/io/github/adamjeremy_sk/Vermilion/manual/";
 constexpr const char* kIndexTopic = "index.md";
 constexpr gsize kMaxTopicBytes = 1024 * 1024;
-constexpr int kTextChars = 90;
-constexpr int kCellChars = 50;
 
 using BytesPtr = std::unique_ptr<GBytes, decltype(&g_bytes_unref)>;
-
-// Bad bytes are replaced, then the text is escaped for markup.
-std::string escape(const std::string& text) {
-    std::string valid = gtkx::take_string(g_utf8_make_valid(text.c_str(), -1));
-    return gtkx::take_string(g_markup_escape_text(valid.c_str(), -1));
-}
-
-std::string markup_of(const std::vector<ManualSpan>& spans, bool& has_link) {
-    std::string out;
-    for (const auto& span : spans) {
-        std::string text = escape(span.text);
-        switch (span.kind) {
-        case SpanKind::Text:
-            out += text;
-            break;
-        case SpanKind::Bold:
-            out += "<b>";
-            out += text;
-            out += "</b>";
-            break;
-        case SpanKind::Code:
-            out += "<tt>";
-            out += text;
-            out += "</tt>";
-            break;
-        case SpanKind::Link:
-            out += "<a href=\"";
-            out += escape(span.target);
-            out += "\">";
-            out += text;
-            out += "</a>";
-            has_link = true;
-            break;
-        }
-    }
-    return out;
-}
-
-// Floating until the container it is appended to takes it over.
-GtkWidget* span_label(const std::vector<ManualSpan>& spans, int chars,
-                      std::vector<GtkWidget*>& links) {
-    bool has_link = false;
-    std::string markup = markup_of(spans, has_link);
-    GtkWidget* label = gtk_label_new(nullptr);
-    gtk_label_set_markup(GTK_LABEL(label), markup.c_str());
-    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
-    gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
-    gtk_label_set_max_width_chars(GTK_LABEL(label), chars);
-    gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
-    if (has_link) {
-        links.push_back(label); // borrowed; only used by HelpWindow::show
-    }
-    return label;
-}
-
-GtkWidget* heading_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    GtkWidget* label = span_label(block.spans, kTextChars, links);
-    const char* css_class = "vm-help-h3";
-    if (block.level == 1) {
-        css_class = "vm-help-h1";
-    } else if (block.level == 2) {
-        css_class = "vm-help-h2";
-    }
-    gtk_widget_add_css_class(label, css_class);
-    return label;
-}
-
-GtkWidget* item_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    // Floating; the page box takes it over.
-    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_widget_add_css_class(box, "vm-help-item");
-    std::vector<ManualSpan> bullet;
-    bullet.push_back(ManualSpan{SpanKind::Text, "\u2022", ""});
-    GtkWidget* bullet_label = span_label(bullet, 1, links);
-    gtk_widget_add_css_class(bullet_label, "vm-help-bullet");
-    gtk_widget_set_valign(bullet_label, GTK_ALIGN_START);
-    gtk_box_append(GTK_BOX(box), bullet_label);
-    gtk_box_append(GTK_BOX(box), span_label(block.spans, kTextChars, links));
-    return box;
-}
-
-GtkWidget* table_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    GtkWidget* grid = gtk_grid_new(); // floating; the page box takes it over
-    gtk_widget_add_css_class(grid, "vm-help-table");
-    gtk_widget_set_halign(grid, GTK_ALIGN_START);
-    for (std::size_t r = 0; r < block.rows.size(); ++r) {
-        for (std::size_t c = 0; c < block.columns; ++c) {
-            ManualCell empty_cell;
-            const ManualCell& cell = c < block.rows[r].size() ? block.rows[r][c] : empty_cell;
-            GtkWidget* label = span_label(cell, kCellChars, links);
-            gtk_widget_add_css_class(label, r == 0 ? "vm-help-th" : "vm-help-td");
-            gtk_grid_attach(GTK_GRID(grid), label, static_cast<int>(c), static_cast<int>(r), 1, 1);
-        }
-    }
-    return grid;
-}
-
-GtkWidget* block_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    switch (block.kind) {
-    case ManualBlockKind::Heading:
-        return heading_widget(block, links);
-    case ManualBlockKind::ListItem:
-        return item_widget(block, links);
-    case ManualBlockKind::Table:
-        return table_widget(block, links);
-    case ManualBlockKind::Paragraph:
-        break;
-    }
-    return span_label(block.spans, kTextChars, links);
-}
-
-// The label renderer of the old window: nothing calls it since the page view; step 5e deletes it
-// with the functions above. Floating until the scrolled window takes it over.
-[[maybe_unused]] GtkWidget* page_widget(const ManualPage& page, std::vector<GtkWidget*>& links) {
-    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
-    gtk_widget_add_css_class(box, "vm-help-page");
-    for (const auto& block : page.blocks) {
-        gtk_box_append(GTK_BOX(box), block_widget(block, links));
-    }
-    return box;
-}
 
 std::optional<std::string> topic_text(const std::string& name) {
     if (!is_topic_name(name)) {

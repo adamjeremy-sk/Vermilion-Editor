@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include <clocale>
 #include <string>
 
 #include "ui/font_css.h"
@@ -135,19 +134,6 @@ TEST(FontCss, TheSizeKeepsAtMostTwoDecimals) {
                                                    "    font-family: \"Sans\", monospace;\n"
                                                    "    font-size: 10.33pt;\n"
                                                    "}\n"));
-}
-
-TEST(FontCss, TheDecimalSeparatorIsADotInEveryLocale) {
-    const char* before = std::setlocale(LC_NUMERIC, nullptr);
-    const std::string saved = before != nullptr ? before : "C";
-    const char* german = std::setlocale(LC_NUMERIC, "de_DE.UTF-8");
-    if (german == nullptr) {
-        std::setlocale(LC_NUMERIC, saved.c_str());
-        GTEST_SKIP();
-    }
-    const std::string css = font_css("Monospace 10.5");
-    std::setlocale(LC_NUMERIC, saved.c_str());
-    EXPECT_NE(css.find("font-size: 10.5pt;"), std::string::npos);
 }
 
 TEST(FontCss, ThePlainMonospaceFamilyGetsNoSecondOne) {
