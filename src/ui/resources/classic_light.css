@@ -15,6 +15,8 @@
 @define-color vm_select_bg #0a246a;
 @define-color vm_select_text #ffffff;
 @define-color vm_info_bg #ffffe1;
+@define-color vm_link #0a246a;
+@define-color vm_match_bg #ffe066;
 
 /* Help page (M2.5b): the vermilion accent, only in the Help window. h1 and the table header use
    #520210, h2 and h3 use #2e0005, links #dc143c (always underlined), the current search match

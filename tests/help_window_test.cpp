@@ -47,11 +47,10 @@ void spin(int ms) {
     }
 }
 
-// A palette with every colour name of the Help page; `shift` changes them all.
+// A palette with every colour name the Help page tags read (the link first); `shift` changes them
+// all.
 std::string palette_css(int shift) {
-    const char* names[] = {"vm_help_h1",       "vm_help_h2",         "vm_help_link",
-                           "vm_help_code_bg",  "vm_help_th_bg",      "vm_help_th_text",
-                           "vm_help_match_bg", "vm_help_current_bg", "vm_help_current_text"};
+    const char* names[] = {"vm_link", "vm_light", "vm_chassis", "vm_field_text"};
     std::string css;
     int n = 0;
     for (const char* name : names) {
@@ -63,11 +62,11 @@ std::string palette_css(int shift) {
     return css;
 }
 
-// The foreground colour of the level 1 heading tag, as text ("" when it is not set).
-std::string heading_colour(HelpWindow& help) {
+// The foreground colour of the link tag, as text ("" when it is not set).
+std::string link_colour(HelpWindow& help) {
     GtkTextBuffer* buffer = gtk_text_view_get_buffer(help.page_view().text_view());
-    GtkTextTag* tag = gtk_text_tag_table_lookup(gtk_text_buffer_get_tag_table(buffer),
-                                                vermilion::ui::kTagHeading1);
+    GtkTextTag* tag =
+        gtk_text_tag_table_lookup(gtk_text_buffer_get_tag_table(buffer), vermilion::ui::kTagLink);
     gboolean set = FALSE;
     GdkRGBA* colour = nullptr;
     g_object_get(tag, "foreground-set", &set, "foreground-rgba", &colour, nullptr);
@@ -108,7 +107,7 @@ private:
     GtkCssProvider* provider_;
 };
 
-// The text that heading_colour() gives for a colour written as "#rrggbb".
+// The text that link_colour() gives for a colour written as "#rrggbb".
 std::string colour_text(const char* hex) {
     GdkRGBA colour;
     EXPECT_TRUE(gdk_rgba_parse(&colour, hex));
@@ -118,8 +117,8 @@ std::string colour_text(const char* hex) {
     return text;
 }
 
-// The level 1 heading colour that palette_css(shift) gives, spelled as heading_colour() spells it.
-std::string heading_colour_of(int shift) {
+// The link colour that palette_css(shift) gives, spelled as link_colour() spells it.
+std::string link_colour_of(int shift) {
     char hex[16];
     g_snprintf(hex, sizeof hex, "#%02x%02x%02x", 16 + shift, 40, 200);
     GdkRGBA colour;
@@ -282,20 +281,20 @@ TEST_F(HelpWindowTest, TheNaturalWidthFollowsTheZoom) {
 TEST_F(HelpWindowTest, ThePageReadsItsColoursAgainWhenTheDarkFlagChanges) {
     PaletteOnDisplay palette(0);
     help_->page_view().refresh_colours();
-    EXPECT_EQ(heading_colour(*help_), heading_colour_of(0));
+    EXPECT_EQ(link_colour(*help_), link_colour_of(0));
     palette.load(5);
-    EXPECT_EQ(heading_colour(*help_), heading_colour_of(0)); // nothing has told the page yet
+    EXPECT_EQ(link_colour(*help_), link_colour_of(0)); // nothing has told the page yet
     const bool was = flip_dark_flag();
-    EXPECT_EQ(heading_colour(*help_), heading_colour_of(5));
+    EXPECT_EQ(link_colour(*help_), link_colour_of(5));
     palette.load(9);
     flip_dark_flag();
-    EXPECT_EQ(heading_colour(*help_), heading_colour_of(9));
+    EXPECT_EQ(link_colour(*help_), link_colour_of(9));
     if (was != FALSE) {
         flip_dark_flag();
     }
 }
 
-// The program's own stylesheets: the dark palette gives the headings their light tint.
+// The program's own stylesheets: the dark palette gives the links their light blue.
 TEST_F(HelpWindowTest, TheProgramsPaletteSwitchChangesTheColoursOfThePage) {
     GtkSettings* settings = gtk_settings_get_default();
     gboolean flag = FALSE;
@@ -304,11 +303,11 @@ TEST_F(HelpWindowTest, TheProgramsPaletteSwitchChangesTheColoursOfThePage) {
         std::unique_ptr<vermilion::ui::Style> style = vermilion::ui::Style::install(false);
         ASSERT_NE(style, nullptr);
         help_->page_view().refresh_colours();
-        EXPECT_EQ(heading_colour(*help_), colour_text("#520210"));
+        EXPECT_EQ(link_colour(*help_), colour_text("#0a246a"));
         ASSERT_TRUE(style->set_dark(true));
-        EXPECT_EQ(heading_colour(*help_), colour_text("#f2a09a"));
+        EXPECT_EQ(link_colour(*help_), colour_text("#7fb2ff"));
         ASSERT_TRUE(style->set_dark(false));
-        EXPECT_EQ(heading_colour(*help_), colour_text("#520210"));
+        EXPECT_EQ(link_colour(*help_), colour_text("#0a246a"));
     }
     g_object_set(settings, "gtk-application-prefer-dark-theme", flag, nullptr);
 }

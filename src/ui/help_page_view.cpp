@@ -142,8 +142,7 @@ void HelpPageView::build_tags() {
     item_ = gtk_text_buffer_create_tag(buffer_, kTagItem, nullptr);
     bold_ = gtk_text_buffer_create_tag(buffer_, kTagBold, "weight", PANGO_WEIGHT_BOLD, nullptr);
     code_ = gtk_text_buffer_create_tag(buffer_, kTagCode, nullptr);
-    link_ =
-        gtk_text_buffer_create_tag(buffer_, kTagLink, "underline", PANGO_UNDERLINE_SINGLE, nullptr);
+    link_ = gtk_text_buffer_create_tag(buffer_, kTagLink, nullptr);
     // Created after the code and link tags, so that its colours win inside a table header.
     table_header_ =
         gtk_text_buffer_create_tag(buffer_, kTagTableHeader, "weight", PANGO_WEIGHT_BOLD, nullptr);

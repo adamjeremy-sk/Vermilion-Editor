@@ -34,9 +34,6 @@ void set_tag_colour(GtkWidget* view, GtkTextTag* tag, const char* property, cons
 
 void HelpPageView::refresh_colours() {
     GtkWidget* view = GTK_WIDGET(view_);
-    set_tag_colour(view, heading_[0], "foreground", kColourH1);
-    set_tag_colour(view, heading_[1], "foreground", kColourH2);
-    set_tag_colour(view, heading_[2], "foreground", kColourH2);
     set_tag_colour(view, link_, "foreground", kColourLink);
     set_tag_colour(view, code_, "background", kColourCodeBg);
     set_tag_colour(view, table_header_, "background", kColourTableHeadBg);

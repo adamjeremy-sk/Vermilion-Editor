@@ -34,7 +34,7 @@ inline constexpr char kTagItem[] = "item"; // list items: hanging indent of two 
 inline constexpr char kTagTableHeader[] = "table-header";
 inline constexpr char kTagBold[] = "bold";
 inline constexpr char kTagCode[] = "code";
-inline constexpr char kTagLink[] = "link";   // underlined
+inline constexpr char kTagLink[] = "link";   // not underlined: the colour and the pointer tell it
 inline constexpr char kTagHeading1[] = "h1"; // bold, 1.5 times the zoom
 inline constexpr char kTagHeading2[] = "h2"; // bold, 1.25 times the zoom
 inline constexpr char kTagHeading3[] = "h3"; // bold; levels 3 to 6
@@ -45,17 +45,16 @@ inline constexpr int kHelpPageLines = 36;
 // bottom margins, so that a heading scrolled to the top is not clipped).
 inline constexpr int kHelpPageMargin = 8;
 
-// The colour names of the Help page, defined with @define-color in classic_light.css and
-// classic_dark.css (the roles are in those files). refresh_colours() reads them.
-inline constexpr char kColourH1[] = "vm_help_h1";                    // text of a level 1 heading
-inline constexpr char kColourH2[] = "vm_help_h2";                    // text of levels 2 and 3
-inline constexpr char kColourLink[] = "vm_help_link";                // text of a link
-inline constexpr char kColourCodeBg[] = "vm_help_code_bg";           // background of a code span
-inline constexpr char kColourTableHeadBg[] = "vm_help_th_bg";        // background of a table header
-inline constexpr char kColourTableHeadText[] = "vm_help_th_text";    // text of a table header
-inline constexpr char kColourMatchBg[] = "vm_help_match_bg";         // background of a search match
-inline constexpr char kColourCurrentBg[] = "vm_help_current_bg";     // the current search match
-inline constexpr char kColourCurrentText[] = "vm_help_current_text"; // text on the current match
+// The colour names of the Help page: the program's own palette names (classic_light.css and
+// classic_dark.css), and vm_link and vm_match_bg, which only the Help page uses. Headings and body
+// text keep the normal text colour. refresh_colours() reads them.
+inline constexpr char kColourLink[] = "vm_link";                // text of a link
+inline constexpr char kColourCodeBg[] = "vm_light";             // background of a code span
+inline constexpr char kColourTableHeadBg[] = "vm_chassis";      // background of a table header
+inline constexpr char kColourTableHeadText[] = "vm_field_text"; // text of a table header
+inline constexpr char kColourMatchBg[] = "vm_match_bg";         // background of a search match
+inline constexpr char kColourCurrentBg[] = "vm_select_bg";      // the current search match
+inline constexpr char kColourCurrentText[] = "vm_select_text";  // text on the current match
 
 inline constexpr double kHelpMinZoom = 0.5;
 inline constexpr double kHelpMaxZoom = 3.0;

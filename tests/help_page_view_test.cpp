@@ -97,7 +97,7 @@ TEST_F(HelpPageViewTest, TagsCoverTheirRanges) {
     EXPECT_FALSE(shown.has_tag(kTagHeading1, at("Second")));
     EXPECT_EQ(shown.tag_weight(kTagBold), PANGO_WEIGHT_BOLD);
     EXPECT_EQ(shown.tag_weight(kTagTableHeader), PANGO_WEIGHT_BOLD);
-    EXPECT_EQ(shown.tag_underline(kTagLink), PANGO_UNDERLINE_SINGLE);
+    EXPECT_EQ(shown.tag_underline(kTagLink), PANGO_UNDERLINE_NONE);
     EXPECT_TRUE(shown.has_tag(kTagBold, at("bold")));
     EXPECT_TRUE(shown.has_tag(kTagBold, at("bold") + 3));
     EXPECT_FALSE(shown.has_tag(kTagBold, at("bold") + 4));

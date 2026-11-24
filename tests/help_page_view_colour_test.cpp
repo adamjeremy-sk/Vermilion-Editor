@@ -17,11 +17,10 @@ namespace {
 using namespace vermilion::ui::help_test;
 using vermilion::ManualText;
 
-// A palette with every name of the Help page in one colour per name; `shift` changes them all.
+// A palette with every name the tags read in one colour per name (0 the link, 1 the code span, 2
+// and 3 the background and the text of a table header); `shift` changes them all.
 std::string palette_css(int shift) {
-    const char* names[] = {"vm_help_h1",       "vm_help_h2",         "vm_help_link",
-                           "vm_help_code_bg",  "vm_help_th_bg",      "vm_help_th_text",
-                           "vm_help_match_bg", "vm_help_current_bg", "vm_help_current_text"};
+    const char* names[] = {"vm_link", "vm_light", "vm_chassis", "vm_field_text"};
     std::string css;
     int n = 0;
     for (const char* name : names) {
@@ -122,14 +121,14 @@ bool colour_at(const Shown& shown, std::size_t offset, const char* property, Gdk
 TEST_F(HelpPageViewTest, TheTagsTakeTheirColoursFromThePalette) {
     PaletteOnDisplay palette(0);
     Shown shown(900, 500);
-    expect_colour(shown, vermilion::ui::kTagHeading1, "foreground", 0, 0);
-    expect_colour(shown, vermilion::ui::kTagHeading2, "foreground", 1, 0);
-    expect_colour(shown, vermilion::ui::kTagHeading3, "foreground", 1, 0);
-    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 2, 0);
-    expect_colour(shown, vermilion::ui::kTagCode, "background", 3, 0);
-    expect_colour(shown, vermilion::ui::kTagTableHeader, "background", 4, 0);
-    expect_colour(shown, vermilion::ui::kTagTableHeader, "foreground", 5, 0);
+    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 0, 0);
+    expect_colour(shown, vermilion::ui::kTagCode, "background", 1, 0);
+    expect_colour(shown, vermilion::ui::kTagTableHeader, "background", 2, 0);
+    expect_colour(shown, vermilion::ui::kTagTableHeader, "foreground", 3, 0);
     GdkRGBA unused;
+    EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagHeading1, "foreground", unused));
+    EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagHeading2, "foreground", unused));
+    EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagHeading3, "foreground", unused));
     EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagBody, "foreground", unused));
     EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagBold, "foreground", unused));
     EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagLink, "background", unused));
@@ -141,19 +140,15 @@ TEST_F(HelpPageViewTest, RefreshColoursReadsTheNewPalette) {
     shown.view->show(build(kMarkdown));
     palette.load(5);
     shown.view->refresh_colours();
-    expect_colour(shown, vermilion::ui::kTagHeading1, "foreground", 0, 5);
-    expect_colour(shown, vermilion::ui::kTagHeading2, "foreground", 1, 5);
-    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 2, 5);
-    expect_colour(shown, vermilion::ui::kTagCode, "background", 3, 5);
-    expect_colour(shown, vermilion::ui::kTagTableHeader, "background", 4, 5);
-    expect_colour(shown, vermilion::ui::kTagTableHeader, "foreground", 5, 5);
+    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 0, 5);
+    expect_colour(shown, vermilion::ui::kTagCode, "background", 1, 5);
+    expect_colour(shown, vermilion::ui::kTagTableHeader, "background", 2, 5);
+    expect_colour(shown, vermilion::ui::kTagTableHeader, "foreground", 3, 5);
 }
 
 TEST_F(HelpPageViewTest, WithoutAPaletteTheColoursAreUnset) {
     Shown shown(900, 500);
     GdkRGBA unused;
-    EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagHeading1, "foreground", unused));
-    EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagHeading2, "foreground", unused));
     EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagLink, "foreground", unused));
     EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagCode, "background", unused));
     EXPECT_FALSE(tag_colour(shown, vermilion::ui::kTagTableHeader, "background", unused));
@@ -177,9 +172,8 @@ TEST_F(HelpPageViewTest, APaletteThatDisappearsLeavesTheColoursUnset) {
 TEST_F(HelpPageViewTest, TheConstructorReadsThePalette) {
     PaletteOnDisplay palette(0);
     Shown shown(900, 500, false);
-    expect_colour(shown, vermilion::ui::kTagHeading1, "foreground", 0, 0);
-    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 2, 0);
-    expect_colour(shown, vermilion::ui::kTagCode, "background", 3, 0);
+    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 0, 0);
+    expect_colour(shown, vermilion::ui::kTagCode, "background", 1, 0);
 }
 
 TEST_F(HelpPageViewTest, MappingTheViewReadsThePalette) {
@@ -187,8 +181,8 @@ TEST_F(HelpPageViewTest, MappingTheViewReadsThePalette) {
     PaletteOnDisplay palette(0);
     gtk_window_present(GTK_WINDOW(shown.window));
     spin(300);
-    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 2, 0);
-    expect_colour(shown, vermilion::ui::kTagHeading1, "foreground", 0, 0);
+    expect_colour(shown, vermilion::ui::kTagLink, "foreground", 0, 0);
+    expect_colour(shown, vermilion::ui::kTagCode, "background", 1, 0);
 }
 
 // Inside a table header the header's colours win over those of a code span and a link.
@@ -199,8 +193,8 @@ TEST_F(HelpPageViewTest, ATableHeaderKeepsItsColoursAroundCodeAndLinks) {
     ASSERT_EQ(page.code.size(), std::size_t{1});
     ASSERT_EQ(page.links.size(), std::size_t{1});
     shown.view->show(page);
-    const GdkRGBA text = palette_colour(5, 0);
-    const GdkRGBA background = palette_colour(4, 0);
+    const GdkRGBA text = palette_colour(3, 0);
+    const GdkRGBA background = palette_colour(2, 0);
     for (std::size_t offset : {page.code[0].begin, page.links[0].begin}) {
         GdkRGBA foreground;
         GdkRGBA fill;
@@ -221,8 +215,8 @@ TEST_F(HelpPageViewTest, ALinkAndACodeSpanShowTheirOwnColours) {
     GdkRGBA code;
     ASSERT_TRUE(colour_at(shown, page.links[0].begin, "foreground", link));
     ASSERT_TRUE(colour_at(shown, page.code[0].begin, "background", code));
-    const GdkRGBA want_link = palette_colour(2, 0);
-    const GdkRGBA want_code = palette_colour(3, 0);
+    const GdkRGBA want_link = palette_colour(0, 0);
+    const GdkRGBA want_code = palette_colour(1, 0);
     EXPECT_TRUE(gdk_rgba_equal(&link, &want_link));
     EXPECT_TRUE(gdk_rgba_equal(&code, &want_code));
 }

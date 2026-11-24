@@ -244,11 +244,8 @@ TEST(UiResources, IconHasEverySize) {
     }
 }
 
-// The colour names of the Help page (see ui/help_page_view.h), in both palettes.
-constexpr const char* kHelpColourNames[] = {
-    "vm_help_h1",       "vm_help_h2",         "vm_help_link",
-    "vm_help_code_bg",  "vm_help_th_bg",      "vm_help_th_text",
-    "vm_help_match_bg", "vm_help_current_bg", "vm_help_current_text"};
+// The two colour names that only the Help page uses (see ui/help_page_view.h), in both palettes.
+constexpr const char* kHelpColourNames[] = {"vm_link", "vm_match_bg"};
 
 // The colour that `css` gives `name` with @define-color (as red, green, blue in 0..1), or false.
 bool defined_colour(const std::string& css, const std::string& name, double (&rgb)[3]) {
@@ -297,34 +294,33 @@ TEST(UiResources, BothPalettesDefineTheHelpColours) {
     }
 }
 
-// Text on its background is at least 4.5:1 in both palettes: headings and links on the page
-// colour, body text on the tint of a code span and of a match, the table header's text on its
-// background, the current match's text on its background. (A link on a tint is not asserted: no
-// tint is pale enough for the red link colour to reach 4.5 on it, and the case is rare.)
+// Text on its background is at least 4.5:1 in both palettes: a link on the page colour, body
+// text on the tint of a code span, of a table header and of a search match, and the current
+// match's text on its background. (A link on a tint is not asserted: it is rare.)
 TEST(UiResources, TheHelpColoursAreReadableInBothPalettes) {
     for (const char* file : {"classic_light.css", "classic_dark.css"}) {
         const std::string css =
             resource_text((std::string("/io/github/adamjeremy_sk/Vermilion/") + file).c_str());
         SCOPED_TRACE(file);
-        EXPECT_GE(contrast(css, "vm_help_h1", "vm_field_bg"), 4.5);
-        EXPECT_GE(contrast(css, "vm_help_h2", "vm_field_bg"), 4.5);
-        EXPECT_GE(contrast(css, "vm_help_link", "vm_field_bg"), 4.5);
-        EXPECT_GE(contrast(css, "vm_field_text", "vm_help_code_bg"), 4.5);
-        EXPECT_GE(contrast(css, "vm_field_text", "vm_help_match_bg"), 4.5);
-        EXPECT_GE(contrast(css, "vm_help_th_text", "vm_help_th_bg"), 4.5);
-        EXPECT_GE(contrast(css, "vm_help_current_text", "vm_help_current_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_link", "vm_field_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_field_text", "vm_light"), 4.5);
+        EXPECT_GE(contrast(css, "vm_field_text", "vm_chassis"), 4.5);
+        EXPECT_GE(contrast(css, "vm_field_text", "vm_match_bg"), 4.5);
+        EXPECT_GE(contrast(css, "vm_select_text", "vm_select_bg"), 4.5);
     }
 }
 
-// The three kinds of background of a Help page differ from the page colour, so that they show.
+// The four kinds of background of a Help page differ from the page colour, so that they show: a
+// code span, a table header, a search match and the current match.
 TEST(UiResources, TheHelpTintsStandOutFromThePage) {
     for (const char* file : {"classic_light.css", "classic_dark.css"}) {
         const std::string css =
             resource_text((std::string("/io/github/adamjeremy_sk/Vermilion/") + file).c_str());
         SCOPED_TRACE(file);
-        EXPECT_GE(contrast(css, "vm_help_code_bg", "vm_field_bg"), 1.1);
-        EXPECT_GE(contrast(css, "vm_help_match_bg", "vm_field_bg"), 1.3);
-        EXPECT_GE(contrast(css, "vm_help_current_bg", "vm_field_bg"), 1.5);
+        EXPECT_GE(contrast(css, "vm_light", "vm_field_bg"), 1.1);
+        EXPECT_GE(contrast(css, "vm_chassis", "vm_field_bg"), 1.2);
+        EXPECT_GE(contrast(css, "vm_match_bg", "vm_field_bg"), 1.25);
+        EXPECT_GE(contrast(css, "vm_select_bg", "vm_field_bg"), 1.5);
     }
 }
 
