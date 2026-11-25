@@ -1510,3 +1510,6 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 
 ### 2026-11-22 (twenty-third chat) - 5c1 and 5c2 committed, 5d ready
 - 5c1 `2765ea8`, 5c2 `9b75077` (nine `vm_help_*` colours); the full ctest caught the hard-coded 13 in `editor_scheme_dark_test.cpp`, now 22. CI green on `9b75077`.
+
+### 2026-11-23 and 24 (twenty-fourth chat) - design revised, 5d to 5m
+- 5d fix 1 (`7b74015`) and 5e audited PASS. Adam saw the Help page and rejected red accents, underlines, fixed width and the bundled font: plan revised (`claude/M2.5b_plan_revision_2026-11-23.md`). Committed: 5f `305d96b`, 5g `4a06146`, 5h `dc42173`, 5i `753e1ce`, 5j `8cc03b8`, 5k `9497429` (core helpers), 5l `7ae5327` (the view follows the window width; prototyped in the cloud), 5m `4f267de` (fixed width deleted; the merge of the two scrolled windows was tried and does not work; Qwen's run failed one 5l test on the real desktop, fix 1 repaired it). Design of the view step: `claude/M2.5b_5l_design.md`.
