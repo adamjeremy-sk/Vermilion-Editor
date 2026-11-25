@@ -435,6 +435,17 @@ target_link_libraries(vermilion_help_contents_tests PRIVATE
     PkgConfig::GTK4)
 gtest_discover_tests(vermilion_help_contents_tests)
 
+# The Search tab of the Help window (the message needs no display; the rest skips without one).
+add_executable(vermilion_help_search_tests help_search_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_search.cpp)
+target_link_libraries(vermilion_help_search_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTK4)
+gtest_discover_tests(vermilion_help_search_tests)
+
 # The Help window on a real display (the tests skip without one).
 add_executable(vermilion_help_window_tests help_window_test.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_window.cpp
