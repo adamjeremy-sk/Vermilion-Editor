@@ -1507,3 +1507,6 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 
 ### 2026-11-21 (night, twenty-second chat) - 5a, 5b, 2c built, audited, committed
 - **5a** `HelpPageView` (`1a600dc`), **5b** zoom, scroll to a heading, wheel (`5c213c1`, 1398 tests), **2c** the editor default font is the system monospace font again (`911adda`, 1399 tests). A probe showed widget margins clip a heading's top 8 px (fixed in 5c1). Third kernel panic at 22:33, diagnosed from kdump (CVE-2026-53285, Backlog Hardware); Adam booted 7.0.0-43 at 22:53.
+
+### 2026-11-22 (twenty-third chat) - 5c1 and 5c2 committed, 5d ready
+- 5c1 `2765ea8`, 5c2 `9b75077` (nine `vm_help_*` colours); the full ctest caught the hard-coded 13 in `editor_scheme_dark_test.cpp`, now 22. CI green on `9b75077`.
