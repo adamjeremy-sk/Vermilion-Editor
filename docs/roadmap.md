@@ -103,7 +103,7 @@ The talk for the M2 window was held 2026-11-10; its outcome is ARCHITECTURE.md s
 | M2.6 | Diff engine and `DiffView` (see gate-details) | Tests incl. edge cases (applying a diff to A gives B); manual check of the view, the banner button and the Compare button | Orchestrator plans, Qwen codes | ☐ |
 | M2.7 | Window size restored; start state (a new untitled document by default; or reopen the last document, a single file; or a blank window); no tab limit | Restored on start | Qwen | ☐ |
 | M2.7c | File → Open Recent (proposed at the end of M2.3; design talk first, see gate-details) | Opens a recent file; a missing file is handled as the talk decides | Plan first (rule 10) | ☐ |
-| M2.7b | The light program `vermilion` (ARCHITECTURE.md 7.12; see gate-details) | Opens text files from the file manager; the link check passes; Adam measures startup. **◆ DOGFOOD 1: `vermilion` replaces gedit and Mousepad on Adam's system** | Orchestrator plans, Qwen codes | ☐ |
+| M2.7b | The light program `vermilion` (ARCHITECTURE.md 7.12; see gate-details) | Opens text files from the file manager; the link check passes; Adam measures startup (the time until the window is visible and typing works, with and without the warm-ups of ARCHITECTURE.md 5). **◆ DOGFOOD 1: `vermilion` replaces gedit and Mousepad on Adam's system** | Orchestrator plans, Qwen codes | ☐ |
 
 ## M3: Directory sidebar (right-hand side) (v0.1.0 with M1 and M2)
 **Status**: ☐
