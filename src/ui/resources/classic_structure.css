@@ -275,6 +275,25 @@ window.vm-help .vm-help-bar {
     padding: 4px;
 }
 
+/* Help > Index, the Contents tree (M2.5b step 6e): drawn in the field colours like the page; the row
+   of the page on the screen is selected, in the selection colours. The text "Loading..." stands in
+   for the tree until the manual is ready. */
+window.vm-help listview.vm-help-contents,
+window.vm-help label.vm-help-loading {
+    background-color: @vm_field_bg;
+    color: @vm_field_text;
+}
+
+window.vm-help label.vm-help-loading {
+    padding: 8px;
+}
+
+window.vm-help listview.vm-help-contents > row:selected,
+window.vm-help listview.vm-help-contents > row:selected label {
+    background-color: @vm_select_bg;
+    color: @vm_select_text;
+}
+
 /* Help page (M2.5b step 5): the text view of the page uses the system monospace font at 12 pt, the
    same for every page, and the width of the page is measured from it. The page is drawn in the
    field colours; the colours of links, code spans, table headers and search matches are text tags

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Tests of HelpWindow on a real display (the tests skip without one): the page view in the window,
-// links, Back and Index, the size at which it opens, and the colours after a palette change.
+// Tests of HelpWindow on a real display (the tests skip without one): the page view and the
+// Contents tree in the window, links, Back and Index, the size at which it opens, and the colours
+// after a palette change.
 
 #include <gtest/gtest.h>
 #include <gtk/gtk.h>
@@ -316,10 +317,134 @@ TEST_F(HelpWindowTest, ItOpensThirtySixLinesHighAndAHundredColumnsWide) {
               view.height_for_lines(vermilion::ui::kHelpPageLines));
     EXPECT_EQ(vermilion::ui::kHelpPageLines, 36);
     const int wide = view.width_for_columns(vermilion::ui::kHelpOpenColumns);
-    EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(help_->window())), wide);
     EXPECT_EQ(gtk_widget_get_width(view.widget()), wide);
     EXPECT_EQ(view.columns(), static_cast<std::size_t>(vermilion::ui::kHelpOpenColumns));
     EXPECT_EQ(vermilion::ui::kHelpOpenColumns, 100);
+    // The pane is 28 columns of the page's font wide, and the window has room for it, the divider
+    // and the page.
+    const int pane = gtk_widget_get_width(help_->contents().widget());
+    EXPECT_EQ(pane, view.width_for_columns(vermilion::ui::kHelpPaneColumns));
+    EXPECT_EQ(vermilion::ui::kHelpPaneColumns, 28);
+    const int divider = gtk_widget_get_width(GTK_WIDGET(help_->window())) - pane - wide;
+    EXPECT_GE(divider, 0);
+    EXPECT_LT(divider, 20);
+}
+
+TEST_F(HelpWindowTest, TheTreeIsAtTheLeftOfThePageInAPanedWidget) {
+    GtkWidget* pane = help_->contents().widget();
+    GtkWidget* split = gtk_widget_get_parent(pane);
+    ASSERT_TRUE(GTK_IS_PANED(split));
+    EXPECT_EQ(gtk_paned_get_start_child(GTK_PANED(split)), pane);
+    EXPECT_EQ(gtk_paned_get_end_child(GTK_PANED(split)), help_->page_view().widget());
+    EXPECT_EQ(gtk_paned_get_position(GTK_PANED(split)),
+              help_->page_view().width_for_columns(vermilion::ui::kHelpPaneColumns));
+}
+
+// The position in help_->contents().rows() of the topic row with this title, or -1.
+int topic_row(HelpWindow& help, const std::string& title) {
+    const auto rows = help.contents().rows();
+    for (std::size_t i = 0; i < rows.size(); ++i) {
+        if (!rows[i].heading && rows[i].title == title) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+// The title of the topic row of `file` in the manual's outline ("" when it is not in it).
+std::string title_of(const ManualLibrary& library, const std::string& file) {
+    for (const vermilion::OutlineTopic& topic : library.data()->outline) {
+        if (topic.file == file) {
+            return topic.title;
+        }
+    }
+    return "";
+}
+
+TEST_F(HelpWindowTest, TheTreeHasARowForEveryTopicAndSelectsThePageOnTheScreen) {
+    const std::vector<vermilion::OutlineTopic>& outline = library_.data()->outline;
+    ASSERT_GE(outline.size(), std::size_t{10});
+    std::size_t topics = 0;
+    for (const auto& row : help_->contents().rows()) {
+        topics += row.heading ? 0 : 1;
+    }
+    EXPECT_EQ(topics, outline.size());
+    EXPECT_FALSE(help_->contents().loading());
+    EXPECT_EQ(help_->contents().current(), "index.md");
+    ASSERT_TRUE(help_->contents().selected().has_value());
+    EXPECT_EQ(help_->contents().rows()[*help_->contents().selected()].title,
+              title_of(library_, "index.md"));
+}
+
+TEST_F(HelpWindowTest, TheTreeFollowsLinksBackAndTheOtherWindowCalls) {
+    help_->open_topic("settings.md");
+    EXPECT_EQ(help_->contents().current(), "settings.md");
+    ASSERT_TRUE(help_->contents().selected().has_value());
+    EXPECT_EQ(help_->contents().rows()[*help_->contents().selected()].title,
+              title_of(library_, "settings.md"));
+    help_->back();
+    EXPECT_EQ(help_->contents().current(), "index.md");
+    EXPECT_EQ(help_->contents().rows()[*help_->contents().selected()].title,
+              title_of(library_, "index.md"));
+}
+
+TEST_F(HelpWindowTest, AClickOnATopicRowOpensItsPage) {
+    const int row = topic_row(*help_, title_of(library_, "settings.md"));
+    ASSERT_GE(row, 0);
+    help_->contents().activate_row(static_cast<std::size_t>(row));
+    EXPECT_EQ(page().text, page_of_file("settings.md").text);
+    EXPECT_TRUE(back_enabled());
+    EXPECT_EQ(help_->contents().current(), "settings.md");
+}
+
+TEST_F(HelpWindowTest, AClickOnAHeadingRowOpensItsPageAndScrollsToTheHeading) {
+    // The topic with the most headings; its last heading is the lowest on the page.
+    const vermilion::OutlineTopic* richest = nullptr;
+    for (const vermilion::OutlineTopic& topic : library_.data()->outline) {
+        if (richest == nullptr || topic.headings.size() > richest->headings.size()) {
+            richest = &topic;
+        }
+    }
+    ASSERT_NE(richest, nullptr);
+    ASSERT_GE(richest->headings.size(), std::size_t{3});
+    gtk_window_present(help_->window());
+    spin(300);
+    // The reader opens the topic in the tree (the page on the screen is still the index) and
+    // clicks its last heading.
+    ASSERT_TRUE(help_->contents().set_topic_open(richest->file, true));
+    const std::size_t heading_row =
+        static_cast<std::size_t>(topic_row(*help_, richest->title)) + richest->headings.size();
+    ASSERT_LT(heading_row, help_->contents().rows().size());
+    ASSERT_TRUE(help_->contents().rows()[heading_row].heading);
+    EXPECT_EQ(page().text, page_of_file("index.md", help_->page_view().columns()).text);
+    help_->contents().activate_row(heading_row);
+    EXPECT_EQ(page().text, page_of_file(richest->file, help_->page_view().columns()).text);
+    for (int i = 0; i < 100 && gtk_adjustment_get_value(help_->page_view().vadjustment()) < 1;
+         ++i) {
+        spin(50);
+    }
+    EXPECT_GT(gtk_adjustment_get_value(help_->page_view().vadjustment()), 1);
+    // The row of the page is selected again, not the heading row.
+    EXPECT_EQ(help_->contents().current(), richest->file);
+    ASSERT_TRUE(help_->contents().selected().has_value());
+    EXPECT_EQ(help_->contents().rows()[*help_->contents().selected()].title, richest->title);
+    EXPECT_FALSE(help_->contents().rows()[*help_->contents().selected()].heading);
+}
+
+TEST_F(HelpWindowTest, WhileTheManualIsLoadingTheTreeSaysSoAndThenFillsIn) {
+    ManualLibrary late; // not prepared
+    HelpWindow early(app_.get(), parent_, late);
+    EXPECT_TRUE(early.contents().loading());
+    EXPECT_TRUE(early.contents().rows().empty());
+    early.open_topic("settings.md");
+    late.prepare();
+    wait_ready(late);
+    EXPECT_FALSE(early.contents().loading());
+    EXPECT_EQ(early.contents().current(), "settings.md");
+    ASSERT_TRUE(early.contents().selected().has_value());
+    EXPECT_EQ(early.contents().rows()[*early.contents().selected()].title,
+              title_of(late, "settings.md"));
+    gtk_window_destroy(early.window());
 }
 
 TEST_F(HelpWindowTest, ThePageIsLaidOutAgainForTheWidthItHas) {

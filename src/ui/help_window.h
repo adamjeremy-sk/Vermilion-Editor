@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// The Help > Index window: the manual, one page at a time, with Back and Index buttons.
+// The Help > Index window: the manual, one page at a time, with the Contents tree at its left and
+// Back and Index buttons above.
 
 #pragma once
 
@@ -11,6 +12,7 @@
 
 #include "core/page_history.h"
 #include "ui/gtkx/signal.h"
+#include "ui/help_contents.h"
 #include "ui/help_page_view.h"
 #include "ui/manual_library.h"
 
@@ -33,6 +35,8 @@ public:
 
     // The page on the screen (for tests and for the side pane of a later step).
     HelpPageView& page_view() { return *page_view_; }
+    // The Contents tree at the left of the page (for tests).
+    HelpContents& contents() { return *contents_; }
 
     void present();
 
@@ -57,6 +61,7 @@ private:
     ManualLibrary::Wait wait_;
     PageHistory history_;
     std::unique_ptr<HelpPageView> page_view_;
+    std::unique_ptr<HelpContents> contents_;
     // "notify::gtk-application-prefer-dark-theme" on the default GtkSettings: the program's Style
     // changes that flag after it has loaded a new palette, so the page reads its colours again.
     gtkx::SignalConnection palette_signal_;

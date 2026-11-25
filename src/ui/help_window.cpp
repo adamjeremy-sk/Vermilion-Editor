@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Builds the help window: the buttons and the page view that shows one page of the manual.
+// Builds the help window: the buttons, the Contents tree and the page view that shows one page of
+// the manual.
 
 #include "ui/help_window.h"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -66,6 +68,13 @@ int natural_height(GtkWidget* widget) {
     return natural;
 }
 
+// The natural width of `widget`, in pixels.
+int natural_width(GtkWidget* widget) {
+    int natural = 0;
+    gtk_widget_measure(widget, GTK_ORIENTATION_HORIZONTAL, -1, nullptr, &natural, nullptr, nullptr);
+    return natural;
+}
+
 } // namespace
 
 HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& library)
@@ -82,25 +91,52 @@ HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& li
     gtk_application_set_accels_for_action(app, "win.back", back_keys);
     page_view_ =
         std::make_unique<HelpPageView>([this](const std::string& target) { open_topic(target); });
-    GtkWidget* page = page_view_->widget(); // borrowed; the page view owns it until the box has it
-    gtk_widget_set_vexpand(page, TRUE);
+    contents_ =
+        std::make_unique<HelpContents>([this](const std::string& file) { open_topic(file); },
+                                       [this](const std::string& file, std::size_t index) {
+                                           open_topic(file);
+                                           page_view_->scroll_to_heading(index);
+                                       });
+    GtkWidget* page = page_view_->widget(); // borrowed; the page view owns it until the pane has it
+    GtkWidget* pane = contents_->widget();  // floating until the pane has it
+    // The tree at the left of the page, with a divider that the reader can drag.
+    GtkWidget* split = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_paned_set_start_child(GTK_PANED(split), pane);
+    gtk_paned_set_end_child(GTK_PANED(split), page);
+    gtk_paned_set_resize_start_child(GTK_PANED(split), FALSE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(split), FALSE);
+    gtk_paned_set_resize_end_child(GTK_PANED(split), TRUE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(split), FALSE);
+    gtk_widget_set_vexpand(split, TRUE);
     // Floating; the window takes it over.
     GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     GtkWidget* bar = build_bar(); // floating; the root box takes it over
     gtk_box_append(GTK_BOX(root), bar);
-    gtk_box_append(GTK_BOX(root), page);
+    gtk_box_append(GTK_BOX(root), split);
     gtk_window_set_child(window_, root);
-    // The window opens kHelpOpenColumns columns wide and kHelpPageLines lines high below the bar.
-    gtk_window_set_default_size(window_, page_view_->width_for_columns(kHelpOpenColumns),
-                                natural_height(bar) + page_view_->height_for_lines(kHelpPageLines));
+    // The pane is kHelpPaneColumns columns of the page's font wide. The window opens wide enough
+    // for that, the divider (what the paned widget needs beyond its two children) and
+    // kHelpOpenColumns columns of text, and kHelpPageLines lines high below the bar.
+    const int pane_width = page_view_->width_for_columns(kHelpPaneColumns);
+    gtk_widget_set_size_request(pane, pane_width, -1);
+    gtk_paned_set_position(GTK_PANED(split), pane_width);
+    const int divider = natural_width(split) - natural_width(pane) - natural_width(page);
+    gtk_window_set_default_size(
+        window_, pane_width + divider + page_view_->width_for_columns(kHelpOpenColumns),
+        natural_height(bar) + page_view_->height_for_lines(kHelpPageLines));
     GtkSettings* settings = gtk_settings_get_default(); // borrowed; null without a display
     if (settings != nullptr) {
         palette_signal_ = gtkx::connect<void(GObject*, GParamSpec*)>(
             settings, "notify::gtk-application-prefer-dark-theme",
             [this](GObject*, GParamSpec*) { page_view_->refresh_colours(); });
     }
-    if (!library_.ready()) {
-        wait_ = library_.on_ready([this] { show(history_.current()); });
+    if (library_.ready()) {
+        contents_->set_outline(library_.data()->outline);
+    } else {
+        wait_ = library_.on_ready([this] {
+            contents_->set_outline(library_.data()->outline);
+            show(history_.current());
+        });
     }
     open_topic(kIndexTopic);
 }
@@ -129,6 +165,7 @@ void HelpWindow::open_topic(const std::string& name) {
 }
 
 void HelpWindow::show(const std::string& name) {
+    contents_->set_current(name);
     const ManualData* manual = library_.data();
     if (manual == nullptr) {
         page_view_->show_source(note_page("Loading..."));

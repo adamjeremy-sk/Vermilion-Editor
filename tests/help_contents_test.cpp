@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <gtk/gtk.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -53,6 +54,40 @@ std::string shown(const HelpContents& contents) {
         text += row.title;
     }
     return text;
+}
+
+// The text of every label under `widget`, in order.
+void collect_labels(GtkWidget* widget, std::vector<std::string>& texts) {
+    if (GTK_IS_LABEL(widget)) {
+        texts.push_back(gtk_label_get_text(GTK_LABEL(widget)));
+    }
+    for (GtkWidget* child = gtk_widget_get_first_child(widget); child != nullptr;
+         child = gtk_widget_get_next_sibling(child)) {
+        collect_labels(child, texts);
+    }
+}
+
+// The first list view under `widget`, or null.
+GtkWidget* find_list_view(GtkWidget* widget) {
+    if (GTK_IS_LIST_VIEW(widget)) {
+        return widget;
+    }
+    for (GtkWidget* child = gtk_widget_get_first_child(widget); child != nullptr;
+         child = gtk_widget_get_next_sibling(child)) {
+        GtkWidget* found = find_list_view(child);
+        if (found != nullptr) {
+            return found;
+        }
+    }
+    return nullptr;
+}
+
+// Runs the main loop for about `ms` milliseconds.
+void spin(int ms) {
+    gint64 end = g_get_monotonic_time() + static_cast<gint64>(ms) * 1000;
+    while (g_get_monotonic_time() < end) {
+        g_main_context_iteration(nullptr, FALSE);
+    }
 }
 
 class HelpContentsTest : public ::testing::Test {
@@ -191,6 +226,44 @@ TEST_F(HelpContentsTest, SettingTheOutlineAgainReplacesTheTree) {
     EXPECT_TRUE(contents_->rows().empty());
     EXPECT_FALSE(contents_->selected().has_value());
     EXPECT_FALSE(contents_->loading());
+}
+
+TEST_F(HelpContentsTest, TheListViewShowsTheTitlesAndAnActivationCallsTheHandler) {
+    contents_->set_outline(sample_outline());
+    contents_->set_current("a.md");
+    gtk_window_set_default_size(window_, 300, 300);
+    gtk_window_present(window_);
+    spin(300);
+    std::vector<std::string> texts;
+    collect_labels(contents_->widget(), texts);
+    for (const char* title : {"Alpha", "One", "Two", "Deep", "Beta", "Gamma"}) {
+        SCOPED_TRACE(title);
+        EXPECT_NE(std::find(texts.begin(), texts.end(), title), texts.end());
+    }
+    EXPECT_EQ(std::find(texts.begin(), texts.end(), "Only"), texts.end()); // Beta is closed
+    GtkWidget* list = find_list_view(contents_->widget());
+    ASSERT_NE(list, nullptr);
+    EXPECT_TRUE(gtk_widget_has_css_class(list, vermilion::ui::kHelpContentsClass));
+    g_signal_emit_by_name(list, "activate", 4u);
+    ASSERT_EQ(topics_.size(), std::size_t{1});
+    EXPECT_EQ(topics_[0], "b.md");
+}
+
+TEST_F(HelpContentsTest, AfterAClickOnAHeadingRowTheSelectionIsBackOnThePageRow) {
+    contents_->set_outline(sample_outline());
+    contents_->set_current("a.md");
+    gtk_window_set_default_size(window_, 300, 300);
+    gtk_window_present(window_);
+    spin(300);
+    GtkWidget* list = find_list_view(contents_->widget());
+    ASSERT_NE(list, nullptr);
+    // What a click does to the list view: it selects the row, then activates it.
+    ASSERT_TRUE(gtk_widget_activate_action(list, "list.select-item", "(ubb)", 2u, FALSE, FALSE));
+    EXPECT_EQ(contents_->selected(), std::optional<std::size_t>(2));
+    g_signal_emit_by_name(list, "activate", 2u);
+    ASSERT_EQ(headings_.size(), std::size_t{1});
+    EXPECT_EQ(headings_[0].second, std::size_t{3});
+    EXPECT_EQ(contents_->selected(), std::optional<std::size_t>(0));
 }
 
 } // namespace
