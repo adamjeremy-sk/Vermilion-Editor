@@ -12,6 +12,7 @@
 #include "core/page_history.h"
 #include "ui/gtkx/signal.h"
 #include "ui/help_page_view.h"
+#include "ui/manual_library.h"
 
 namespace vermilion::ui {
 
@@ -20,8 +21,10 @@ public:
     // Creates the window for app, transient for parent (borrowed; the help window is destroyed
     // with it) and shows the page "index.md". GTK owns the window; this object must be destroyed
     // when the window emits "destroy". The window opens kHelpOpenColumns columns wide and
-    // kHelpPageLines lines high (below the button bar).
-    HelpWindow(GtkApplication* app, GtkWindow* parent);
+    // kHelpPageLines lines high (below the button bar). `library` (borrowed, must outlive this
+    // object) holds the pages: while it is not ready the page says "Loading..." and is filled in
+    // when the library is ready (the current page of the history, which may have changed).
+    HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& library);
 
     HelpWindow(const HelpWindow&) = delete;
     HelpWindow& operator=(const HelpWindow&) = delete;
@@ -49,6 +52,9 @@ private:
     void update_actions();
 
     GtkWindow* window_ = nullptr; // borrowed; GTK owns the window
+    ManualLibrary& library_;
+    // The claim on the library's "ready" call; empty when the library was ready at the start.
+    ManualLibrary::Wait wait_;
     PageHistory history_;
     std::unique_ptr<HelpPageView> page_view_;
     // "notify::gtk-application-prefer-dark-theme" on the default GtkSettings: the program's Style

@@ -55,9 +55,10 @@ void MainWindow::install_menus_and_shortcuts(GtkApplication* app) {
 
 // The window from _new is owned by GTK (its toplevel list and the application), so it is
 // borrowed here, not adopted.
-MainWindow::MainWindow(GtkApplication* app, Style* style, FontStyle* font_style)
-    : window_(GTK_WINDOW(gtk_application_window_new(app))), search_(std::make_unique<GlibTimer>()),
-      replace_(search_, std::make_unique<GlibTimer>()),
+MainWindow::MainWindow(GtkApplication* app, Style* style, FontStyle* font_style,
+                       ManualLibrary& manual)
+    : window_(GTK_WINDOW(gtk_application_window_new(app))), manual_(manual),
+      search_(std::make_unique<GlibTimer>()), replace_(search_, std::make_unique<GlibTimer>()),
       tabs_(list_, DocumentTabs::Callbacks{
                        [this] { refresh(); }, [this](DocumentId id) { close_document(id); },
                        [this](const std::string& message) { status_.show_message(message); },
@@ -297,7 +298,7 @@ void MainWindow::show_help() {
         return;
     }
     GtkApplication* app = gtk_window_get_application(window_); // borrowed
-    help_ = std::make_unique<HelpWindow>(app, window_);
+    help_ = std::make_unique<HelpWindow>(app, window_, manual_);
     help_destroy_ = gtkx::connect<void(GtkWidget*)>(GTK_WIDGET(help_->window()), "destroy",
                                                     [this](GtkWidget*) { help_.reset(); });
     help_->present();

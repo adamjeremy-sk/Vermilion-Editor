@@ -21,6 +21,7 @@
 #include "manual_test_columns.h"
 #include "ui/help_page_view.h"
 #include "ui/help_window.h"
+#include "ui/manual_library.h"
 #include "ui/style.h"
 #include "vermilion_manual.h"
 #include "vermilion_resources.h"
@@ -29,6 +30,7 @@ namespace {
 
 using vermilion::ManualText;
 using vermilion::ui::HelpWindow;
+using vermilion::ui::ManualLibrary;
 
 bool g_display = false;
 
@@ -45,6 +47,15 @@ void spin(int ms) {
     gint64 end = g_get_monotonic_time() + static_cast<gint64>(ms) * 1000;
     while (g_get_monotonic_time() < end) {
         g_main_context_iteration(nullptr, FALSE);
+    }
+}
+
+// Runs the main loop until `library` is ready, for at most ten seconds.
+void wait_ready(ManualLibrary& library) {
+    const gint64 end = g_get_monotonic_time() + 10 * G_USEC_PER_SEC;
+    while (!library.ready() && g_get_monotonic_time() < end) {
+        g_main_context_iteration(nullptr, FALSE);
+        g_usleep(1000);
     }
 }
 
@@ -156,7 +167,10 @@ protected:
                                        G_APPLICATION_NON_UNIQUE));
         ASSERT_TRUE(g_application_register(G_APPLICATION(app_.get()), nullptr, nullptr));
         parent_ = GTK_WINDOW(gtk_window_new()); // toplevel; destroyed in TearDown
-        help_ = std::make_unique<HelpWindow>(app_.get(), parent_);
+        library_.prepare();
+        wait_ready(library_);
+        ASSERT_TRUE(library_.ready());
+        help_ = std::make_unique<HelpWindow>(app_.get(), parent_, library_);
     }
 
     void TearDown() override {
@@ -180,6 +194,7 @@ protected:
 
     std::unique_ptr<GtkApplication, void (*)(gpointer)> app_{nullptr, &g_object_unref};
     GtkWindow* parent_ = nullptr;
+    ManualLibrary library_; // before help_, so it is destroyed after it
     std::unique_ptr<HelpWindow> help_;
 };
 
@@ -236,6 +251,42 @@ TEST_F(HelpWindowTest, EveryTopicOfTheManualOpens) {
         ++count;
     }
     EXPECT_GE(count, 10);
+}
+
+TEST_F(HelpWindowTest, BeforeTheManualIsReadyThePageSaysLoadingAndThenFillsIn) {
+    ManualLibrary late; // not prepared
+    HelpWindow early(app_.get(), parent_, late);
+    EXPECT_EQ(early.page_view().page().text, "Loading...");
+    EXPECT_FALSE(early.page_view().page().text.empty());
+    late.prepare();
+    wait_ready(late);
+    EXPECT_EQ(early.page_view().page().text, page_of_file("index.md").text);
+    gtk_window_destroy(early.window());
+}
+
+TEST_F(HelpWindowTest, ATopicOpenedWhileLoadingShowsItWhenTheManualIsReady) {
+    ManualLibrary late; // not prepared
+    HelpWindow early(app_.get(), parent_, late);
+    early.open_topic("settings.md");
+    EXPECT_EQ(early.page_view().page().text, "Loading...");
+    late.prepare();
+    wait_ready(late);
+    EXPECT_EQ(early.page_view().page().text, page_of_file("settings.md").text);
+    early.back();
+    EXPECT_EQ(early.page_view().page().text, page_of_file("index.md").text);
+    gtk_window_destroy(early.window());
+}
+
+TEST_F(HelpWindowTest, AWindowThatIsGoneBeforeTheManualIsReadyIsNeverCalled) {
+    ManualLibrary late; // not prepared
+    {
+        HelpWindow early(app_.get(), parent_, late);
+        gtk_window_destroy(early.window());
+    }
+    late.prepare();
+    wait_ready(late);
+    spin(50);
+    EXPECT_TRUE(late.ready());
 }
 
 TEST_F(HelpWindowTest, ATopicThatIsNotInTheProgramSaysSo) {

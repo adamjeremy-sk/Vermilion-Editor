@@ -427,6 +427,8 @@ gtest_discover_tests(vermilion_help_page_view_tests)
 # The Help window on a real display (the tests skip without one).
 add_executable(vermilion_help_window_tests help_window_test.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_window.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/manual_library.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/background_task.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/style.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_page_view.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp

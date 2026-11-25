@@ -16,28 +16,17 @@
 namespace vermilion::ui {
 namespace {
 
-constexpr const char* kManualPrefix = "/io/github/adamjeremy_sk/Vermilion/manual/";
 constexpr const char* kIndexTopic = "index.md";
-constexpr gsize kMaxTopicBytes = 1024 * 1024;
 
-using BytesPtr = std::unique_ptr<GBytes, decltype(&g_bytes_unref)>;
-
-std::optional<std::string> topic_text(const std::string& name) {
-    if (!is_topic_name(name)) {
-        return std::nullopt;
-    }
-    std::string path = kManualPrefix + name;
-    BytesPtr bytes(g_resources_lookup_data(path.c_str(), G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr),
-                   &g_bytes_unref); // full reference; nullptr when the topic is not in the program
-    if (bytes == nullptr) {
-        return std::nullopt;
-    }
-    gsize size = 0;
-    const void* data = g_bytes_get_data(bytes.get(), &size);
-    if (size > kMaxTopicBytes) {
-        return std::nullopt;
-    }
-    return std::string(static_cast<const char*>(data), size);
+// A page of one paragraph with `text`.
+ManualPage note_page(const std::string& text) {
+    ManualPage page;
+    ManualBlock block;
+    block.spans.resize(1);
+    block.spans[0].kind = SpanKind::Text;
+    block.spans[0].text = text;
+    page.blocks.push_back(std::move(block));
+    return page;
 }
 
 void on_back(GSimpleAction*, GVariant*, gpointer data) {
@@ -79,8 +68,9 @@ int natural_height(GtkWidget* widget) {
 
 } // namespace
 
-HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent)
-    : window_(GTK_WINDOW(gtk_application_window_new(app))) { // GTK owns the window; it is borrowed
+HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& library)
+    : window_(GTK_WINDOW(gtk_application_window_new(app))), // GTK owns the window; it is borrowed
+      library_(library) {
     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window_), FALSE);
     gtk_window_set_title(window_, "Vermilion Editor Help");
     gtk_window_set_transient_for(window_, parent);
@@ -109,6 +99,9 @@ HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent)
             settings, "notify::gtk-application-prefer-dark-theme",
             [this](GObject*, GParamSpec*) { page_view_->refresh_colours(); });
     }
+    if (!library_.ready()) {
+        wait_ = library_.on_ready([this] { show(history_.current()); });
+    }
     open_topic(kIndexTopic);
 }
 
@@ -136,18 +129,17 @@ void HelpWindow::open_topic(const std::string& name) {
 }
 
 void HelpWindow::show(const std::string& name) {
-    std::optional<std::string> text = topic_text(name);
-    ManualPage page;
-    if (text.has_value()) {
-        page = parse_manual(*text);
-    } else {
-        ManualBlock block;
-        block.spans.resize(1);
-        block.spans[0].kind = SpanKind::Text;
-        block.spans[0].text = "This topic is not available: " + name;
-        page.blocks.push_back(std::move(block));
+    const ManualData* manual = library_.data();
+    if (manual == nullptr) {
+        page_view_->show_source(note_page("Loading..."));
+        return;
     }
-    page_view_->show_source(page);
+    const auto found = manual->pages.find(name);
+    if (found != manual->pages.end()) {
+        page_view_->show_source(found->second);
+    } else {
+        page_view_->show_source(note_page("This topic is not available: " + name));
+    }
 }
 
 void HelpWindow::update_actions() {
