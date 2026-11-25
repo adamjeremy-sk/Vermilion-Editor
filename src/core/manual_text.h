@@ -47,7 +47,7 @@ struct HeadingMark {
 struct ManualText {
     std::string text;
     std::size_t length = 0;               // character_count(text)
-    std::vector<TextRange> bold;          // bold spans, headings included
+    std::vector<TextRange> bold;          // bold spans, in tables too; headings are in `headings`
     std::vector<TextRange> code;          // code spans
     std::vector<LinkRange> links;         // topic links
     std::vector<HeadingMark> headings;    // one per heading block, in page order
