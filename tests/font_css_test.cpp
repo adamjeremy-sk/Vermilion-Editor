@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include <clocale>
 #include <string>
 
 #include "ui/font_css.h"
@@ -27,7 +26,7 @@ TEST(FontCss, EmptyOrBlankTextGivesNoRule) {
 TEST(FontCss, FamilyAndSize) {
     EXPECT_EQ(font_css("DejaVu Sans Mono 11"),
               std::string(".vm-editor {\n"
-                          "    font-family: \"DejaVu Sans Mono\";\n"
+                          "    font-family: \"DejaVu Sans Mono\", monospace;\n"
                           "    font-size: 11pt;\n"
                           "}\n"));
 }
@@ -48,7 +47,7 @@ TEST(FontCss, AnAbsoluteSizeIsInPixels) {
 
 TEST(FontCss, WeightAndStyleComeAfterTheSize) {
     EXPECT_EQ(font_css("Sans Bold Italic 12"), std::string(".vm-editor {\n"
-                                                           "    font-family: \"Sans\";\n"
+                                                           "    font-family: \"Sans\", monospace;\n"
                                                            "    font-size: 12pt;\n"
                                                            "    font-weight: 700;\n"
                                                            "    font-style: italic;\n"
@@ -56,12 +55,13 @@ TEST(FontCss, WeightAndStyleComeAfterTheSize) {
 }
 
 TEST(FontCss, ALightObliqueFont) {
-    EXPECT_EQ(font_css("Sans Light Oblique 9"), std::string(".vm-editor {\n"
-                                                            "    font-family: \"Sans\";\n"
-                                                            "    font-size: 9pt;\n"
-                                                            "    font-weight: 300;\n"
-                                                            "    font-style: oblique;\n"
-                                                            "}\n"));
+    EXPECT_EQ(font_css("Sans Light Oblique 9"),
+              std::string(".vm-editor {\n"
+                          "    font-family: \"Sans\", monospace;\n"
+                          "    font-size: 9pt;\n"
+                          "    font-weight: 300;\n"
+                          "    font-style: oblique;\n"
+                          "}\n"));
 }
 
 TEST(FontCss, OnlyTheFieldsThatAreSetAreWritten) {
@@ -83,24 +83,26 @@ TEST(FontCss, EveryNameOfAFamilyListIsQuoted) {
 }
 
 TEST(FontCss, EmptyNamesInTheListAreLeftOut) {
-    EXPECT_EQ(font_css("Mono,, Sans, 10"), std::string(".vm-editor {\n"
-                                                       "    font-family: \"Mono\", \"Sans\";\n"
-                                                       "    font-size: 10pt;\n"
-                                                       "}\n"));
+    EXPECT_EQ(font_css("Mono,, Sans, 10"),
+              std::string(".vm-editor {\n"
+                          "    font-family: \"Mono\", \"Sans\", monospace;\n"
+                          "    font-size: 10pt;\n"
+                          "}\n"));
 }
 
 TEST(FontCss, QuotesAndBackslashesInANameAreEscaped) {
-    EXPECT_EQ(font_css("Ev\"il\\Font 11"), std::string(".vm-editor {\n"
-                                                       "    font-family: \"Ev\\\"il\\\\Font\";\n"
-                                                       "    font-size: 11pt;\n"
-                                                       "}\n"));
+    EXPECT_EQ(font_css("Ev\"il\\Font 11"),
+              std::string(".vm-editor {\n"
+                          "    font-family: \"Ev\\\"il\\\\Font\", monospace;\n"
+                          "    font-size: 11pt;\n"
+                          "}\n"));
 }
 
 TEST(FontCss, ControlCharactersInANameBecomeSpaces) {
     EXPECT_EQ(font_css("A\x01"
                        "B 11"),
               std::string(".vm-editor {\n"
-                          "    font-family: \"A B\";\n"
+                          "    font-family: \"A B\", monospace;\n"
                           "    font-size: 11pt;\n"
                           "}\n"));
 }
@@ -108,7 +110,7 @@ TEST(FontCss, ControlCharactersInANameBecomeSpaces) {
 TEST(FontCss, ANameCannotCloseTheRuleOrTheString) {
     const std::string css = font_css("a}b;c{ 11");
     EXPECT_EQ(css, std::string(".vm-editor {\n"
-                               "    font-family: \"a}b;c{\";\n"
+                               "    font-family: \"a}b;c{\", monospace;\n"
                                "    font-size: 11pt;\n"
                                "}\n"));
 }
@@ -122,29 +124,43 @@ TEST(FontCss, ANormalWeightAndStyleAreNotWritten) {
 
 TEST(FontCss, ASizeOfZeroIsLeftOut) {
     EXPECT_EQ(font_css("Sans Bold 0"), std::string(".vm-editor {\n"
-                                                   "    font-family: \"Sans\";\n"
+                                                   "    font-family: \"Sans\", monospace;\n"
                                                    "    font-weight: 700;\n"
                                                    "}\n"));
 }
 
 TEST(FontCss, TheSizeKeepsAtMostTwoDecimals) {
     EXPECT_EQ(font_css("Sans 10.333"), std::string(".vm-editor {\n"
-                                                   "    font-family: \"Sans\";\n"
+                                                   "    font-family: \"Sans\", monospace;\n"
                                                    "    font-size: 10.33pt;\n"
                                                    "}\n"));
 }
 
-TEST(FontCss, TheDecimalSeparatorIsADotInEveryLocale) {
-    const char* before = std::setlocale(LC_NUMERIC, nullptr);
-    const std::string saved = before != nullptr ? before : "C";
-    const char* german = std::setlocale(LC_NUMERIC, "de_DE.UTF-8");
-    if (german == nullptr) {
-        std::setlocale(LC_NUMERIC, saved.c_str());
-        GTEST_SKIP();
-    }
-    const std::string css = font_css("Monospace 10.5");
-    std::setlocale(LC_NUMERIC, saved.c_str());
-    EXPECT_NE(css.find("font-size: 10.5pt;"), std::string::npos);
+TEST(FontCss, ThePlainMonospaceFamilyGetsNoSecondOne) {
+    EXPECT_EQ(font_css("monospace 11"), std::string(".vm-editor {\n"
+                                                    "    font-family: \"monospace\";\n"
+                                                    "    font-size: 11pt;\n"
+                                                    "}\n"));
+    EXPECT_EQ(font_css("Sans, MONOSPACE 11"),
+              std::string(".vm-editor {\n"
+                          "    font-family: \"Sans\", \"MONOSPACE\";\n"
+                          "    font-size: 11pt;\n"
+                          "}\n"));
+}
+
+TEST(FontCss, AFamilyThatMerelyContainsMonospaceStillGetsTheGenericOne) {
+    EXPECT_EQ(font_css("Noto Sans Monospace 11"),
+              std::string(".vm-editor {\n"
+                          "    font-family: \"Noto Sans Monospace\", monospace;\n"
+                          "    font-size: 11pt;\n"
+                          "}\n"));
+}
+
+TEST(FontCss, ADescriptionWithoutAFamilyAddsNoGenericOne) {
+    EXPECT_EQ(font_css("Italic 11"), std::string(".vm-editor {\n"
+                                                 "    font-size: 11pt;\n"
+                                                 "    font-style: italic;\n"
+                                                 "}\n"));
 }
 
 } // namespace

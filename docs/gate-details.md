@@ -39,7 +39,7 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
   - Every build renders both SVGs to PNG with `rsvg-convert` (`librsvg2-bin`; configure stops with the package name if it is missing): `vedticon.svg` at 16 and 24 px, `vermilion-icon.svg` at 32, 48, 64, 128 and 256 px.
   - The PNGs are compiled into the resources under `icons/<n>x<n>/apps/`, named by the application ID; GtkApplication adds that path to the icon theme. GTK picks the small icon for the title bar and the large one for the panel, Alt+Tab and About. The resource test checks every size. Fully dictated.
 - **M2.1d** continuous integration (build infrastructure, ahead of M2.2).
-  - The workflow `.github/workflows/ci.yml` runs on every push and pull request to `main`.
+  - The workflow `.github/workflows/ci.yml` runs on every push and pull request to `main`, and since 2026-11-21 on every push to a `gate/**` branch.
   - A clean Ubuntu 24.04 runner installs the README's packages (without `clang-tidy`), configures, builds and runs the full `ctest`, including `SourceCheck.Repo` and `Format.Check`. UI tests that need a display will add `xvfb`.
 - **M2.2 Open.**
   - Before a file loads, the core `TextScanner` reads it once in 64 KiB blocks ("Checking … P%") and decides the encoding: a strict whole-file UTF-8 check, a UTF-8 or UTF-16 byte-order mark, else Windows-1252, or Latin-1 when one of its five undefined bytes occurs.
@@ -84,11 +84,12 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
   - Settings: colour mode Light, Dark or Follow system (two classic palettes; the schemes `vermilion-classic` and `vermilion-classic-dark`), the current-line band, the editor font (default: the system monospace), tab width 4 or 8 (the Tab key inserts spaces), the large-reload question and the long-line limit.
   - Changes show 100 ms after Apply, with no restart and no preview.
   - Left out on purpose (Adam, 2026-11-19): style presets, a Colour Mode menu item and Zoom (parked in `docs/ideas.md`).
-- **M2.5b** Help window (a Windows 98 Help screenshot is a layout idea only; our own look and branding, ARCHITECTURE.md rules stay).
-  - The Help → Index window (M2.2b) gets two panes. Left: a **Contents** tab (a tree of manual topics and their sections) and a **Search** tab (a text box with Match case, Whole word and Regex, and a list of matching pages with a snippet). Right: the page view.
-  - Text-only buttons **Hide** (collapses the left pane), **Back** and **Forward**. No Index tab (Search covers it; it would need a hand-made keyword list). The page text becomes selectable.
-  - Search reuses the core `SearchOptions`, `effective_search_text` and `pattern_error` with GLib's regex over the page text (the editor's `SearchSession` is bound to a text buffer and is not reused). Forward extends `PageHistory`.
-  - Placed before M2 ends by the Orchestrator; scope to be confirmed with Adam in a short design talk first.
+- **M2.5b** Help window (built; ARCHITECTURE.md 7.10, "Manual"; a Windows 98 Help screenshot was a layout idea only).
+  - The Help → Index window (M2.2b) has a side pane on the left with a **Contents** tab (the topics in the order of the index, each with its headings; the current topic open).
+  - The **Search** tab has a box with Match case, Whole word and Regex, one result row per page with a count and a snippet, and Previous and Next.
+  - Text-only buttons **Hide**/**Show**, **Back** and **Forward** at the top, a status line at the bottom. Keys: Alt+Left, Alt+Right, Ctrl+F, F3, Shift+F3 and the zoom keys. No Index tab or button.
+  - The page is one read-only text view in the system monospace font and the program's colours. Text and tables follow the window width; the highlights follow the last search on every page.
+  - The manual is read in the background after the first window shows (`ManualLibrary`, `BackgroundScope`; ARCHITECTURE.md 5). The program bundles no font (Adam, 2026-11-23).
 - **M2.6** diff (the diff is part of the light editor `vermilion` too).
   - **Engine** in core: Myers on lines behind one function, so another algorithm (histogram, in `docs/ideas.md`) can replace it; aligned rows; word-level highlights inside paired lines.
   - **`DiffView` widget** in the editor base: side by side with filler lines, shared scroll, folding of unchanged regions.
@@ -135,6 +136,11 @@ Adam's hands-on lists passed: one and several files, a relative path, the same f
 ¶¶ 1235 tests (ARCHITECTURE.md 7.1 "Settings as built"). Steps 1a to 6: the core values and the colour mode, the dark palette and scheme, `Style`, the appearance controller and its wiring, the editor font, the page look, `SystemTheme` (Follow system), the Settings window shell, its three pages and the wiring.
 Qwen wrote the `.cpp` files from specifications; headers, tests and wiring were dictated. Fixes followed steps 3a, 4 (the About logo size under Greybird and Greybird-dark), 5a (a wrong comment in the window test) and 5d (the room around the Settings tab labels, found in Adam's hands-on). The manual gained the topic "Settings".
 Adam's hands-on lists passed: Follow system on XFCE in light and dark, Tools → Settings… and Ctrl+Comma, Apply, OK, Cancel and Esc, the colour mode, the font, tab width 4 and 8, the large-file settings, and a hand edit of `settings.ini` that shows at the next open.
+
+§§ 1516 tests (ARCHITECTURE.md 7.10, "Manual"). Steps 1a to 8b, each one prompt and one commit. The core came first: tables, the page as one text, Forward, the outline, page search and result rows.
+Then the page view (5a to 5m), the search highlights and the background library (6a to 6d2), the Contents and Search tabs (6e1 to 6f2), and the window (7a to 7c).
+Revised on 2026-11-23 after Adam saw the first page: the bundled Fantasque Sans Mono and the fixed 100-column page were removed (steps 5f, 5i, 5m). On 2026-11-24 the side pane moved to the left.
+Qwen wrote the `.cpp` files from specifications; headers and tests were dictated and built in the cloud first. Step 8a made the Help window tests share one registered application per test program; 8b corrected a comment in `manual_text.h`.
 
 ## M5: Agent core (v0.3.0)
 

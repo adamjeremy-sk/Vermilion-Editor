@@ -36,7 +36,8 @@ public:
     // for anything else, a null pointer included. The font dialog's filter calls it.
     static bool is_monospace_item(gpointer item);
 
-    // The font shown when the setting holds no font of its own.
+    // The font shown (greyed out) while the setting holds no font of its own, and the one the
+    // button switches to first when the system font box is unchecked.
     static const char* default_font_text();
 
     // The controls (borrowed), for the tests.

@@ -33,9 +33,12 @@ std::string quoted(const std::string& name) {
 }
 
 // Every name of the comma separated family list, quoted, joined with ", "; empty when no name is
-// left. The parts are not trimmed: Pango cut the blanks around the commas already.
+// left. The parts are not trimmed: Pango cut the blanks around the commas already. When no name is
+// "monospace" (any case), the generic family monospace (unquoted) is added last, so a family that
+// is not installed falls back to a monospace font and not to a proportional one.
 std::string family_value(const std::string& list) {
     std::string result;
+    bool has_monospace = false;
     std::string::size_type start = 0;
     while (start < list.size()) {
         const std::string::size_type comma = list.find(',', start);
@@ -46,11 +49,17 @@ std::string family_value(const std::string& list) {
                 result += ", ";
             }
             result += quoted(part);
+            if (g_ascii_strcasecmp(part.c_str(), "monospace") == 0) {
+                has_monospace = true;
+            }
         }
         if (comma == std::string::npos) {
             break;
         }
         start = comma + 1;
+    }
+    if (!result.empty() && !has_monospace) {
+        result += ", monospace";
     }
     return result;
 }

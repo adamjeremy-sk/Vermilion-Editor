@@ -1,4 +1,4 @@
-add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp manual_spans_test.cpp manual_page_test.cpp page_history_test.cpp manual_files_test.cpp recovery_file_test.cpp recovery_file_reject_test.cpp recovery_schedule_test.cpp recovery_store_test.cpp recovery_store_files_test.cpp recovery_tracker_test.cpp recovery_tracker_rules_test.cpp recovery_tracker_events_test.cpp recovery_tracker_adopt_test.cpp recovery_offer_test.cpp recovery_question_test.cpp baseline_test.cpp document_list_deleted_test.cpp recovery_answers_test.cpp recovery_blank_test.cpp search_options_test.cpp search_replacement_test.cpp count_text_test.cpp goto_line_test.cpp goto_column_test.cpp search_messages_test.cpp held_events_test.cpp file_hash_test.cpp text_scan_hash_test.cpp settings_file_test.cpp external_change_test.cpp external_messages_test.cpp document_list_encoding_test.cpp recovery_tracker_deleted_test.cpp reload_format_test.cpp external_look_test.cpp external_reload_test.cpp open_arguments_test.cpp open_request_test.cpp open_queue_test.cpp create_questions_test.cpp settings_values_test.cpp colour_mode_test.cpp editor_settings_test.cpp editor_look_test.cpp settings_io_test.cpp)
+add_executable(vermilion_tests core_version_test.cpp agent_info_test.cpp result_test.cpp redact_test.cpp log_test.cpp document_list_test.cpp text_format_test.cpp text_scan_test.cpp document_list_files_test.cpp open_messages_test.cpp text_format_ids_test.cpp document_list_save_test.cpp save_messages_test.cpp manual_spans_test.cpp manual_page_test.cpp page_history_test.cpp manual_files_test.cpp recovery_file_test.cpp recovery_file_reject_test.cpp recovery_schedule_test.cpp recovery_store_test.cpp recovery_store_files_test.cpp recovery_tracker_test.cpp recovery_tracker_rules_test.cpp recovery_tracker_events_test.cpp recovery_tracker_adopt_test.cpp recovery_offer_test.cpp recovery_question_test.cpp baseline_test.cpp document_list_deleted_test.cpp recovery_answers_test.cpp recovery_blank_test.cpp search_options_test.cpp search_replacement_test.cpp count_text_test.cpp goto_line_test.cpp goto_column_test.cpp search_messages_test.cpp held_events_test.cpp file_hash_test.cpp text_scan_hash_test.cpp settings_file_test.cpp external_change_test.cpp external_messages_test.cpp document_list_encoding_test.cpp recovery_tracker_deleted_test.cpp reload_format_test.cpp external_look_test.cpp external_reload_test.cpp open_arguments_test.cpp open_request_test.cpp open_queue_test.cpp create_questions_test.cpp settings_values_test.cpp colour_mode_test.cpp editor_settings_test.cpp editor_look_test.cpp settings_io_test.cpp manual_table_test.cpp manual_text_test.cpp manual_text_files_test.cpp page_history_forward_test.cpp manual_outline_test.cpp manual_outline_files_test.cpp manual_search_test.cpp manual_search_files_test.cpp manual_results_test.cpp manual_results_files_test.cpp)
 target_link_libraries(vermilion_tests PRIVATE
     GTest::gtest_main
     vermilion_core
@@ -106,6 +106,34 @@ target_link_libraries(vermilion_file_inspector_tests PRIVATE
     vermilion_warnings
     PkgConfig::GTK4)
 gtest_discover_tests(vermilion_file_inspector_tests)
+
+# BackgroundScope on a real GIO thread pool and main loop, no window and no display (GTK4 is
+# linked for the GIO headers only; no widget is created).
+add_executable(vermilion_background_task_tests background_task_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/background_task.cpp)
+target_link_libraries(vermilion_background_task_tests PRIVATE
+    GTest::gtest_main
+    vermilion_warnings
+    PkgConfig::GTK4)
+target_include_directories(vermilion_background_task_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+gtest_discover_tests(vermilion_background_task_tests)
+
+# ManualLibrary: the manual made from text and from the program's resources, and the library that
+# is prepared on a worker thread; no window and no display (GTK4 is linked for the GIO headers
+# only; no widget is created).
+add_executable(vermilion_manual_library_tests manual_library_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/manual_library.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/background_task.cpp)
+target_link_libraries(vermilion_manual_library_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_resources
+    vermilion_warnings
+    PkgConfig::GTK4)
+target_include_directories(vermilion_manual_library_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_compile_definitions(vermilion_manual_library_tests PRIVATE
+    VERMILION_MANUAL_DIR="${CMAKE_SOURCE_DIR}/docs/manual")
+gtest_discover_tests(vermilion_manual_library_tests)
 
 # FileWatcher on a real GIO file monitor and main loop, no window and no display (GTK4 is linked
 # for the GIO headers only; no widget is created). The timer is the real GlibTimer in most tests
@@ -378,4 +406,71 @@ gtest_discover_tests(vermilion_ui_tests)
 add_test(NAME SourceCheck.Repo COMMAND ${CMAKE_SOURCE_DIR}/tools/check_sources.sh)
 add_test(NAME Format.Check COMMAND ${CMAKE_SOURCE_DIR}/tools/check_format.sh)
 set_tests_properties(Format.Check PROPERTIES SKIP_RETURN_CODE 77)
+
+# The Help page view on a real display (the tests skip without one).
+add_executable(vermilion_help_page_view_tests help_page_view_test.cpp
+    help_page_view_link_test.cpp help_page_view_zoom_test.cpp help_page_view_margin_test.cpp
+    help_page_view_colour_test.cpp help_page_view_layout_test.cpp help_page_view_search_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_layout.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_colours.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_search.cpp)
+target_link_libraries(vermilion_help_page_view_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTK4)
+gtest_discover_tests(vermilion_help_page_view_tests)
+
+# The Contents tree of the Help window on a real display (the tests skip without one).
+add_executable(vermilion_help_contents_tests help_contents_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_contents.cpp)
+target_link_libraries(vermilion_help_contents_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTK4)
+gtest_discover_tests(vermilion_help_contents_tests)
+
+# The Search tab of the Help window (the message needs no display; the rest skips without one).
+add_executable(vermilion_help_search_tests help_search_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_search.cpp)
+target_link_libraries(vermilion_help_search_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTK4)
+gtest_discover_tests(vermilion_help_search_tests)
+
+# The Help window on a real display (the tests skip without one).
+add_executable(vermilion_help_window_tests help_window_test.cpp help_window_bar_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_window.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_window_actions.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_window_search.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_contents.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_search.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/manual_library.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/background_task.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/style.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_layout.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_colours.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_search.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/window_shortcuts.cpp)
+target_link_libraries(vermilion_help_window_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_resources
+    vermilion_warnings
+    PkgConfig::GTK4)
+target_compile_definitions(vermilion_help_window_tests PRIVATE
+    VERMILION_MANUAL_DIR="${CMAKE_SOURCE_DIR}/docs/manual")
+gtest_discover_tests(vermilion_help_window_tests)
+
 add_subdirectory(ctxmon)

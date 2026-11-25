@@ -6,7 +6,7 @@
 
 ## How this plan works
 
-- **Gates.** Each gate is one step, with evidence and an audit verdict. A gate that adds code also adds its tests. Adam builds, tests and commits; the work is pushed at the end of each gate.
+- **Gates and steps.** A gate is one row of this roadmap, worked on its own branch `gate/<name>`. A step is one prompt, one audit verdict and one commit. A gate that adds code also adds its tests. Adam builds, tests, commits and pushes after every audited step, and merges the branch into `main` (`--no-ff`) when the gate ends.
 - **Milestone reviews.** Every milestone ends with a review with Adam before the next one starts (AI_ONBOARDING.md section 2, item 7). Its conclusions go to `docs/milestones/M<n>-review.md`.
 - **The Done column.** ☐ means not done. ☑ means done, followed by the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes of that milestone in `docs/gate-details.md`; the marks start again in each milestone. Each milestone also has a Status line.
 - **Standing objective: REUSE certification.** The repository is to pass `reuse lint` (https://reuse.software), with the licence texts in `LICENSES/`. Everything created from 2026-11-17 on is compliant when it is made (AGENTS.md rule 5); older files are brought into line at M9. Already done: the vendored xxHash (`third_party/xxhash/`, with a `.license` sidecar) and `LICENSES/`.
@@ -18,9 +18,9 @@
 - **Upkeep.** The weights are the Orchestrator's estimate, accepted by Adam; they change only when Adam decides. The bar is updated with the Done column at every gate commit, and the same line is in README.md.
 - **Weights** (sum 100): M0 5 · M1 6 · M2 19 · M3 8 · M4 6 · M5 25 · M6 10 · M7 10 · M8 5 · M9 6.
 - **Share of one gate** in its milestone: M0 0.42% (12 gates) · M1 0.55% (11) · M2 1.19% (16) · M3 1.33% (6) · M4 1.20% (5) · M5 1.67% (15) · M6 1.25% (8) · M7 1.67% (6) · M8 1.67% (3) · M9 6.00% (1).
-- **Now**: 5 + 6 + 19 × 11/16 = 24.1, shown as 24%.
+- **Now**: 5 + 6 + 19 × 12/16 = 25.25, shown as 25%.
 
-**Progress**: `████░░░░░░░░░░░░░░░░` 24% (weighted: M0 and M1 done; M2 11 of 16)
+**Progress**: `█████░░░░░░░░░░░░░░░` 25% (weighted: M0 and M1 done; M2 12 of 16)
 
 ## Versions
 | Version | Contents | Milestones |
@@ -99,11 +99,11 @@ The talk for the M2 window was held 2026-11-10; its outcome is ARCHITECTURE.md s
 | M2.4 | File monitor and the external-change policy (the banner's Show diff button joins with the diff view, M2.6) | Edit on disk reloads a clean buffer; dirty buffer shows the banner | Orchestrator plans, Qwen codes | ☑ 2026/11/18 †† |
 | M2.4b | Files from the command line: `vermilion file1 file2 ...`, a terminal question for missing files (create them), the open queue, the manual topic Command-line options (see gate-details) | Core tests for the argument sorting, the queue and the question machine; Adam's hands-on run from a terminal | Orchestrator plans, Qwen codes | ☑ 2026/11/19 ‡‡ |
 | M2.5 | Settings window and key file: colour mode, schemes, editor font, tab width; the Tools menu (see gate-details) | Settings persist; Adam checks light and dark | Orchestrator plans, Qwen codes | ☑ 2026/11/21 ¶¶ |
-| M2.5b | Help window with a contents tree and a search tab (see gate-details) | Manual check: tree, search with each option, Back, Forward, Hide; core tests for the page search and the history | Design talk with Adam, then plan first (rule 10) | ☐ |
+| M2.5b | Help window with a contents tree and a search tab (see gate-details) | Manual check: tree, search with each option, Back, Forward, Hide; core tests for the page search and the history | Design talk with Adam, then plan first (rule 10) | ☑ 2026/11/25 §§ |
 | M2.6 | Diff engine and `DiffView` (see gate-details) | Tests incl. edge cases (applying a diff to A gives B); manual check of the view, the banner button and the Compare button | Orchestrator plans, Qwen codes | ☐ |
 | M2.7 | Window size restored; start state (a new untitled document by default; or reopen the last document, a single file; or a blank window); no tab limit | Restored on start | Qwen | ☐ |
 | M2.7c | File → Open Recent (proposed at the end of M2.3; design talk first, see gate-details) | Opens a recent file; a missing file is handled as the talk decides | Plan first (rule 10) | ☐ |
-| M2.7b | The light program `vermilion` (ARCHITECTURE.md 7.12; see gate-details) | Opens text files from the file manager; the link check passes; Adam measures startup. **◆ DOGFOOD 1: `vermilion` replaces gedit and Mousepad on Adam's system** | Orchestrator plans, Qwen codes | ☐ |
+| M2.7b | The light program `vermilion` (ARCHITECTURE.md 7.12; see gate-details) | Opens text files from the file manager; the link check passes; Adam measures startup with and without the warm-ups (ARCHITECTURE.md 5). **◆ DOGFOOD 1: `vermilion` replaces gedit and Mousepad on Adam's system** | Orchestrator plans, Qwen codes | ☐ |
 
 ## M3: Directory sidebar (right-hand side) (v0.1.0 with M1 and M2)
 **Status**: ☐

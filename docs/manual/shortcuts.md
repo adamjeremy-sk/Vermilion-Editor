@@ -29,6 +29,9 @@
 | Escape | In a question or in the Settings window: Cancel |
 | F1 | Help → Index: open the manual, or bring it forward |
 | Alt+Left | In the manual window: Back to the previous page |
+| Alt+Right | In the manual window: Forward to the page that Back left |
+| Ctrl+F, F3, Shift+F3 | In the manual window: search the manual, next and previous match on the page |
+| Ctrl+=, Ctrl+-, Ctrl+0 | In the manual window: larger text, smaller text, normal size |
 
 The editor's own keys (arrows, Home, End, Page Up, Page Down, Ctrl+Home, Ctrl+End, and Shift with any of them to select)
 work as in other GTK text editors.

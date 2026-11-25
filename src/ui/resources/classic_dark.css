@@ -15,3 +15,8 @@
 @define-color vm_select_bg #145ba6;
 @define-color vm_select_text #ffffff;
 @define-color vm_info_bg #4a4730;
+
+/* Used by the Help page only: the colour of a link and the background of a search match (the
+   current match uses the selection colours). */
+@define-color vm_link #7fb2ff;
+@define-color vm_match_bg #4a4730;

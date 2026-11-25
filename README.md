@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Progress</strong>: <code>████░░░░░░░░░░░░░░░░</code> 24% (weighted: M0 and M1 done; M2 11 of 16) (<a href="docs/roadmap.md">roadmap</a>)
+  <strong>Progress</strong>: <code>█████░░░░░░░░░░░░░░░</code> 25% (weighted: M0 and M1 done; M2 12 of 16) (<a href="docs/roadmap.md">roadmap</a>)
 </p>
 
 <p align="center">
@@ -19,13 +19,14 @@
 </p>
 
 > **Status: pre-alpha.** It opens, edits and saves files, finds and replaces text, recovers documents after a crash,
-> reloads files that change on disk, opens files given on the command line, and has a Settings window with Light, Dark and
-> Follow system colours.
+> reloads files that change on disk, opens files given on the command line, has a Settings window with Light, Dark and
+> Follow system colours, and a Help window with contents and search.
 > It is not ready for daily use, and everything marked "Planned" is a plan. See [Status](#status).
+> Next: the diff view (M2.6). 1516 tests.
 
 <p align="center">
   <img src="res/github/vermilion-m2.5a-finished.png" width="800" alt="Vermilion Editor: the main window with an empty document, the Help window showing the Settings topic, and the About dialog">
-  <br><em>The current build (M2.5): the main window with an empty document; Help showing the Settings topic; the About dialog.</em>
+  <br><em>The build at M2.5, before the new Help window of M2.5b: the main window with an empty document; Help showing the Settings topic; the About dialog.</em>
 </p>
 
 ---
@@ -64,8 +65,9 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 ---
 
 ## Status
-M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 11 of 16 gates. 1235 tests, all
-passing at the last commit. Everything after M2 is designed, not started. There are no releases yet.
+M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 12 of 16 gates. The latest, M2.5b,
+rebuilt the Help window with a Contents tree, a Search tab, Back, Forward and Hide. 1516 tests, all passing at the last
+commit. Next: M2.6 (diff). Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
 Each row is one finished gate; the test count is the total after that gate.
@@ -85,6 +87,7 @@ Each row is one finished gate; the test count is the total after that gate.
 | M2.4, external changes | A clean tab reloads by itself when its file changes; an edited or large tab shows a bar (Reload, Keep mine); a deleted file keeps its text; File → Reload from Disk (Ctrl+R); the one setting is kept in `settings.ini`; changes are detected by time, size and an xxHash | 970 |
 | M2.4b, command line | `vermilion file1 file2 ...` opens every file in its own tab, also in a running window; a missing file is asked about on the terminal and created on a yes; folders are refused; `--help` | 1016 |
 | M2.5, settings | Tools → Settings… (Ctrl+Comma): colour mode Light, Dark or Follow system (the whole window and the editor colours follow it, also when the desktop changes), highlight the current line, editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; saved in `settings.ini` | 1235 |
+| M2.5b, Help window | The manual in a window with a Contents tree and a Search tab (match case, whole word, regex; highlights on every page; F3), Back, Forward and Hide; the page follows the window width in the system monospace font; the manual is read in the background after start | 1516 |
 
 ---
 
@@ -111,9 +114,9 @@ One window, one opened folder. The right-hand stack has the directory sidebar (*
 (which also exists as a standalone program). The bottom panel has build output, problems, terminals and the debugger
 views. There is no toolbar: every command is a menu item that shows its shortcut.
 
-Today (after M2.5) the window has the menu bar, tabs, the editor, the status bar, the search windows and the Settings
-window. The right-hand stack arrives
-with M3, the bottom panel with M4, the Agent tab with M5 and the ctxmon tab with M6.
+Today (after M2.5b) the window has the menu bar, tabs, the editor, the status bar, the search windows, the Settings
+window and the Help window. The right-hand stack arrives with M3, the bottom panel with M4, the Agent tab with M5 and
+the ctxmon tab with M6.
 
 ---
 
@@ -132,11 +135,11 @@ Rows marked Built exist today; everything else is a plan.
 | Keyboard first | Built (M2.1 to M2.3) | Gedit-style status bar, no toolbar, every command a menu item with its shortcut. Build and debug keys come with their features |
 | Fixed-width tabs | Built (M2.1) | Close button at the right edge, an unsaved marker, drag to reorder; a tab is never closed on its own |
 | Large files | Built (M2.2) | Loaded in the background, highlighting switched on afterwards: a 50 MB C++ file opens in about 4 s instead of 87. A binary file or a line over 350,000 characters asks "Open anyway / Cancel" |
-| Manual inside the program | Built (M2.2b) | Help → Index (F1): the topics of `docs/manual` in a read-only window, with links, Back and Index |
+| Manual inside the program | Built (M2.2b, M2.5b) | Help → Index (F1): the topics of `docs/manual` in a read-only Help window, with links |
 | Search, replace, go to line | Built (M2.3) | Find (Ctrl+F), Replace (Ctrl+H), Go to Line (Ctrl+G, `line` or `line:column`); match case, whole word, regular expressions; match count; F3 and Shift+F3; Replace All is one Undo step |
 | External changes | Built (M2.4) | A clean tab reloads by itself when its file changes (up to 10 MB); an edited or large tab shows a bar with Reload and Keep mine. A deleted file keeps its tab and text. File → Reload from Disk (Ctrl+R); "Do not ask again" is kept in `settings.ini` |
-| Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
-| Help window | Planned (M2.5b) | A Contents tree, a Search tab, and Back, Forward and Hide buttons |
+| Settings | Built (M2.5) | Tools → Settings… or Ctrl+Comma: colour mode (Light, Dark, Follow system), the current-line band, the editor font (the system monospace font unless you pick one), tab width 4 or 8, the large-file questions; OK, Cancel and Apply; the change shows at once, with no restart |
+| Help window | Built (M2.5b) | A side pane with a Contents tree and a Search tab, Back, Forward and Hide, a status line for the search. The page uses the system monospace font and the program's own colours, wraps to the window width and zooms |
 | Diff view | Planned (M2.6) | Side by side with folding; opened from the external-change banner and the crash-recovery question |
 | Open Recent | Planned (M2.7c) | File → Open Recent, with a way to clear the list |
 | The light program | Planned (M2.7b) | `vermilion` as a plain editor for quick edits, a replacement for gedit or Mousepad; both programs are built from the same editor code |
@@ -263,7 +266,7 @@ ctest --test-dir build --output-on-failure
 
 - The test run includes two repository checks: `SourceCheck.Repo` (licence header, purpose comment and size of every source
   file) and `Format.Check` (`clang-format --dry-run --Werror`; skipped, not failed, when clang-format is missing).
-- GitHub Actions runs the same steps on a clean Ubuntu 24.04 for every push and pull request to `main`.
+- GitHub Actions runs the same steps on a clean Ubuntu 24.04 for every push to `main` and to the `gate/**` branches, and for every pull request to `main`.
 - `librsvg2-bin` provides `rsvg-convert`, which the build uses to render the application icons from `res/vedt/`. CMake stops
   at configure with the package name if it is missing.
 - Optional: `python3 tools/ctxmon_oracle.py` regenerates the ctxmon tests' expected values from the Python original. The
@@ -279,16 +282,16 @@ ctest --test-dir build --output-on-failure
 
 | Path | Contents |
 |---|---|
-| `src/core/` | UI-free logic: the document list, text scanner and encodings, the manual's parser and page history, search options, replacement rules, Go to Line, message texts, the external-change policy and file hashing, the settings file and its keys, the command-line open queue, crash-recovery logic, logging, the `Result` type. Planned: diff and permission engines, build presets, the debug client, slash commands, cost, archive. No GTK headers |
+| `src/core/` | UI-free logic: the document list, text scanner and encodings, the manual's parser, page text, outline, search and result rows and page history, search options, replacement rules, Go to Line, message texts, the external-change policy and file hashing, the settings file and its keys, the command-line open queue, crash-recovery logic, logging, the `Result` type. Planned: diff and permission engines, build presets, the debug client, slash commands, cost, archive. No GTK headers |
 | `src/ctxmon/core/` | ctxmon logic, UI-free: log lines, server responses, server state and warnings, graph geometry, VRAM readers. No GTK headers |
 | `src/ctxmon/ui/` | *(M6)* The ctxmon cards, graphs and terminal, shared by the ctxmon tab and the standalone `ctxmon` |
 | `src/agent/` | The provider adapter, the agent loop, the tool registry. No GTK headers |
-| `src/ui/` | The GTK application: main window and actions, tabs and editor pages, the open and save flow, the search windows and Replace All job, the Settings window, the external-change controller and banner, crash-recovery prompts, the status bar, the help window, and the compiled-in resources. `gtkx/` is a small helper layer (reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks) |
+| `src/ui/` | The GTK application: main window and actions, tabs and editor pages, the open and save flow, the search windows and Replace All job, the Settings window, the external-change controller and banner, crash-recovery prompts, the status bar, the Help window (page view, Contents and Search tabs), the background loading of the manual, and the compiled-in resources. `gtkx/` is a small helper layer (reference pointer, signal connection by lambda, string conversion, a guard for asynchronous callbacks) |
 | `tests/` | GoogleTest tests; `tests/ctxmon/` has sample llama.cpp logs and responses and fake GPU sysfs trees in `fixtures/` |
 | `tools/` | Repository checks run by `ctest` (`check_sources.sh`, `check_format.sh`) and `ctxmon_oracle.py` (until M6.6) |
 | `.github/workflows/` | `ci.yml`: configure, build and the full test run on GitHub Actions |
 | `res/vedt/`, `res/github/` | Vermilion's artwork as SVG masters (the build renders the icons to PNG); images used by this README |
-| `third_party/` | Vendored code, kept byte-exact and never edited: xxHash v0.8.3 (BSD-2-Clause; used from M2.4 for file-change detection), with its licence, a `.license` sidecar and a README |
+| `third_party/` | Vendored code, kept byte-exact and never edited: xxHash v0.8.3 (BSD-2-Clause; used from M2.4 for file-change detection), with its licence, `.license` sidecars and a README |
 | `LICENSES/` | The full texts of the licences in use (GPL-3.0-or-later, BSD-2-Clause), for REUSE |
 | `reference/ctxmon/` | The Python original of ctxmon (frozen; test oracle until M6.6) and its logo. Not built |
 | `docs/` | `manual/` (the user manual, one topic per file, [index](docs/manual/index.md)), `roadmap.md`, `gate-details.md`, `milestones/` (reviews), `requirements/` (behaviour specifications) |

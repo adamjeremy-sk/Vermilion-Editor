@@ -207,10 +207,11 @@ TEST_F(EditorSchemeDarkTest, TheClassicDarkParentExistsAndSuppliesTheOtherStyles
     EXPECT_NE(gtk_source_style_scheme_get_style(scheme, "def:comment"), nullptr);
 }
 
-TEST_F(EditorSchemeDarkTest, TheDarkPaletteDefinesTheSameThirteenNamesAsTheLightOne) {
+TEST_F(EditorSchemeDarkTest, TheDarkPaletteDefinesTheSameNamesAsTheLightOne) {
     const std::vector<std::string> light = defined_names(resource_text("classic_light.css"));
     const std::vector<std::string> dark = defined_names(resource_text("classic_dark.css"));
-    EXPECT_EQ(light.size(), 13u);
+    // The thirteen names of the classic look and the two of the Help page (vm_link, vm_match_bg).
+    EXPECT_EQ(light.size(), 15u);
     EXPECT_EQ(dark, light);
 }
 

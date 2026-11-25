@@ -20,7 +20,7 @@ struct EditorLook {
     // 4 or 8: how wide a tab is drawn, and how many spaces the Tab key inserts.
     int tab_width = settings::kTabWidthDefault;
     // A Pango font description; empty text means the system monospace font.
-    std::string font;
+    std::string font = settings::kFontDefault;
 };
 
 inline bool operator==(const EditorLook& a, const EditorLook& b) {

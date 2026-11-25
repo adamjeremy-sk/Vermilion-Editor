@@ -1,181 +1,35 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Builds the help window: the manual's pages as labels and grids in a scrolling area.
+// Builds the help window: the Hide, Back and Forward buttons, the side pane (the Contents tree and
+// the Search tab), the page view that shows one page of the manual and the status line.
 
 #include "ui/help_window.h"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "core/manual_page.h"
 #include "core/manual_spans.h"
 #include "ui/gtkx/signal.h"
-#include "ui/gtkx/string.h"
 
 namespace vermilion::ui {
 namespace {
 
-constexpr const char* kManualPrefix = "/io/github/adamjeremy_sk/Vermilion/manual/";
 constexpr const char* kIndexTopic = "index.md";
-constexpr gsize kMaxTopicBytes = 1024 * 1024;
-constexpr int kTextChars = 90;
-constexpr int kCellChars = 50;
 
-using BytesPtr = std::unique_ptr<GBytes, decltype(&g_bytes_unref)>;
-
-// Bad bytes are replaced, then the text is escaped for markup.
-std::string escape(const std::string& text) {
-    std::string valid = gtkx::take_string(g_utf8_make_valid(text.c_str(), -1));
-    return gtkx::take_string(g_markup_escape_text(valid.c_str(), -1));
+// A page of one paragraph with `text`.
+ManualPage note_page(const std::string& text) {
+    ManualPage page;
+    ManualBlock block;
+    block.spans.resize(1);
+    block.spans[0].kind = SpanKind::Text;
+    block.spans[0].text = text;
+    page.blocks.push_back(std::move(block));
+    return page;
 }
-
-std::string markup_of(const std::vector<ManualSpan>& spans, bool& has_link) {
-    std::string out;
-    for (const auto& span : spans) {
-        std::string text = escape(span.text);
-        switch (span.kind) {
-        case SpanKind::Text:
-            out += text;
-            break;
-        case SpanKind::Bold:
-            out += "<b>";
-            out += text;
-            out += "</b>";
-            break;
-        case SpanKind::Code:
-            out += "<tt>";
-            out += text;
-            out += "</tt>";
-            break;
-        case SpanKind::Link:
-            out += "<a href=\"";
-            out += escape(span.target);
-            out += "\">";
-            out += text;
-            out += "</a>";
-            has_link = true;
-            break;
-        }
-    }
-    return out;
-}
-
-// Floating until the container it is appended to takes it over.
-GtkWidget* span_label(const std::vector<ManualSpan>& spans, int chars,
-                      std::vector<GtkWidget*>& links) {
-    bool has_link = false;
-    std::string markup = markup_of(spans, has_link);
-    GtkWidget* label = gtk_label_new(nullptr);
-    gtk_label_set_markup(GTK_LABEL(label), markup.c_str());
-    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
-    gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
-    gtk_label_set_max_width_chars(GTK_LABEL(label), chars);
-    gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
-    if (has_link) {
-        links.push_back(label); // borrowed; only used by HelpWindow::show
-    }
-    return label;
-}
-
-GtkWidget* heading_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    GtkWidget* label = span_label(block.spans, kTextChars, links);
-    const char* css_class = "vm-help-h3";
-    if (block.level == 1) {
-        css_class = "vm-help-h1";
-    } else if (block.level == 2) {
-        css_class = "vm-help-h2";
-    }
-    gtk_widget_add_css_class(label, css_class);
-    return label;
-}
-
-GtkWidget* item_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    // Floating; the page box takes it over.
-    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_widget_add_css_class(box, "vm-help-item");
-    std::vector<ManualSpan> bullet;
-    bullet.push_back(ManualSpan{SpanKind::Text, "\u2022", ""});
-    GtkWidget* bullet_label = span_label(bullet, 1, links);
-    gtk_widget_add_css_class(bullet_label, "vm-help-bullet");
-    gtk_widget_set_valign(bullet_label, GTK_ALIGN_START);
-    gtk_box_append(GTK_BOX(box), bullet_label);
-    gtk_box_append(GTK_BOX(box), span_label(block.spans, kTextChars, links));
-    return box;
-}
-
-GtkWidget* table_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    GtkWidget* grid = gtk_grid_new(); // floating; the page box takes it over
-    gtk_widget_add_css_class(grid, "vm-help-table");
-    gtk_widget_set_halign(grid, GTK_ALIGN_START);
-    for (std::size_t r = 0; r < block.rows.size(); ++r) {
-        for (std::size_t c = 0; c < block.columns; ++c) {
-            ManualCell empty_cell;
-            const ManualCell& cell = c < block.rows[r].size() ? block.rows[r][c] : empty_cell;
-            GtkWidget* label = span_label(cell, kCellChars, links);
-            gtk_widget_add_css_class(label, r == 0 ? "vm-help-th" : "vm-help-td");
-            gtk_grid_attach(GTK_GRID(grid), label, static_cast<int>(c), static_cast<int>(r), 1, 1);
-        }
-    }
-    return grid;
-}
-
-GtkWidget* block_widget(const ManualBlock& block, std::vector<GtkWidget*>& links) {
-    switch (block.kind) {
-    case ManualBlockKind::Heading:
-        return heading_widget(block, links);
-    case ManualBlockKind::ListItem:
-        return item_widget(block, links);
-    case ManualBlockKind::Table:
-        return table_widget(block, links);
-    case ManualBlockKind::Paragraph:
-        break;
-    }
-    return span_label(block.spans, kTextChars, links);
-}
-
-// Floating until the scrolled window takes it over.
-GtkWidget* page_widget(const ManualPage& page, std::vector<GtkWidget*>& links) {
-    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
-    gtk_widget_add_css_class(box, "vm-help-page");
-    for (const auto& block : page.blocks) {
-        gtk_box_append(GTK_BOX(box), block_widget(block, links));
-    }
-    return box;
-}
-
-std::optional<std::string> topic_text(const std::string& name) {
-    if (!is_topic_name(name)) {
-        return std::nullopt;
-    }
-    std::string path = kManualPrefix + name;
-    BytesPtr bytes(g_resources_lookup_data(path.c_str(), G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr),
-                   &g_bytes_unref); // full reference; nullptr when the topic is not in the program
-    if (bytes == nullptr) {
-        return std::nullopt;
-    }
-    gsize size = 0;
-    const void* data = g_bytes_get_data(bytes.get(), &size);
-    if (size > kMaxTopicBytes) {
-        return std::nullopt;
-    }
-    return std::string(static_cast<const char*>(data), size);
-}
-
-void on_back(GSimpleAction*, GVariant*, gpointer data) {
-    static_cast<HelpWindow*>(data)->back();
-}
-
-void on_to_index(GSimpleAction*, GVariant*, gpointer data) {
-    static_cast<HelpWindow*>(data)->show_index();
-}
-
-const GActionEntry kActions[] = {
-    {"back", on_back, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"to-index", on_to_index, nullptr, nullptr, nullptr, {0, 0, 0}},
-};
 
 // Floating until the bar takes it over.
 GtkWidget* action_button(const char* label, const char* action, const char* tooltip) {
@@ -185,35 +39,147 @@ GtkWidget* action_button(const char* label, const char* action, const char* tool
     return button;
 }
 
+// The bar with the Hide/Show, Back and Forward buttons, in that order (Hide/Show is its first
+// child); floating until the root box takes it over.
+GtkWidget* build_bar() {
+    GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_add_css_class(bar, "vm-help-bar");
+    gtk_box_append(GTK_BOX(bar), action_button("Hide", "win.toggle-pane", "Hide the side pane"));
+    gtk_box_append(GTK_BOX(bar), action_button("Back", "win.back", "Back (Alt+Left)"));
+    gtk_box_append(GTK_BOX(bar), action_button("Forward", "win.forward", "Forward (Alt+Right)"));
+    return bar;
+}
+
+// The side pane: a notebook with the Contents tree and the Search tab. Floating until the paned
+// widget takes it over.
+GtkWidget* build_tabs(GtkWidget* contents, GtkWidget* search) {
+    GtkWidget* tabs = gtk_notebook_new();
+    gtk_notebook_append_page(GTK_NOTEBOOK(tabs), contents, gtk_label_new("Contents"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(tabs), search, gtk_label_new("Search"));
+    return tabs;
+}
+
+// The pane at the left of the page, with a divider that the reader can drag; when the pane is
+// hidden the page has all the room. Floating until the root box takes it over.
+GtkWidget* build_split(GtkWidget* pane, GtkWidget* page) {
+    GtkWidget* split = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_paned_set_start_child(GTK_PANED(split), pane);
+    gtk_paned_set_end_child(GTK_PANED(split), page);
+    gtk_paned_set_resize_start_child(GTK_PANED(split), FALSE);
+    gtk_paned_set_shrink_start_child(GTK_PANED(split), FALSE);
+    gtk_paned_set_resize_end_child(GTK_PANED(split), TRUE);
+    gtk_paned_set_shrink_end_child(GTK_PANED(split), FALSE);
+    gtk_widget_set_vexpand(split, TRUE);
+    return split;
+}
+
+// The status line: a bar with one label (its first child), drawn like the status bar of the main
+// window. Floating until the root box takes it over.
+GtkWidget* build_status() {
+    GtkWidget* text = gtk_label_new("");
+    gtk_widget_add_css_class(text, "vm-status-message");
+    gtk_label_set_xalign(GTK_LABEL(text), 0.0f);
+    gtk_label_set_ellipsize(GTK_LABEL(text), PANGO_ELLIPSIZE_END);
+    gtk_widget_set_hexpand(text, TRUE);
+    GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_add_css_class(bar, "vm-statusbar");
+    gtk_box_append(GTK_BOX(bar), text);
+    return bar;
+}
+
+// The natural height of `widget`, in pixels.
+int natural_height(GtkWidget* widget) {
+    int natural = 0;
+    gtk_widget_measure(widget, GTK_ORIENTATION_VERTICAL, -1, nullptr, &natural, nullptr, nullptr);
+    return natural;
+}
+
+// The natural width of `widget`, in pixels.
+int natural_width(GtkWidget* widget) {
+    int natural = 0;
+    gtk_widget_measure(widget, GTK_ORIENTATION_HORIZONTAL, -1, nullptr, &natural, nullptr, nullptr);
+    return natural;
+}
+
 } // namespace
 
-HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent)
-    : window_(GTK_WINDOW(gtk_application_window_new(app))) { // GTK owns the window; it is borrowed
+HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& library)
+    : window_(GTK_WINDOW(gtk_application_window_new(app))), // GTK owns the window; it is borrowed
+      library_(library) {
     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window_), FALSE);
     gtk_window_set_title(window_, "Vermilion Editor Help");
-    gtk_window_set_default_size(window_, 780, 640);
     gtk_window_set_transient_for(window_, parent);
     gtk_window_set_destroy_with_parent(window_, TRUE);
     gtk_widget_add_css_class(GTK_WIDGET(window_), "vm-main");
     gtk_widget_add_css_class(GTK_WIDGET(window_), "vm-help");
-    g_action_map_add_action_entries(G_ACTION_MAP(window_), kActions, G_N_ELEMENTS(kActions), this);
-    const char* const back_keys[] = {"<Alt>Left", nullptr};
-    gtk_application_set_accels_for_action(app, "win.back", back_keys);
-    // Floating; the window takes the root box over.
-    GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    // Floating; the root box takes the bar over.
-    GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_widget_add_css_class(bar, "vm-help-bar");
-    gtk_box_append(GTK_BOX(bar), action_button("Back", "win.back", "Back (Alt+Left)"));
-    gtk_box_append(GTK_BOX(bar), action_button("Index", "win.to-index", "Index"));
-    gtk_box_append(GTK_BOX(root), bar);
-    scroller_ = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new()); // floating; the root box owns it
-    gtk_widget_add_css_class(GTK_WIDGET(scroller_), "vm-help-well");
-    gtk_scrolled_window_set_policy(scroller_, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_widget_set_vexpand(GTK_WIDGET(scroller_), TRUE);
-    gtk_box_append(GTK_BOX(root), GTK_WIDGET(scroller_));
-    gtk_window_set_child(window_, root);
+    add_actions(app);
+    create_parts();
+    assemble();
+    follow_palette();
+    follow_library();
     open_topic(kIndexTopic);
+}
+
+void HelpWindow::create_parts() {
+    page_view_ =
+        std::make_unique<HelpPageView>([this](const std::string& target) { open_topic(target); });
+    contents_ =
+        std::make_unique<HelpContents>([this](const std::string& file) { open_topic(file); },
+                                       [this](const std::string& file, std::size_t index) {
+                                           open_topic(file);
+                                           page_view_->scroll_to_heading(index);
+                                       });
+    search_ =
+        std::make_unique<HelpSearch>([this](const SearchOptions& options) { run_search(options); },
+                                     [this](const std::string& file) { open_result(file); },
+                                     [this](bool forward) { step_match(forward); });
+}
+
+void HelpWindow::assemble() {
+    GtkWidget* bar = build_bar(); // floating; the root box takes it over
+    pane_button_ = gtk_widget_get_first_child(bar);
+    tabs_ = build_tabs(contents_->widget(), search_->widget()); // floating until the split has it
+    GtkWidget* page = page_view_->widget(); // borrowed; the view owns it until the split has it
+    GtkWidget* split = build_split(tabs_, page); // floating; the root box takes it over
+    GtkWidget* statusbar = build_status();       // floating; the root box takes it over
+    status_ = gtk_widget_get_first_child(statusbar);
+    GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); // floating; the window takes it
+    gtk_box_append(GTK_BOX(root), bar);
+    gtk_box_append(GTK_BOX(root), split);
+    gtk_box_append(GTK_BOX(root), statusbar);
+    gtk_window_set_child(window_, root);
+    // The pane is kHelpPaneColumns columns of the page's font wide. The window opens wide enough
+    // for that, the divider (what the paned widget needs beyond its two children) and
+    // kHelpOpenColumns columns of text, and kHelpPageLines lines high between the bar and the
+    // status line.
+    const int pane_width = page_view_->width_for_columns(kHelpPaneColumns);
+    gtk_widget_set_size_request(tabs_, pane_width, -1);
+    gtk_paned_set_position(GTK_PANED(split), pane_width);
+    const int divider = natural_width(split) - natural_width(tabs_) - natural_width(page);
+    gtk_window_set_default_size(
+        window_, pane_width + divider + page_view_->width_for_columns(kHelpOpenColumns),
+        natural_height(bar) + page_view_->height_for_lines(kHelpPageLines) +
+            natural_height(statusbar));
+}
+
+void HelpWindow::follow_palette() {
+    GtkSettings* settings = gtk_settings_get_default(); // borrowed; null without a display
+    if (settings != nullptr) {
+        palette_signal_ = gtkx::connect<void(GObject*, GParamSpec*)>(
+            settings, "notify::gtk-application-prefer-dark-theme",
+            [this](GObject*, GParamSpec*) { page_view_->refresh_colours(); });
+    }
+}
+
+void HelpWindow::follow_library() {
+    if (library_.ready()) {
+        contents_->set_outline(library_.data()->outline);
+    } else {
+        wait_ = library_.on_ready([this] {
+            contents_->set_outline(library_.data()->outline);
+            show(history_.current());
+        });
+    }
 }
 
 void HelpWindow::present() {
@@ -228,56 +194,45 @@ void HelpWindow::back() {
     }
 }
 
-void HelpWindow::show_index() {
-    open_topic(kIndexTopic);
+void HelpWindow::forward() {
+    std::optional<std::string> page = history_.forward();
+    if (page.has_value()) {
+        show(*page);
+        update_actions();
+    }
 }
 
 void HelpWindow::open_topic(const std::string& name) {
-    if (history_.open(name)) {
+    if (is_topic_name(name) && history_.open(name)) {
         show(name);
         update_actions();
     }
 }
 
+bool HelpWindow::pane_shown() const {
+    return gtk_widget_get_visible(tabs_) != FALSE;
+}
+
+void HelpWindow::set_pane_shown(bool shown) {
+    gtk_widget_set_visible(tabs_, shown ? TRUE : FALSE);
+    gtk_button_set_label(GTK_BUTTON(pane_button_), shown ? "Hide" : "Show");
+    gtk_widget_set_tooltip_text(pane_button_, shown ? "Hide the side pane" : "Show the side pane");
+}
+
 void HelpWindow::show(const std::string& name) {
-    // This may run inside a link click; the old connections are released here.
-    link_signals_.clear();
-    std::vector<GtkWidget*> links;
-    std::optional<std::string> text = topic_text(name);
-    ManualPage page;
-    if (text.has_value()) {
-        page = parse_manual(*text);
+    contents_->set_current(name);
+    const ManualData* manual = library_.data();
+    if (manual == nullptr) {
+        page_view_->show_source(note_page("Loading..."));
+        return;
+    }
+    const auto found = manual->pages.find(name);
+    if (found != manual->pages.end()) {
+        page_view_->show_source(found->second);
     } else {
-        ManualBlock block;
-        block.spans.resize(1);
-        block.spans[0].kind = SpanKind::Text;
-        block.spans[0].text = "This topic is not available: " + name;
-        page.blocks.push_back(std::move(block));
+        page_view_->show_source(note_page("This topic is not available: " + name));
     }
-    GtkWidget* content = page_widget(page, links);
-    for (GtkWidget* label : links) {
-        link_signals_.push_back(gtkx::connect<gboolean(GtkLabel*, const char*)>(
-            label, "activate-link", [this](GtkLabel*, const char* uri) -> gboolean {
-                return follow_link(uri) ? TRUE : FALSE;
-            }));
-    }
-    // Takes the floating box and releases the old page.
-    gtk_scrolled_window_set_child(scroller_, content);
-    gtk_adjustment_set_value(gtk_scrolled_window_get_vadjustment(scroller_), 0.0);
-}
-
-void HelpWindow::update_actions() {
-    GAction* action = g_action_map_lookup_action(G_ACTION_MAP(window_), "back"); // borrowed
-    if (action != nullptr) {
-        g_simple_action_set_enabled(G_SIMPLE_ACTION(action), history_.can_go_back() ? TRUE : FALSE);
-    }
-}
-
-bool HelpWindow::follow_link(const char* uri) {
-    if (uri != nullptr && is_topic_name(uri)) {
-        open_topic(uri);
-    }
-    return true;
+    update_match_status();
 }
 
 } // namespace vermilion::ui

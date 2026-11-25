@@ -160,6 +160,28 @@ TEST_F(EditorSettingsFileTest, EveryKeyIsRead) {
     EXPECT_EQ(settings.long_line_limit, std::uint64_t{20000});
 }
 
+TEST_F(EditorSettingsFileTest, AMissingFontLineGivesTheSystemFont) {
+    put("[editor]\ntab_width=8\n");
+    EXPECT_EQ(read_back().font, std::string(""));
+}
+
+TEST_F(EditorSettingsFileTest, AnEmptyFontLineStaysTheSystemFont) {
+    put("[editor]\nfont=\n");
+    EXPECT_EQ(read_back().font, std::string(""));
+}
+
+TEST_F(EditorSettingsFileTest, ChoosingTheSystemFontIsWrittenAndKept) {
+    put("[editor]\nfont=DejaVu Sans Mono 11\n");
+    SettingsFile file(path_);
+    file.load();
+    EditorSettings settings = read_back();
+    settings.font.clear();
+    store_settings(settings, file);
+    ASSERT_TRUE(file.save().is_ok());
+    EXPECT_TRUE(contains(text(), "font="));
+    EXPECT_EQ(read_back().font, std::string(""));
+}
+
 TEST_F(EditorSettingsFileTest, ValuesOutsideTheRulesAreMovedIntoThem) {
     put("[editor]\ntab_width=5\n[files]\nlong_line_limit=5\n");
     EditorSettings settings = read_back();

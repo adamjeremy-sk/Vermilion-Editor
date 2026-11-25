@@ -16,6 +16,7 @@
 #include "ui/gtkx/object_ptr.h"
 #include "ui/gtkx/signal.h"
 #include "ui/main_window.h"
+#include "ui/manual_library.h"
 #include "ui/style.h"
 #include "vermilion_manual.h"
 #include "vermilion_resources.h"
@@ -27,6 +28,9 @@ struct AppState {
     std::unique_ptr<vermilion::ui::Style> style;
     // After the style (its rule wins a tie), so it is destroyed before it.
     std::unique_ptr<vermilion::ui::FontStyle> font_style;
+    // The manual, read in the background once the first window is shown; before the window, so it
+    // is destroyed after it (the help window reads its pages).
+    vermilion::ui::ManualLibrary manual;
     std::unique_ptr<vermilion::ui::MainWindow> window;
     vermilion::gtkx::SignalConnection window_destroy;
     std::unique_ptr<vermilion::ui::CommandLineHandler> command_line;
@@ -55,14 +59,16 @@ vermilion::ui::MainWindow& show_window(GtkApplication* app, AppState& state) {
     // The icon is named after the application ID; GTK picks the size (badge in the title bar).
     gtk_window_set_default_icon_name(g_application_get_application_id(G_APPLICATION(app)));
     vermilion::ui::MainWindow::install_menus_and_shortcuts(app);
-    state.window =
-        std::make_unique<vermilion::ui::MainWindow>(app, state.style.get(), state.font_style.get());
+    state.window = std::make_unique<vermilion::ui::MainWindow>(
+        app, state.style.get(), state.font_style.get(), state.manual);
     // The C++ side of the window goes when GTK destroys the window.
     state.window_destroy = vermilion::gtkx::connect<void(GtkWidget*)>(
         state.window->window(), "destroy", [&state](GtkWidget*) { state.window.reset(); });
     state.window->present();
     // The question about the recovery copies of an earlier run comes once the window is shown.
     state.window->offer_recovery();
+    // Everything the window does not need to draw is prepared when the main loop is idle.
+    state.manual.prepare_when_idle();
     return *state.window;
 }
 

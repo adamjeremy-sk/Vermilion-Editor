@@ -24,6 +24,7 @@
 #include "ui/goto_line_window.h"
 #include "ui/gtkx/signal.h"
 #include "ui/help_window.h"
+#include "ui/manual_library.h"
 #include "ui/recovery_controller.h"
 #include "ui/recovery_prompt.h"
 #include "ui/replace_controller.h"
@@ -46,8 +47,9 @@ public:
     // Creates the window with one untitled document. GTK owns the window; this object must be
     // destroyed when the window emits "destroy". `style` and `font_style` are borrowed, may be null
     // (then that part of the look is not changed) and must outlive the window: the settings give
-    // them the palette and the editor font (start_appearance, M2.5).
-    MainWindow(GtkApplication* app, Style* style, FontStyle* font_style);
+    // them the palette and the editor font (start_appearance, M2.5). `manual` is borrowed and must
+    // outlive the window: the help window reads its pages there.
+    MainWindow(GtkApplication* app, Style* style, FontStyle* font_style, ManualLibrary& manual);
 
     // Detaches the recovery controller from the document tabs first (see the .cpp).
     ~MainWindow();
@@ -147,6 +149,7 @@ private:
     void find_again(bool forward);
 
     GtkWindow* window_ = nullptr; // borrowed; GTK owns the window, this object dies with it
+    ManualLibrary& manual_;       // borrowed; the application owns it for the whole session
     DocumentList list_;
     StatusBar status_;
     // The one search of the Find window (and, later, the Replace window). Before tabs_: the tabs
