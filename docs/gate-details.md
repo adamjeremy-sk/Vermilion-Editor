@@ -137,10 +137,11 @@ Adam's hands-on lists passed: one and several files, a relative path, the same f
 Qwen wrote the `.cpp` files from specifications; headers, tests and wiring were dictated. Fixes followed steps 3a, 4 (the About logo size under Greybird and Greybird-dark), 5a (a wrong comment in the window test) and 5d (the room around the Settings tab labels, found in Adam's hands-on). The manual gained the topic "Settings".
 Adam's hands-on lists passed: Follow system on XFCE in light and dark, Tools → Settings… and Ctrl+Comma, Apply, OK, Cancel and Esc, the colour mode, the font, tab width 4 and 8, the large-file settings, and a hand edit of `settings.ini` that shows at the next open.
 
-§§ 1516 tests (ARCHITECTURE.md 7.10, "Manual"). Steps 1a to 8b, each one prompt and one commit. The core came first: tables, the page as one text, Forward, the outline, page search and result rows.
+§§ 1517 tests (ARCHITECTURE.md 7.10, "Manual"). Steps 1a to 8b, each one prompt and one commit. The core came first: tables, the page as one text, Forward, the outline, page search and result rows.
 Then the page view (5a to 5m), the search highlights and the background library (6a to 6d2), the Contents and Search tabs (6e1 to 6f2), and the window (7a to 7c).
 Revised on 2026-11-23 after Adam saw the first page: the bundled Fantasque Sans Mono and the fixed 100-column page were removed (steps 5f, 5i, 5m). On 2026-11-24 the side pane moved to the left.
 Qwen wrote the `.cpp` files from specifications; headers and tests were dictated and built in the cloud first. Step 8a made the Help window tests share one registered application per test program; 8b corrected a comment in `manual_text.h`.
+After the merge, a fix on `main` made the page wrap at whole words (it still broke lines inside words, as the fixed page had); one test added.
 
 ## M5: Agent core (v0.3.0)
 

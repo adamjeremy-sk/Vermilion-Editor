@@ -22,11 +22,11 @@
 > reloads files that change on disk, opens files given on the command line, has a Settings window with Light, Dark and
 > Follow system colours, and a Help window with contents and search.
 > It is not ready for daily use, and everything marked "Planned" is a plan. See [Status](#status).
-> Next: the diff view (M2.6). 1516 tests.
+> Next: the diff view (M2.6). 1517 tests.
 
 <p align="center">
-  <img src="res/github/vermilion-m2.5a-finished.png" width="800" alt="Vermilion Editor: the main window with an empty document, the Help window showing the Settings topic, and the About dialog">
-  <br><em>The build at M2.5, before the new Help window of M2.5b: the main window with an empty document; Help showing the Settings topic; the About dialog.</em>
+  <img src="res/github/vermilion-m2.5b-finished.png" width="800" alt="Vermilion Editor: the Help window with its Contents tree open on the topic Using the manual, the main window editing help_search.cpp with C++ highlighting, and the About dialog">
+  <br><em>The build at M2.5b: the Help window with the Contents tree and the topic "Using the manual"; the editor with a C++ file; the About dialog.</em>
 </p>
 
 ---
@@ -66,7 +66,7 @@ loop: edit, ask the agent, review its changes, build, run, debug and watch the m
 
 ## Status
 M0 and M1 are done (the foundation and the ctxmon logic). M2, the editor, is under way: 12 of 16 gates. The latest, M2.5b,
-rebuilt the Help window with a Contents tree, a Search tab, Back, Forward and Hide. 1516 tests, all passing at the last
+rebuilt the Help window with a Contents tree, a Search tab, Back, Forward and Hide. 1517 tests, all passing at the last
 commit. Next: M2.6 (diff). Everything after M2 is designed, not started. There are no releases yet.
 
 ### Built so far
@@ -87,7 +87,7 @@ Each row is one finished gate; the test count is the total after that gate.
 | M2.4, external changes | A clean tab reloads by itself when its file changes; an edited or large tab shows a bar (Reload, Keep mine); a deleted file keeps its text; File → Reload from Disk (Ctrl+R); the one setting is kept in `settings.ini`; changes are detected by time, size and an xxHash | 970 |
 | M2.4b, command line | `vermilion file1 file2 ...` opens every file in its own tab, also in a running window; a missing file is asked about on the terminal and created on a yes; folders are refused; `--help` | 1016 |
 | M2.5, settings | Tools → Settings… (Ctrl+Comma): colour mode Light, Dark or Follow system (the whole window and the editor colours follow it, also when the desktop changes), highlight the current line, editor font, tab width 4 or 8, the large-file questions; OK, Cancel and Apply; saved in `settings.ini` | 1235 |
-| M2.5b, Help window | The manual in a window with a Contents tree and a Search tab (match case, whole word, regex; highlights on every page; F3), Back, Forward and Hide; the page follows the window width in the system monospace font; the manual is read in the background after start | 1516 |
+| M2.5b, Help window | The manual in a window with a Contents tree and a Search tab (match case, whole word, regex; highlights on every page; F3), Back, Forward and Hide; the page follows the window width in the system monospace font; the manual is read in the background after start | 1517 |
 
 ---
 
