@@ -39,7 +39,7 @@ The detail behind the gates of `docs/roadmap.md`. The roadmap keeps one short ro
   - Every build renders both SVGs to PNG with `rsvg-convert` (`librsvg2-bin`; configure stops with the package name if it is missing): `vedticon.svg` at 16 and 24 px, `vermilion-icon.svg` at 32, 48, 64, 128 and 256 px.
   - The PNGs are compiled into the resources under `icons/<n>x<n>/apps/`, named by the application ID; GtkApplication adds that path to the icon theme. GTK picks the small icon for the title bar and the large one for the panel, Alt+Tab and About. The resource test checks every size. Fully dictated.
 - **M2.1d** continuous integration (build infrastructure, ahead of M2.2).
-  - The workflow `.github/workflows/ci.yml` runs on every push and pull request to `main`.
+  - The workflow `.github/workflows/ci.yml` runs on every push and pull request to `main`, and since 2026-11-21 on every push to a `gate/**` branch.
   - A clean Ubuntu 24.04 runner installs the README's packages (without `clang-tidy`), configures, builds and runs the full `ctest`, including `SourceCheck.Repo` and `Format.Check`. UI tests that need a display will add `xvfb`.
 - **M2.2 Open.**
   - Before a file loads, the core `TextScanner` reads it once in 64 KiB blocks ("Checking … P%") and decides the encoding: a strict whole-file UTF-8 check, a UTF-8 or UTF-16 byte-order mark, else Windows-1252, or Latin-1 when one of its five undefined bytes occurs.

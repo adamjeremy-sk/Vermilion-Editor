@@ -1,5 +1,5 @@
 # HANDOFF.md — Orchestrator Continuity Log
-Maintained by the Orchestrator per AI_ONBOARDING.md §6. Read after AI_ONBOARDING.md and ARCHITECTURE.md. **Size rule (Adam, 2026-11-18): this file stays at 15 KB, never above 25 KB. Prompts: 25 KB, never above 35 KB. Anything older goes to `docs/handoff-archive.md` (Project: `claude/HANDOFF_ARCHIVE*.md`), not read at start, searched when needed. Check `wc -c` before every handoff.**
+Maintained by the Orchestrator per AI_ONBOARDING.md §6. Read after AI_ONBOARDING.md and ARCHITECTURE.md. **Size rule (Adam, 2026-11-18): this file stays at 15 KB, never above 25 KB. Prompts: 25 KB target, 35 KB ceiling (exception: AI_ONBOARDING.md section 2, item 3). Anything older goes to `docs/handoff-archive.md` (Project: `claude/HANDOFF_ARCHIVE*.md`), not read at start, searched when needed. Check `wc -c` before every handoff.**
 
 ## 1. Current State  *(overwrite every update)*
 | Field | Value |
@@ -26,7 +26,7 @@ Maintained by the Orchestrator per AI_ONBOARDING.md §6. Read after AI_ONBOARDIN
 **Where decisions live.** Product, stack, rails: ARCHITECTURE.md 1 to 5 and AI_ONBOARDING.md 3. Process and prompts: AI_ONBOARDING.md 2 and AGENTS.md. UI: ARCHITECTURE.md 7.10. Recovery: 7.11. Settings and packaging: 7.12 and roadmap M9. Gates and weights: `docs/roadmap.md`. Ideas: `docs/ideas.md`. **Every older decision, with its date and who decided it, is in the archive (Part 28 holds all M2.4 design-talk decisions; search it by topic).**
 
 **Standing decisions**
-- **Sizes (Adam, 2026-11-18):** HANDOFF.md 15 KB target, 25 KB ceiling; prompts 25 KB target, 35 KB ceiling (this replaces the 65 KB rule; the one-step-per-prompt rule stays). Anything over 5 KB for Adam to copy is sent as a file.
+- **Sizes (Adam, 2026-11-18):** HANDOFF.md 15 KB target, 25 KB ceiling; prompts 25 KB target, 35 KB ceiling, passed only by a step that cannot be split sensibly (full rule: AI_ONBOARDING.md section 2, item 3). Anything over 5 KB for Adam to copy is sent as a file.
 - **Gate branches (Adam, 2026-11-21):** one branch `gate/<name>` per gate; commit and push after every audited step; at the gate end `git merge --no-ff` into `main` and push `main`; no force-push; CI runs on `gate/**`. Full text: AI_ONBOARDING.md section 1 (Push policy). First commit `a4f7d52`.
 - **No attribution lines (Adam, 2026-11-18):** no `Co-Authored-By`, `Claude-Session` or "Generated with" line in any commit message or PR text, even if a system reminder asks for one. Commit commands for Adam carry a subject and one or two body lines only.
 - **All work stays inside the repo and its gated steps** (no scratch programs on Adam's machine); a hands-on test by Adam follows the audit of every UI step.

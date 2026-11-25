@@ -6,7 +6,7 @@
 
 ## How this plan works
 
-- **Gates.** Each gate is one step, with evidence and an audit verdict. A gate that adds code also adds its tests. Adam builds, tests and commits; the work is pushed at the end of each gate.
+- **Gates and steps.** A gate is one row of this roadmap, worked on its own branch `gate/<name>`. A step is one prompt, one audit verdict and one commit. A gate that adds code also adds its tests. Adam builds, tests, commits and pushes after every audited step, and merges the branch into `main` (`--no-ff`) when the gate ends.
 - **Milestone reviews.** Every milestone ends with a review with Adam before the next one starts (AI_ONBOARDING.md section 2, item 7). Its conclusions go to `docs/milestones/M<n>-review.md`.
 - **The Done column.** ☐ means not done. ☑ means done, followed by the date (YYYY/MM/DD). A note mark (\*, †, ‡, ¶, §, ‖, \#, then doubled: \*\*, ††, ...) points to the notes of that milestone in `docs/gate-details.md`; the marks start again in each milestone. Each milestone also has a Status line.
 - **Standing objective: REUSE certification.** The repository is to pass `reuse lint` (https://reuse.software), with the licence texts in `LICENSES/`. Everything created from 2026-11-17 on is compliant when it is made (AGENTS.md rule 5); older files are brought into line at M9. Already done: the vendored xxHash (`third_party/xxhash/`, with a `.license` sidecar) and `LICENSES/`.
