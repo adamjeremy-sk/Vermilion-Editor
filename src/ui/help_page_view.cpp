@@ -96,7 +96,7 @@ void HelpPageView::build_widgets() {
     gtk_widget_add_css_class(view, kHelpViewClass);
     gtk_text_view_set_editable(view_, FALSE);
     gtk_text_view_set_cursor_visible(view_, FALSE);
-    gtk_text_view_set_wrap_mode(view_, GTK_WRAP_CHAR);
+    gtk_text_view_set_wrap_mode(view_, GTK_WRAP_WORD_CHAR); // whole words; a longer word breaks
     // The margins belong to the text view, not to the widget: a widget margin clips the top of a
     // heading that is scrolled to the top.
     gtk_text_view_set_left_margin(view_, 0);

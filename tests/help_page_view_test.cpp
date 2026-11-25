@@ -30,7 +30,7 @@ TEST_F(HelpPageViewTest, ShowPutsTheTextIntoTheView) {
     g_free(text);
     EXPECT_EQ(shown.view->page().text, page.text);
     EXPECT_FALSE(gtk_text_view_get_editable(shown.text()));
-    EXPECT_EQ(gtk_text_view_get_wrap_mode(shown.text()), GTK_WRAP_CHAR);
+    EXPECT_EQ(gtk_text_view_get_wrap_mode(shown.text()), GTK_WRAP_WORD_CHAR);
 }
 
 TEST_F(HelpPageViewTest, TheWindowHeightHoldsTheLinesAsked) {
@@ -83,19 +83,41 @@ TEST_F(HelpPageViewTest, TagsCoverTheirRanges) {
 
 TEST_F(HelpPageViewTest, AListItemHangsByTwoColumns) {
     Shown shown(900, 500);
-    ManualText page = build("- " + std::string(250, 'y') + "\n");
+    std::string item;
+    for (int i = 0; i < 32; ++i) {
+        item += " yyyyyyy"; // words, so the lines break between them
+    }
+    ManualText page = build("-" + item + "\n");
     ASSERT_EQ(page.list_items.size(), std::size_t{1});
     shown.view->show(page);
     spin(300);
     const int line = shown.first_line_chars();
     EXPECT_GT(line, 50);
-    EXPECT_LT(line, 250);
+    EXPECT_LT(line, 200);
     const GdkRectangle first = shown.where(0);
     const GdkRectangle second_line = shown.where(line);
     const double advance = shown.where(3).x - shown.where(2).x;
     EXPECT_EQ(first.x, 0);
     EXPECT_GT(second_line.y, first.y);
     EXPECT_NEAR(second_line.x, 2 * advance, 1.0);
+}
+
+TEST_F(HelpPageViewTest, LinesBreakBetweenWordsNotInsideThem) {
+    Shown shown(400, 500);
+    std::string words;
+    for (int i = 0; i < 60; ++i) {
+        words += "wrapping "; // nine characters, so every word starts at a multiple of 9
+    }
+    shown.view->show(build(words + "\n"));
+    spin(300);
+    GtkTextIter at;
+    gtk_text_buffer_get_start_iter(gtk_text_view_get_buffer(shown.text()), &at);
+    int lines = 1;
+    while (gtk_text_view_forward_display_line(shown.text(), &at) && !gtk_text_iter_is_end(&at)) {
+        ++lines;
+        EXPECT_EQ(gtk_text_iter_get_offset(&at) % 9, 0) << "display line " << lines;
+    }
+    EXPECT_GT(lines, 2);
 }
 
 TEST_F(HelpPageViewTest, ShowReplacesThePage) {
