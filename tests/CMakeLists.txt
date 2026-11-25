@@ -424,6 +424,17 @@ target_link_libraries(vermilion_help_page_view_tests PRIVATE
     PkgConfig::GTK4)
 gtest_discover_tests(vermilion_help_page_view_tests)
 
+# The Contents tree of the Help window on a real display (the tests skip without one).
+add_executable(vermilion_help_contents_tests help_contents_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_contents.cpp)
+target_link_libraries(vermilion_help_contents_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_gtkx
+    vermilion_warnings
+    PkgConfig::GTK4)
+gtest_discover_tests(vermilion_help_contents_tests)
+
 # The Help window on a real display (the tests skip without one).
 add_executable(vermilion_help_window_tests help_window_test.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_window.cpp
