@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Builds the help window: the Back and Forward buttons, the side pane (the Contents tree and
+// Builds the help window: the Hide, Back and Forward buttons, the side pane (the Contents tree and
 // the Search tab), the page view that shows one page of the manual and the status line.
 
 #include "ui/help_window.h"
@@ -39,11 +39,12 @@ GtkWidget* action_button(const char* label, const char* action, const char* tool
     return button;
 }
 
-// The bar with the Back and Forward buttons, in that order; floating until the root box takes it
-// over.
+// The bar with the Hide/Show, Back and Forward buttons, in that order (Hide/Show is its first
+// child); floating until the root box takes it over.
 GtkWidget* build_bar() {
     GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_widget_add_css_class(bar, "vm-help-bar");
+    gtk_box_append(GTK_BOX(bar), action_button("Hide", "win.toggle-pane", "Hide the side pane"));
     gtk_box_append(GTK_BOX(bar), action_button("Back", "win.back", "Back (Alt+Left)"));
     gtk_box_append(GTK_BOX(bar), action_button("Forward", "win.forward", "Forward (Alt+Right)"));
     return bar;
@@ -136,6 +137,7 @@ void HelpWindow::create_parts() {
 
 void HelpWindow::assemble() {
     GtkWidget* bar = build_bar(); // floating; the root box takes it over
+    pane_button_ = gtk_widget_get_first_child(bar);
     tabs_ = build_tabs(contents_->widget(), search_->widget()); // floating until the split has it
     GtkWidget* page = page_view_->widget(); // borrowed; the view owns it until the split has it
     GtkWidget* split = build_split(tabs_, page); // floating; the root box takes it over
@@ -205,6 +207,16 @@ void HelpWindow::open_topic(const std::string& name) {
         show(name);
         update_actions();
     }
+}
+
+bool HelpWindow::pane_shown() const {
+    return gtk_widget_get_visible(tabs_) != FALSE;
+}
+
+void HelpWindow::set_pane_shown(bool shown) {
+    gtk_widget_set_visible(tabs_, shown ? TRUE : FALSE);
+    gtk_button_set_label(GTK_BUTTON(pane_button_), shown ? "Hide" : "Show");
+    gtk_widget_set_tooltip_text(pane_button_, shown ? "Hide the side pane" : "Show the side pane");
 }
 
 void HelpWindow::show(const std::string& name) {

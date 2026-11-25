@@ -17,6 +17,7 @@ bool HelpWindow::search_tab_shown() const {
 }
 
 void HelpWindow::show_search() {
+    set_pane_shown(true);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(tabs_), 1);
     search_->focus_text();
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Tests of the bar and the keys of HelpWindow on a real display (the tests skip without one): Back
-// and Forward, Ctrl+F, F3 and Shift+F3, and the pane at the start.
+// Tests of the bar and the keys of HelpWindow on a real display (the tests skip without one): Hide
+// and Show, Back and Forward, Ctrl+F, F3 and Shift+F3, and the pane at the start.
 
 #include <gtest/gtest.h>
 #include <gtk/gtk.h>
@@ -37,6 +37,17 @@ void spin(int ms) {
     while (g_get_monotonic_time() < end) {
         g_main_context_iteration(nullptr, FALSE);
     }
+}
+
+// Runs the main loop until `done()` is true, for at most two seconds; returns `done()`.
+template <typename Done>
+bool spin_until(Done done) {
+    const gint64 end = g_get_monotonic_time() + 2 * G_USEC_PER_SEC;
+    while (!done() && g_get_monotonic_time() < end) {
+        g_main_context_iteration(nullptr, FALSE);
+        g_usleep(1000);
+    }
+    return done();
 }
 
 // The keys that `app` has for `action`, as GTK spells them.
@@ -97,6 +108,10 @@ protected:
 
     // The bar of buttons: the first row of the window.
     GtkWidget* bar() { return gtk_widget_get_first_child(gtk_window_get_child(help_->window())); }
+    // The status line: the last row of the window.
+    GtkWidget* status_line() {
+        return gtk_widget_get_last_child(gtk_window_get_child(help_->window()));
+    }
     // The buttons of the bar, left to right.
     std::vector<GtkWidget*> buttons() {
         std::vector<GtkWidget*> found;
@@ -144,6 +159,7 @@ protected:
 TEST_F(HelpWindowBarTest, TheButtonsOfTheBarAreInOrder) {
     const std::vector<GtkWidget*> bar = buttons();
     const std::vector<std::pair<std::string, std::string>> expected = {
+        {"Hide", "win.toggle-pane"},
         {"Back", "win.back"},
         {"Forward", "win.forward"},
     };
@@ -157,13 +173,16 @@ TEST_F(HelpWindowBarTest, TheButtonsOfTheBarAreInOrder) {
 }
 
 TEST_F(HelpWindowBarTest, EveryWindowOpensOnTheHomePageWithThePaneOnItsContentsTab) {
+    EXPECT_TRUE(help_->pane_shown());
     EXPECT_TRUE(gtk_widget_get_visible(pane()));
     EXPECT_FALSE(help_->search_tab_shown());
     EXPECT_EQ(help_->contents().current(), "index.md");
     EXPECT_FALSE(enabled("back"));
     EXPECT_FALSE(enabled("forward"));
     help_->show_search();
+    help_->set_pane_shown(false);
     HelpWindow second(app_.get(), parent_, library_);
+    EXPECT_TRUE(second.pane_shown());
     EXPECT_FALSE(second.search_tab_shown());
     EXPECT_EQ(second.contents().current(), "index.md");
     gtk_window_destroy(second.window());
@@ -210,11 +229,54 @@ TEST_F(HelpWindowBarTest, TheBackAndForwardButtonsAndKeysGoThroughThePages) {
     EXPECT_EQ(help_->contents().current(), "settings.md");
 }
 
+TEST_F(HelpWindowBarTest, HideGivesThePanesRoomToThePageAndShowGivesItBack) {
+    vermilion::ui::HelpPageView& view = help_->page_view();
+    gtk_window_present(help_->window());
+    spin(500);
+    GtkWidget* hide = button("Hide");
+    ASSERT_NE(hide, nullptr);
+    GtkWidget* split = gtk_widget_get_parent(pane());
+    const int window_width = gtk_widget_get_width(GTK_WIDGET(help_->window()));
+    const int page_width = gtk_widget_get_width(view.widget());
+    const int position = gtk_paned_get_position(GTK_PANED(split));
+    const std::size_t columns = view.columns();
+    click(hide);
+    EXPECT_FALSE(help_->pane_shown());
+    EXPECT_FALSE(gtk_widget_get_visible(pane()));
+    EXPECT_EQ(label_of(hide), "Show");
+    EXPECT_STREQ(gtk_widget_get_tooltip_text(hide), "Show the side pane");
+    EXPECT_TRUE(spin_until([&] { return view.columns() > columns; }));
+    EXPECT_EQ(gtk_widget_get_width(view.widget()), gtk_widget_get_width(split));
+    EXPECT_GT(gtk_widget_get_width(view.widget()), page_width);
+    EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(help_->window())), window_width);
+    EXPECT_TRUE(gtk_widget_get_mapped(status_line()));
+    click(hide);
+    EXPECT_TRUE(help_->pane_shown());
+    EXPECT_EQ(label_of(hide), "Hide");
+    EXPECT_STREQ(gtk_widget_get_tooltip_text(hide), "Hide the side pane");
+    EXPECT_TRUE(spin_until([&] { return view.columns() == columns; }));
+    EXPECT_EQ(gtk_paned_get_position(GTK_PANED(split)), position);
+    EXPECT_EQ(gtk_widget_get_width(view.widget()), page_width);
+}
+
 TEST_F(HelpWindowBarTest, CtrlFShowsTheSearchTabWithTheKeyboardInTheBox) {
     EXPECT_EQ(keys_of(app_.get(), "win.find"), std::vector<std::string>{"<Control>f"});
     gtk_window_present(help_->window());
     spin(300);
     activate("win.find");
+    EXPECT_TRUE(help_->search_tab_shown());
+    GtkWidget* focus = gtk_window_get_focus(help_->window()); // borrowed
+    ASSERT_NE(focus, nullptr);
+    EXPECT_TRUE(gtk_widget_is_ancestor(focus, help_->search().widget()));
+}
+
+TEST_F(HelpWindowBarTest, CtrlFShowsAHiddenPaneAgain) {
+    gtk_window_present(help_->window());
+    spin(300);
+    help_->set_pane_shown(false);
+    activate("win.find");
+    EXPECT_TRUE(help_->pane_shown());
+    EXPECT_EQ(label_of(buttons()[0]), "Hide");
     EXPECT_TRUE(help_->search_tab_shown());
     GtkWidget* focus = gtk_window_get_focus(help_->window()); // borrowed
     ASSERT_NE(focus, nullptr);
@@ -235,6 +297,7 @@ TEST_F(HelpWindowBarTest, F3AndShiftF3StepThroughTheMatchesOfThePage) {
     EXPECT_EQ(help_->page_view().current_match(), std::optional<std::size_t>(1));
     activate("win.find-previous");
     EXPECT_EQ(help_->page_view().current_match(), std::optional<std::size_t>(0));
+    help_->set_pane_shown(false); // the keys work while the pane is hidden
     activate("win.find-previous");
     EXPECT_EQ(help_->page_view().current_match(),
               std::optional<std::size_t>(static_cast<std::size_t>(count) - 1));

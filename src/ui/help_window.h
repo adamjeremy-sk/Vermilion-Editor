@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 // The Help > Index window: the manual, one page at a time, with the side pane (the Contents tree
-// and the Search tab) at its left, the Back and Forward buttons above and a status line below.
+// and the Search tab) at its left, the Hide, Back and Forward buttons above and a status line
+// below.
 
 #pragma once
 
@@ -46,10 +47,10 @@ public:
     void present();
 
     // The window's actions call these: "win.back" (Alt+Left) and "win.forward" (Alt+Right) go
-    // through the pages shown. "win.find" (Ctrl+F, show_search), "win.find-next" (F3) and
-    // "win.find-previous" (Shift+F3, step_match) have the names of the editor's Search actions,
-    // so the keys of the program's shortcut table (window_shortcuts.cpp) reach them in this window
-    // too.
+    // through the pages shown, "win.toggle-pane" is the Hide/Show button. "win.find" (Ctrl+F,
+    // show_search), "win.find-next" (F3) and "win.find-previous" (Shift+F3, step_match) have the
+    // names of the editor's Search actions, so the keys of the program's shortcut table
+    // (window_shortcuts.cpp) reach them in this window too.
     void back();
     void forward();
 
@@ -58,9 +59,15 @@ public:
     // shows a page that says so.
     void open_topic(const std::string& name);
 
-    // The side pane has two tabs, Contents and Search. True while the Search tab is the one shown.
+    // The side pane (the Contents and Search tabs) is shown at every start. Hiding it gives its
+    // room to the page; showing it gives the room back, at the width it had. The Hide/Show button
+    // says what a click will do: "Hide" while the pane is shown, "Show" while it is hidden.
+    bool pane_shown() const;
+    void set_pane_shown(bool shown);
+
+    // True while the Search tab is the tab of the pane that is shown.
     bool search_tab_shown() const;
-    // Shows the Search tab and puts the keyboard in its box, the text selected.
+    // Shows the pane and its Search tab and puts the keyboard in its box, the text selected.
     void show_search();
 
     // Runs a search over the manual (the Enter key in the Search box): the page on the screen and
@@ -106,6 +113,7 @@ private:
     std::unique_ptr<HelpPageView> page_view_;
     std::unique_ptr<HelpContents> contents_;
     std::unique_ptr<HelpSearch> search_;
+    GtkWidget* pane_button_ = nullptr; // borrowed: the Hide/Show button, owned by the window
     GtkWidget* tabs_ = nullptr;   // borrowed: the notebook with the two tabs, owned by the window
     GtkWidget* status_ = nullptr; // borrowed: the label of the status line
     // "notify::gtk-application-prefer-dark-theme" on the default GtkSettings: the program's Style

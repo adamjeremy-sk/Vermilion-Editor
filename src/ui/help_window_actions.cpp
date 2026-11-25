@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// The actions of the Help window: Back, Forward and the three Search actions, the keys of Back and
-// Forward, and when Back and Forward can be used.
+// The actions of the Help window: Back, Forward, Hide/Show and the three Search actions, the keys
+// of Back and Forward, and when Back and Forward can be used.
 
 #include <gtk/gtk.h>
 
@@ -22,6 +22,10 @@ void on_forward(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->forward();
 }
 
+void on_toggle_pane(GSimpleAction*, GVariant*, gpointer data) {
+    self(data)->set_pane_shown(!self(data)->pane_shown());
+}
+
 void on_find(GSimpleAction*, GVariant*, gpointer data) {
     self(data)->show_search();
 }
@@ -37,6 +41,7 @@ void on_find_previous(GSimpleAction*, GVariant*, gpointer data) {
 const GActionEntry kActions[] = {
     {"back", on_back, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"forward", on_forward, nullptr, nullptr, nullptr, {0, 0, 0}},
+    {"toggle-pane", on_toggle_pane, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"find", on_find, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"find-next", on_find_next, nullptr, nullptr, nullptr, {0, 0, 0}},
     {"find-previous", on_find_previous, nullptr, nullptr, nullptr, {0, 0, 0}},
