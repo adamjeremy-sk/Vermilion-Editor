@@ -107,6 +107,17 @@ target_link_libraries(vermilion_file_inspector_tests PRIVATE
     PkgConfig::GTK4)
 gtest_discover_tests(vermilion_file_inspector_tests)
 
+# BackgroundScope on a real GIO thread pool and main loop, no window and no display (GTK4 is
+# linked for the GIO headers only; no widget is created).
+add_executable(vermilion_background_task_tests background_task_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/background_task.cpp)
+target_link_libraries(vermilion_background_task_tests PRIVATE
+    GTest::gtest_main
+    vermilion_warnings
+    PkgConfig::GTK4)
+target_include_directories(vermilion_background_task_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+gtest_discover_tests(vermilion_background_task_tests)
+
 # FileWatcher on a real GIO file monitor and main loop, no window and no display (GTK4 is linked
 # for the GIO headers only; no widget is created). The timer is the real GlibTimer in most tests
 # and a recording fake in two.
