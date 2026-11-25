@@ -17,10 +17,15 @@
 #include <vector>
 
 #include "core/manual_page.h"
+#include "core/manual_results.h"
+#include "core/manual_search.h"
 #include "core/manual_spans.h"
 #include "core/manual_text.h"
+#include "core/search_messages.h"
+#include "core/search_options.h"
 #include "manual_test_columns.h"
 #include "ui/help_page_view.h"
+#include "ui/help_search.h"
 #include "ui/help_window.h"
 #include "ui/manual_library.h"
 #include "ui/style.h"
@@ -308,6 +313,11 @@ TEST_F(HelpWindowTest, ANameThatIsNotATopicIsIgnored) {
     }
 }
 
+// The side pane: the notebook that holds the tree and the Search tab.
+GtkWidget* pane_of(HelpWindow& help) {
+    return gtk_widget_get_ancestor(help.contents().widget(), GTK_TYPE_NOTEBOOK);
+}
+
 TEST_F(HelpWindowTest, ItOpensThirtySixLinesHighAndAHundredColumnsWide) {
     vermilion::ui::HelpPageView& view = help_->page_view();
     gtk_window_present(help_->window());
@@ -322,16 +332,21 @@ TEST_F(HelpWindowTest, ItOpensThirtySixLinesHighAndAHundredColumnsWide) {
     EXPECT_EQ(vermilion::ui::kHelpOpenColumns, 100);
     // The pane is 28 columns of the page's font wide, and the window has room for it, the divider
     // and the page.
-    const int pane = gtk_widget_get_width(help_->contents().widget());
+    GtkWidget* split = gtk_widget_get_parent(pane_of(*help_));
+    const int pane = gtk_paned_get_position(GTK_PANED(split));
     EXPECT_EQ(pane, view.width_for_columns(vermilion::ui::kHelpPaneColumns));
     EXPECT_EQ(vermilion::ui::kHelpPaneColumns, 28);
-    const int divider = gtk_widget_get_width(GTK_WIDGET(help_->window())) - pane - wide;
+    graphene_rect_t bounds;
+    ASSERT_TRUE(gtk_widget_compute_bounds(view.widget(), split, &bounds));
+    const int divider = static_cast<int>(bounds.origin.x) - pane;
     EXPECT_GE(divider, 0);
     EXPECT_LT(divider, 20);
+    EXPECT_EQ(gtk_widget_get_width(GTK_WIDGET(help_->window())), pane + divider + wide);
 }
 
-TEST_F(HelpWindowTest, TheTreeIsAtTheLeftOfThePageInAPanedWidget) {
-    GtkWidget* pane = help_->contents().widget();
+TEST_F(HelpWindowTest, ThePaneIsAtTheLeftOfThePageInAPanedWidget) {
+    GtkWidget* pane = pane_of(*help_);
+    ASSERT_NE(pane, nullptr);
     GtkWidget* split = gtk_widget_get_parent(pane);
     ASSERT_TRUE(GTK_IS_PANED(split));
     EXPECT_EQ(gtk_paned_get_start_child(GTK_PANED(split)), pane);
@@ -512,6 +527,164 @@ TEST_F(HelpWindowTest, AfterTheWindowIsGoneTheFlagMeansNothingToIt) {
         flip_dark_flag();
     }
     SUCCEED();
+}
+
+// The search that the tests run: a word that many pages of the manual have.
+vermilion::SearchOptions settings_search() {
+    vermilion::SearchOptions options;
+    options.text = "settings";
+    return options;
+}
+
+TEST_F(HelpWindowTest, ThePaneHasAContentsTabAndASearchTab) {
+    GtkNotebook* tabs = GTK_NOTEBOOK(pane_of(*help_));
+    ASSERT_NE(tabs, nullptr);
+    ASSERT_EQ(gtk_notebook_get_n_pages(tabs), 2);
+    EXPECT_STREQ(gtk_notebook_get_tab_label_text(tabs, gtk_notebook_get_nth_page(tabs, 0)),
+                 "Contents");
+    EXPECT_STREQ(gtk_notebook_get_tab_label_text(tabs, gtk_notebook_get_nth_page(tabs, 1)),
+                 "Search");
+    EXPECT_EQ(gtk_notebook_get_nth_page(tabs, 0), help_->contents().widget());
+    EXPECT_EQ(gtk_notebook_get_nth_page(tabs, 1), help_->search().widget());
+    EXPECT_FALSE(help_->search_tab_shown());
+    EXPECT_EQ(help_->status_text(), "");
+}
+
+TEST_F(HelpWindowTest, ShowSearchSwitchesToTheSearchTabAndPutsTheKeyboardInTheBox) {
+    gtk_window_present(help_->window());
+    spin(300);
+    help_->show_search();
+    EXPECT_TRUE(help_->search_tab_shown());
+    GtkWidget* focus = gtk_window_get_focus(help_->window()); // borrowed
+    ASSERT_NE(focus, nullptr);
+    EXPECT_TRUE(gtk_widget_is_ancestor(focus, help_->search().widget()));
+}
+
+TEST_F(HelpWindowTest, ASearchListsThePagesThatHaveAMatchAndSaysHowMany) {
+    const vermilion::SearchOptions options = settings_search();
+    help_->search().set_options(options);
+    help_->search().run(); // what Enter in the box does
+    const std::vector<vermilion::PageResult> expected = vermilion::search_pages(
+        vermilion::ui::manual_search_pages(*library_.data(), help_->page_view().columns()),
+        options);
+    const std::vector<vermilion::PageResult>& shown = help_->search().results();
+    ASSERT_GE(expected.size(), std::size_t{3});
+    ASSERT_EQ(shown.size(), expected.size());
+    for (std::size_t i = 0; i < shown.size(); ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_EQ(shown[i].file, expected[i].file);
+        EXPECT_EQ(shown[i].count, expected[i].count);
+        EXPECT_GT(shown[i].count, std::size_t{0});
+    }
+    EXPECT_EQ(help_->status_text(), vermilion::ui::results_message(expected));
+    // The page on the screen (the index) shows the matches of the search.
+    EXPECT_EQ(help_->page_view().search(), options);
+    EXPECT_EQ(help_->page_view().matches().size(),
+              vermilion::find_matches(page().text, options).size());
+}
+
+TEST_F(HelpWindowTest, AnEmptySearchClearsTheResultsAndTheHighlights) {
+    help_->run_search(settings_search());
+    ASSERT_FALSE(help_->search().results().empty());
+    ASSERT_FALSE(help_->page_view().matches().empty());
+    help_->run_search(vermilion::SearchOptions{});
+    EXPECT_TRUE(help_->search().results().empty());
+    EXPECT_TRUE(help_->page_view().matches().empty());
+    EXPECT_EQ(help_->status_text(), "");
+    help_->open_topic("settings.md"); // a page that opens afterwards has no highlights either
+    EXPECT_TRUE(help_->page_view().matches().empty());
+    EXPECT_EQ(help_->status_text(), "");
+}
+
+TEST_F(HelpWindowTest, ABadPatternShowsItsMessageAndFindsNothing) {
+    help_->run_search(settings_search());
+    ASSERT_FALSE(help_->search().results().empty());
+    vermilion::SearchOptions bad;
+    bad.text = "(";
+    bad.regex = true;
+    help_->run_search(bad);
+    EXPECT_TRUE(help_->search().results().empty());
+    EXPECT_TRUE(help_->page_view().matches().empty());
+    EXPECT_EQ(help_->status_text().rfind("Not a valid pattern: ", 0), std::size_t{0});
+    help_->open_topic("settings.md"); // the message stays while pages open
+    EXPECT_EQ(help_->status_text().rfind("Not a valid pattern: ", 0), std::size_t{0});
+}
+
+TEST_F(HelpWindowTest, APageThatOpensShowsTheMatchesOfTheLastSearchAndCountsThem) {
+    help_->run_search(settings_search());
+    help_->open_topic("settings.md");
+    const std::size_t count = help_->page_view().matches().size();
+    ASSERT_GT(count, std::size_t{0});
+    EXPECT_EQ(count, vermilion::find_matches(page().text, settings_search()).size());
+    EXPECT_FALSE(help_->page_view().current_match().has_value());
+    EXPECT_EQ(help_->status_text(), vermilion::match_count_message(0, static_cast<int>(count)));
+}
+
+TEST_F(HelpWindowTest, AClickOnAResultRowOpensItsPageAtTheFirstMatch) {
+    help_->run_search(settings_search());
+    const std::vector<vermilion::PageResult>& shown = help_->search().results();
+    std::size_t row = shown.size();
+    for (std::size_t i = 0; i < shown.size(); ++i) {
+        if (shown[i].file != "index.md") {
+            row = i;
+            break;
+        }
+    }
+    ASSERT_LT(row, shown.size());
+    const std::string file = shown[row].file;
+    const std::size_t count = shown[row].count;
+    help_->search().activate_row(row);
+    EXPECT_EQ(help_->contents().current(), file);
+    EXPECT_EQ(page().text, page_of_file(file, help_->page_view().columns()).text);
+    EXPECT_TRUE(back_enabled());
+    ASSERT_TRUE(help_->page_view().current_match().has_value());
+    EXPECT_EQ(*help_->page_view().current_match(), std::size_t{0});
+    EXPECT_EQ(help_->page_view().matches().size(), count);
+    EXPECT_EQ(help_->status_text(), vermilion::match_count_message(1, static_cast<int>(count)));
+}
+
+TEST_F(HelpWindowTest, NextAndPreviousStepThroughTheMatchesAndSayWhereTheyAre) {
+    help_->run_search(settings_search());
+    const std::vector<vermilion::PageResult>& shown = help_->search().results();
+    std::size_t row = shown.size();
+    for (std::size_t i = 0; i < shown.size(); ++i) {
+        if (shown[i].count >= 3) {
+            row = i;
+            break;
+        }
+    }
+    ASSERT_LT(row, shown.size()); // a page with at least three matches
+    const int count = static_cast<int>(shown[row].count);
+    help_->search().activate_row(row);
+    ASSERT_EQ(help_->status_text(), vermilion::match_count_message(1, count));
+    help_->search().step(true);
+    EXPECT_EQ(help_->page_view().current_match(), std::optional<std::size_t>(1));
+    EXPECT_EQ(help_->status_text(), vermilion::match_count_message(2, count));
+    help_->search().step(false);
+    EXPECT_EQ(help_->status_text(), vermilion::match_count_message(1, count));
+    help_->search().step(false); // before the first match: around to the last
+    EXPECT_EQ(help_->page_view().current_match(),
+              std::optional<std::size_t>(static_cast<std::size_t>(count) - 1));
+    EXPECT_EQ(help_->status_text(), vermilion::wrapped_message(false));
+    help_->search().step(true); // after the last match: around to the first
+    EXPECT_EQ(help_->page_view().current_match(), std::optional<std::size_t>(0));
+    EXPECT_EQ(help_->status_text(), vermilion::wrapped_message(true));
+}
+
+TEST_F(HelpWindowTest, SteppingWithoutASearchChangesNothing) {
+    help_->step_match(true);
+    EXPECT_FALSE(help_->page_view().current_match().has_value());
+    EXPECT_EQ(help_->status_text(), "");
+}
+
+TEST_F(HelpWindowTest, ASearchBeforeTheManualIsReadySaysSo) {
+    ManualLibrary late; // not prepared
+    HelpWindow early(app_.get(), parent_, late);
+    early.run_search(settings_search());
+    EXPECT_EQ(early.status_text(), "The manual is still loading.");
+    EXPECT_TRUE(early.search().results().empty());
+    EXPECT_FALSE(early.page_view().search().text == "settings");
+    gtk_window_destroy(early.window());
 }
 
 } // namespace

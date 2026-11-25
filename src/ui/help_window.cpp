@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
-// Builds the help window: the buttons, the Contents tree and the page view that shows one page of
-// the manual.
+// Builds the help window: the buttons, the side pane (the Contents tree and the Search tab), the
+// page view that shows one page of the manual and the status line.
 
 #include "ui/help_window.h"
 
@@ -61,6 +61,29 @@ GtkWidget* build_bar() {
     return bar;
 }
 
+// The side pane: a notebook with the Contents tree and the Search tab. Floating until the paned
+// widget takes it over.
+GtkWidget* build_tabs(GtkWidget* contents, GtkWidget* search) {
+    GtkWidget* tabs = gtk_notebook_new();
+    gtk_notebook_append_page(GTK_NOTEBOOK(tabs), contents, gtk_label_new("Contents"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(tabs), search, gtk_label_new("Search"));
+    return tabs;
+}
+
+// The status line: a bar with one label (its first child), drawn like the status bar of the main
+// window. Floating until the root box takes it over.
+GtkWidget* build_status() {
+    GtkWidget* text = gtk_label_new("");
+    gtk_widget_add_css_class(text, "vm-status-message");
+    gtk_label_set_xalign(GTK_LABEL(text), 0.0f);
+    gtk_label_set_ellipsize(GTK_LABEL(text), PANGO_ELLIPSIZE_END);
+    gtk_widget_set_hexpand(text, TRUE);
+    GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_add_css_class(bar, "vm-statusbar");
+    gtk_box_append(GTK_BOX(bar), text);
+    return bar;
+}
+
 // The natural height of `widget`, in pixels.
 int natural_height(GtkWidget* widget) {
     int natural = 0;
@@ -97,9 +120,14 @@ HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& li
                                            open_topic(file);
                                            page_view_->scroll_to_heading(index);
                                        });
+    search_ =
+        std::make_unique<HelpSearch>([this](const SearchOptions& options) { run_search(options); },
+                                     [this](const std::string& file) { open_result(file); },
+                                     [this](bool forward) { step_match(forward); });
     GtkWidget* page = page_view_->widget(); // borrowed; the page view owns it until the pane has it
-    GtkWidget* pane = contents_->widget();  // floating until the pane has it
-    // The tree at the left of the page, with a divider that the reader can drag.
+    tabs_ = build_tabs(contents_->widget(), search_->widget()); // floating until the pane has it
+    GtkWidget* pane = tabs_;
+    // The tabs at the left of the page, with a divider that the reader can drag.
     GtkWidget* split = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_paned_set_start_child(GTK_PANED(split), pane);
     gtk_paned_set_end_child(GTK_PANED(split), page);
@@ -113,17 +141,22 @@ HelpWindow::HelpWindow(GtkApplication* app, GtkWindow* parent, ManualLibrary& li
     GtkWidget* bar = build_bar(); // floating; the root box takes it over
     gtk_box_append(GTK_BOX(root), bar);
     gtk_box_append(GTK_BOX(root), split);
+    GtkWidget* statusbar = build_status(); // floating; the root box takes it over
+    status_ = gtk_widget_get_first_child(statusbar);
+    gtk_box_append(GTK_BOX(root), statusbar);
     gtk_window_set_child(window_, root);
     // The pane is kHelpPaneColumns columns of the page's font wide. The window opens wide enough
     // for that, the divider (what the paned widget needs beyond its two children) and
-    // kHelpOpenColumns columns of text, and kHelpPageLines lines high below the bar.
+    // kHelpOpenColumns columns of text, and kHelpPageLines lines high between the bar and the
+    // status line.
     const int pane_width = page_view_->width_for_columns(kHelpPaneColumns);
     gtk_widget_set_size_request(pane, pane_width, -1);
     gtk_paned_set_position(GTK_PANED(split), pane_width);
     const int divider = natural_width(split) - natural_width(pane) - natural_width(page);
     gtk_window_set_default_size(
         window_, pane_width + divider + page_view_->width_for_columns(kHelpOpenColumns),
-        natural_height(bar) + page_view_->height_for_lines(kHelpPageLines));
+        natural_height(bar) + page_view_->height_for_lines(kHelpPageLines) +
+            natural_height(statusbar));
     GtkSettings* settings = gtk_settings_get_default(); // borrowed; null without a display
     if (settings != nullptr) {
         palette_signal_ = gtkx::connect<void(GObject*, GParamSpec*)>(
@@ -177,6 +210,7 @@ void HelpWindow::show(const std::string& name) {
     } else {
         page_view_->show_source(note_page("This topic is not available: " + name));
     }
+    update_match_status();
 }
 
 void HelpWindow::update_actions() {
