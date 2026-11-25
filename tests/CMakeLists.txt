@@ -447,8 +447,9 @@ target_link_libraries(vermilion_help_search_tests PRIVATE
 gtest_discover_tests(vermilion_help_search_tests)
 
 # The Help window on a real display (the tests skip without one).
-add_executable(vermilion_help_window_tests help_window_test.cpp
+add_executable(vermilion_help_window_tests help_window_test.cpp help_window_bar_test.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_window.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/help_window_actions.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_window_search.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_contents.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_search.cpp
@@ -459,7 +460,8 @@ add_executable(vermilion_help_window_tests help_window_test.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_zoom.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_layout.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_colours.cpp
-    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_search.cpp)
+    ${CMAKE_SOURCE_DIR}/src/ui/help_page_view_search.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/window_shortcuts.cpp)
 target_link_libraries(vermilion_help_window_tests PRIVATE
     GTest::gtest_main
     vermilion_core
