@@ -24,6 +24,7 @@
 #include "core/search_messages.h"
 #include "core/search_options.h"
 #include "manual_test_columns.h"
+#include "test_app.h"
 #include "ui/help_page_view.h"
 #include "ui/help_search.h"
 #include "ui/help_window.h"
@@ -169,14 +170,16 @@ protected:
         if (!g_display) {
             GTEST_SKIP() << "no display";
         }
-        app_.reset(gtk_application_new("io.github.adamjeremy_sk.VermilionHelpWindowTest",
-                                       G_APPLICATION_NON_UNIQUE));
-        ASSERT_TRUE(g_application_register(G_APPLICATION(app_.get()), nullptr, nullptr));
+        // All the tests of the process share one application (test_app.h).
+        static GtkApplication* const app =
+            test_app::registered("io.github.adamjeremy_sk.VermilionHelpWindowTest");
+        app_ = app;
+        ASSERT_NE(app_, nullptr);
         parent_ = GTK_WINDOW(gtk_window_new()); // toplevel; destroyed in TearDown
         library_.prepare();
         wait_ready(library_);
         ASSERT_TRUE(library_.ready());
-        help_ = std::make_unique<HelpWindow>(app_.get(), parent_, library_);
+        help_ = std::make_unique<HelpWindow>(app_, parent_, library_);
     }
 
     void TearDown() override {
@@ -198,7 +201,7 @@ protected:
         return action != nullptr && g_action_get_enabled(action) != FALSE;
     }
 
-    std::unique_ptr<GtkApplication, void (*)(gpointer)> app_{nullptr, &g_object_unref};
+    GtkApplication* app_ = nullptr; // the shared application, borrowed
     GtkWindow* parent_ = nullptr;
     ManualLibrary library_; // before help_, so it is destroyed after it
     std::unique_ptr<HelpWindow> help_;
@@ -251,7 +254,7 @@ TEST_F(HelpWindowTest, EveryTopicOfTheManualOpens) {
 
 TEST_F(HelpWindowTest, BeforeTheManualIsReadyThePageSaysLoadingAndThenFillsIn) {
     ManualLibrary late; // not prepared
-    HelpWindow early(app_.get(), parent_, late);
+    HelpWindow early(app_, parent_, late);
     EXPECT_EQ(early.page_view().page().text, "Loading...");
     EXPECT_FALSE(early.page_view().page().text.empty());
     late.prepare();
@@ -262,7 +265,7 @@ TEST_F(HelpWindowTest, BeforeTheManualIsReadyThePageSaysLoadingAndThenFillsIn) {
 
 TEST_F(HelpWindowTest, ATopicOpenedWhileLoadingShowsItWhenTheManualIsReady) {
     ManualLibrary late; // not prepared
-    HelpWindow early(app_.get(), parent_, late);
+    HelpWindow early(app_, parent_, late);
     early.open_topic("settings.md");
     EXPECT_EQ(early.page_view().page().text, "Loading...");
     late.prepare();
@@ -276,7 +279,7 @@ TEST_F(HelpWindowTest, ATopicOpenedWhileLoadingShowsItWhenTheManualIsReady) {
 TEST_F(HelpWindowTest, AWindowThatIsGoneBeforeTheManualIsReadyIsNeverCalled) {
     ManualLibrary late; // not prepared
     {
-        HelpWindow early(app_.get(), parent_, late);
+        HelpWindow early(app_, parent_, late);
         gtk_window_destroy(early.window());
     }
     late.prepare();
@@ -438,7 +441,7 @@ TEST_F(HelpWindowTest, AClickOnAHeadingRowOpensItsPageAndScrollsToTheHeading) {
 
 TEST_F(HelpWindowTest, WhileTheManualIsLoadingTheTreeSaysSoAndThenFillsIn) {
     ManualLibrary late; // not prepared
-    HelpWindow early(app_.get(), parent_, late);
+    HelpWindow early(app_, parent_, late);
     EXPECT_TRUE(early.contents().loading());
     EXPECT_TRUE(early.contents().rows().empty());
     early.open_topic("settings.md");
@@ -669,7 +672,7 @@ TEST_F(HelpWindowTest, SteppingWithoutASearchChangesNothing) {
 
 TEST_F(HelpWindowTest, ASearchBeforeTheManualIsReadySaysSo) {
     ManualLibrary late; // not prepared
-    HelpWindow early(app_.get(), parent_, late);
+    HelpWindow early(app_, parent_, late);
     early.run_search(settings_search());
     EXPECT_EQ(early.status_text(), "The manual is still loading.");
     EXPECT_TRUE(early.search().results().empty());

@@ -15,6 +15,7 @@
 
 #include "core/search_messages.h"
 #include "core/search_options.h"
+#include "test_app.h"
 #include "ui/help_contents.h"
 #include "ui/help_page_view.h"
 #include "ui/help_search.h"
@@ -80,11 +81,13 @@ protected:
         if (!g_display) {
             GTEST_SKIP() << "no display";
         }
-        app_.reset(gtk_application_new("io.github.adamjeremy_sk.VermilionHelpWindowBarTest",
-                                       G_APPLICATION_NON_UNIQUE));
-        ASSERT_TRUE(g_application_register(G_APPLICATION(app_.get()), nullptr, nullptr));
-        vermilion::ui::set_shortcuts(app_.get()); // what the main window does at the start
-        parent_ = GTK_WINDOW(gtk_window_new());   // toplevel; destroyed in TearDown
+        // All the tests of the process share one application (test_app.h).
+        static GtkApplication* const app =
+            test_app::registered("io.github.adamjeremy_sk.VermilionHelpWindowBarTest");
+        app_ = app;
+        ASSERT_NE(app_, nullptr);
+        vermilion::ui::set_shortcuts(app_);     // what the main window does at the start
+        parent_ = GTK_WINDOW(gtk_window_new()); // toplevel; destroyed in TearDown
         library_.prepare();
         const gint64 end = g_get_monotonic_time() + 10 * G_USEC_PER_SEC;
         while (!library_.ready() && g_get_monotonic_time() < end) {
@@ -92,7 +95,7 @@ protected:
             g_usleep(1000);
         }
         ASSERT_TRUE(library_.ready());
-        help_ = std::make_unique<HelpWindow>(app_.get(), parent_, library_);
+        help_ = std::make_unique<HelpWindow>(app_, parent_, library_);
     }
 
     void TearDown() override {
@@ -150,7 +153,7 @@ protected:
     }
     const std::string& text() { return help_->page_view().page().text; }
 
-    std::unique_ptr<GtkApplication, void (*)(gpointer)> app_{nullptr, &g_object_unref};
+    GtkApplication* app_ = nullptr; // the shared application, borrowed
     GtkWindow* parent_ = nullptr;
     ManualLibrary library_; // before help_, so it is destroyed after it
     std::unique_ptr<HelpWindow> help_;
@@ -181,7 +184,7 @@ TEST_F(HelpWindowBarTest, EveryWindowOpensOnTheHomePageWithThePaneOnItsContentsT
     EXPECT_FALSE(enabled("forward"));
     help_->show_search();
     help_->set_pane_shown(false);
-    HelpWindow second(app_.get(), parent_, library_);
+    HelpWindow second(app_, parent_, library_);
     EXPECT_TRUE(second.pane_shown());
     EXPECT_FALSE(second.search_tab_shown());
     EXPECT_EQ(second.contents().current(), "index.md");
@@ -216,8 +219,8 @@ TEST_F(HelpWindowBarTest, ForwardGoesToThePageThatBackLeft) {
 }
 
 TEST_F(HelpWindowBarTest, TheBackAndForwardButtonsAndKeysGoThroughThePages) {
-    EXPECT_EQ(keys_of(app_.get(), "win.back"), std::vector<std::string>{"<Alt>Left"});
-    EXPECT_EQ(keys_of(app_.get(), "win.forward"), std::vector<std::string>{"<Alt>Right"});
+    EXPECT_EQ(keys_of(app_, "win.back"), std::vector<std::string>{"<Alt>Left"});
+    EXPECT_EQ(keys_of(app_, "win.forward"), std::vector<std::string>{"<Alt>Right"});
     help_->open_topic("settings.md");
     click(button("Back"));
     EXPECT_EQ(help_->contents().current(), "index.md");
@@ -260,7 +263,7 @@ TEST_F(HelpWindowBarTest, HideGivesThePanesRoomToThePageAndShowGivesItBack) {
 }
 
 TEST_F(HelpWindowBarTest, CtrlFShowsTheSearchTabWithTheKeyboardInTheBox) {
-    EXPECT_EQ(keys_of(app_.get(), "win.find"), std::vector<std::string>{"<Control>f"});
+    EXPECT_EQ(keys_of(app_, "win.find"), std::vector<std::string>{"<Control>f"});
     gtk_window_present(help_->window());
     spin(300);
     activate("win.find");
@@ -284,8 +287,8 @@ TEST_F(HelpWindowBarTest, CtrlFShowsAHiddenPaneAgain) {
 }
 
 TEST_F(HelpWindowBarTest, F3AndShiftF3StepThroughTheMatchesOfThePage) {
-    EXPECT_EQ(keys_of(app_.get(), "win.find-next"), std::vector<std::string>{"F3"});
-    EXPECT_EQ(keys_of(app_.get(), "win.find-previous"), std::vector<std::string>{"<Shift>F3"});
+    EXPECT_EQ(keys_of(app_, "win.find-next"), std::vector<std::string>{"F3"});
+    EXPECT_EQ(keys_of(app_, "win.find-previous"), std::vector<std::string>{"<Shift>F3"});
     help_->run_search(settings_search());
     help_->open_topic("settings.md");
     const int count = static_cast<int>(help_->page_view().matches().size());
