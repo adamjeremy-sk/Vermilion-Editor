@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 // The Help > Index window: the manual, one page at a time, with the Contents tree and the Search
-// tab at its left, Back and Index buttons above and a status line below.
+// tab at its left, a Back button above and a status line below.
 
 #pragma once
 
@@ -44,9 +44,8 @@ public:
 
     void present();
 
-    // The window's actions ("win.back" and "win.to-index"); their buttons and Alt+Left call these.
+    // The window's action "win.back"; its button and Alt+Left call it.
     void back();
-    void show_index();
 
     // Makes the topic the current page (history) and shows it; nothing when it already is, or
     // when `name` is not a topic file name (is_topic_name). A topic that is not in the program

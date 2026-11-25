@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Adam Hainstock (@adamjeremy-sk)
 // Tests of HelpWindow on a real display (the tests skip without one): the page view and the
-// Contents tree in the window, links, Back and Index, the size at which it opens, and the colours
-// after a palette change.
+// Contents tree in the window, links, Back, the size at which it opens, and the colours after a
+// palette change.
 
 #include <gtest/gtest.h>
 #include <gtk/gtk.h>
@@ -227,17 +227,7 @@ TEST_F(HelpWindowTest, AClickOnALinkOpensItsTopicAndBackComesBack) {
     EXPECT_FALSE(back_enabled());
 }
 
-TEST_F(HelpWindowTest, TheIndexGoesBackToTheIndexPage) {
-    ASSERT_FALSE(page().links.empty());
-    help_->page_view().activate_at(page().links[0].begin);
-    ASSERT_NE(page().text, page_of_file("index.md").text);
-    help_->show_index();
-    EXPECT_EQ(page().text, page_of_file("index.md").text);
-    EXPECT_TRUE(back_enabled());
-}
-
 TEST_F(HelpWindowTest, OpeningThePageThatIsOpenChangesNothing) {
-    help_->show_index();
     EXPECT_FALSE(back_enabled());
     help_->open_topic("index.md");
     EXPECT_FALSE(back_enabled());

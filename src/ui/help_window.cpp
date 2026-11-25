@@ -35,13 +35,8 @@ void on_back(GSimpleAction*, GVariant*, gpointer data) {
     static_cast<HelpWindow*>(data)->back();
 }
 
-void on_to_index(GSimpleAction*, GVariant*, gpointer data) {
-    static_cast<HelpWindow*>(data)->show_index();
-}
-
 const GActionEntry kActions[] = {
     {"back", on_back, nullptr, nullptr, nullptr, {0, 0, 0}},
-    {"to-index", on_to_index, nullptr, nullptr, nullptr, {0, 0, 0}},
 };
 
 // Floating until the bar takes it over.
@@ -52,12 +47,11 @@ GtkWidget* action_button(const char* label, const char* action, const char* tool
     return button;
 }
 
-// The bar with the Back and Index buttons; floating until the root box takes it over.
+// The bar with the Back button; floating until the root box takes it over.
 GtkWidget* build_bar() {
     GtkWidget* bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_widget_add_css_class(bar, "vm-help-bar");
     gtk_box_append(GTK_BOX(bar), action_button("Back", "win.back", "Back (Alt+Left)"));
-    gtk_box_append(GTK_BOX(bar), action_button("Index", "win.to-index", "Index"));
     return bar;
 }
 
@@ -184,10 +178,6 @@ void HelpWindow::back() {
         show(*page);
         update_actions();
     }
-}
-
-void HelpWindow::show_index() {
-    open_topic(kIndexTopic);
 }
 
 void HelpWindow::open_topic(const std::string& name) {

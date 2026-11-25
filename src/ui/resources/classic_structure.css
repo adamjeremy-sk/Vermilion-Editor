@@ -269,8 +269,8 @@ window.aboutdialog image.large-icons {
 }
 
 /* Help > Index (M2.2b): the window also has the class vm-main, so its buttons and chassis come from
-   the rules above. The bar with the Back and Index buttons has a little padding; the page is
-   styled by the rules of the page view below. */
+   the rules above. The bar of buttons at the top has a little padding; the page is styled by the
+   rules of the page view below. */
 window.vm-help .vm-help-bar {
     padding: 4px;
 }
