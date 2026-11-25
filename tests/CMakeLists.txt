@@ -118,6 +118,23 @@ target_link_libraries(vermilion_background_task_tests PRIVATE
 target_include_directories(vermilion_background_task_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 gtest_discover_tests(vermilion_background_task_tests)
 
+# ManualLibrary: the manual made from text and from the program's resources, and the library that
+# is prepared on a worker thread; no window and no display (GTK4 is linked for the GIO headers
+# only; no widget is created).
+add_executable(vermilion_manual_library_tests manual_library_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/manual_library.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/background_task.cpp)
+target_link_libraries(vermilion_manual_library_tests PRIVATE
+    GTest::gtest_main
+    vermilion_core
+    vermilion_resources
+    vermilion_warnings
+    PkgConfig::GTK4)
+target_include_directories(vermilion_manual_library_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_compile_definitions(vermilion_manual_library_tests PRIVATE
+    VERMILION_MANUAL_DIR="${CMAKE_SOURCE_DIR}/docs/manual")
+gtest_discover_tests(vermilion_manual_library_tests)
+
 # FileWatcher on a real GIO file monitor and main loop, no window and no display (GTK4 is linked
 # for the GIO headers only; no widget is created). The timer is the real GlibTimer in most tests
 # and a recording fake in two.
