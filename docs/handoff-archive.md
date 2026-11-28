@@ -1556,3 +1556,12 @@ Measured: 289,088 matches replaced in 64.5 s; Undo of a 19,040-match run took 10
 ### Decision of the finished gate M2.5b
 
 - **Closing M2.5b (Orchestrator, Adam deferred, 2026-11-25):** (a) the Fantasque font files stay in the history of `a4f7d52` (about 0.7 MB in every clone; an external audit pointed it out): removing them would rewrite all 51 gate commits, break the build of the commits from 1a to 5f and need a force-push; OFL 1.1 allows redistribution. (b) `claude/M2.5b_plan_amendments.md`, `claude/M2.5b_plan_revision_2026-11-23.md` and `claude/M2.5b_6_design.md` stay in the Project as dated records (the archive and old prompts point to them; the step 6 design holds the hands-on list); `claude/M2.5b_plan.md` is the current plan.
+
+## Part 51 — rotated out of HANDOFF.md on 2026-11-27 (thirtieth chat, M2.6 probe and plan, handoff)
+
+### Session log entry rotated out
+
+### 2026-11-25 (twenty-seventh chat) - step 7 as 7a, 7b, 7c; the shared test application (8a)
+- Step 7 was 39 KB in one prompt, so it ran as 7a (the Index button deleted, rule 8), 7b (Forward, the keys, `help_window_actions.cpp`, the constructor in five parts, `tests/help_window_bar_test.cpp`) and 7c (Hide/Show); each built in the cloud on a tree byte-identical to the device, 20 mutants all caught, the real keys checked under Xvfb. All three audited PASS on the device (every hash matched) and committed: `a1ce335`, `333f3a0`, `32b3e10`; 1516 tests.
+- Qwen's 7c report noted two bar tests failing together in one process. Cause, found in the cloud: GLib never frees a registered application, so every Help window display test after the first fails to register; the 6f2 tree did the same; ctest (one process per test) and CI were never affected. Adam chose one application per test program; the 8a prompt (and its hashes doc) was written, checked (39 of 39 in one process, shuffled and repeated; 1516 under ctest) and issued.
+- Lessons: a two-line expectation in a prompt (`git diff --stat` counts, FAILED lines of a filtered run) is run in the cloud before it is written down; after a context compaction `project_write` from a file needs a fresh full `Read`.
